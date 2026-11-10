@@ -1,0 +1,518 @@
+{
+  "candidates": [
+    {
+      "id": 1,
+      "name": "Caesar Cipher",
+      "category": "Classical Cryptography",
+      "era": "Ancient",
+      "origin": "Rome",
+      "type": "Substitution"
+    },
+    {
+      "id": 2,
+      "name": "Enigma Machine",
+      "category": "Mechanical Cryptography",
+      "era": "Modern",
+      "origin": "Germany",
+      "type": "Rotor Machine"
+    },
+    {
+      "id": 3,
+      "name": "Rosetta Stone",
+      "category": "Ancient Artifacts",
+      "era": "Ancient",
+      "origin": "Egypt",
+      "type": "Stele"
+    },
+    {
+      "id": 4,
+      "name": "Antikythera Mechanism",
+      "category": "Ancient Technology",
+      "era": "Ancient",
+      "origin": "Greece",
+      "type": "Analog Computer"
+    },
+    {
+      "id": 5,
+      "name": "Voynich Manuscript",
+      "category": "Mysterious Codices",
+      "era": "Medieval",
+      "origin": "Europe",
+      "type": "Illustrated Manuscript"
+    },
+    {
+      "id": 6,
+      "name": "RSA Algorithm",
+      "category": "Modern Cryptography",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Public Key"
+    },
+    {
+      "id": 7,
+      "name": "Diffie-Hellman Key Exchange",
+      "category": "Modern Cryptography",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Key Protocol"
+    },
+    {
+      "id": 8,
+      "name": "SHA-256",
+      "category": "Cryptographic Primitives",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Hash Function"
+    },
+    {
+      "id": 9,
+      "name": "Bitcoin Whitepaper",
+      "category": "Decentralized Systems",
+      "era": "Digital",
+      "origin": "Cyberspace",
+      "type": "Protocol Spec"
+    },
+    {
+      "id": 10,
+      "name": "Satoshi Nakamoto",
+      "category": "Cypherpunks",
+      "era": "Digital",
+      "origin": "Unknown",
+      "type": "Pseudonym"
+    },
+    {
+      "id": 11,
+      "name": "Alan Turing",
+      "category": "Pioneers",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Cryptanalyst"
+    },
+    {
+      "id": 12,
+      "name": "Claude Shannon",
+      "category": "Information Theory",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Mathematician"
+    },
+    {
+      "id": 13,
+      "name": "Bletchley Park",
+      "category": "Cryptanalysis Centers",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Historic Estate"
+    },
+    {
+      "id": 14,
+      "name": "Lorenz Cipher",
+      "category": "Mechanical Cryptography",
+      "era": "Modern",
+      "origin": "Germany",
+      "type": "Teleprinter Cipher"
+    },
+    {
+      "id": 15,
+      "name": "One-Time Pad",
+      "category": "Information-Theoretic Security",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Perfect Secrecy"
+    },
+    {
+      "id": 16,
+      "name": "Beale Ciphers",
+      "category": "Unsolved Mysteries",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Book Cipher"
+    },
+    {
+      "id": 17,
+      "name": "Kryptos Sculpture",
+      "category": "Art & Cryptography",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Sculpture"
+    },
+    {
+      "id": 18,
+      "name": "Zodiac 340 Cipher",
+      "category": "Serial Cryptography",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Homophonic Cipher"
+    },
+    {
+      "id": 19,
+      "name": "Phaistos Disc",
+      "category": "Ancient Artifacts",
+      "era": "Ancient",
+      "origin": "Crete",
+      "type": "Clay Disc"
+    },
+    {
+      "id": 20,
+      "name": "Babington Plot",
+      "category": "Historical Espionage",
+      "era": "Early Modern",
+      "origin": "England",
+      "type": "Coded Conspiracy"
+    },
+    {
+      "id": 21,
+      "name": "Mary Queen of Scots",
+      "category": "Historical Figures",
+      "era": "Early Modern",
+      "origin": "Scotland",
+      "type": "Monarch"
+    },
+    {
+      "id": 22,
+      "name": "Vigenere Cipher",
+      "category": "Classical Cryptography",
+      "era": "Early Modern",
+      "origin": "France",
+      "type": "Polyalphabetic"
+    },
+    {
+      "id": 23,
+      "name": "Playfair Cipher",
+      "category": "Classical Cryptography",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Digraphic Substitution"
+    },
+    {
+      "id": 24,
+      "name": "Navajo Code Talkers",
+      "category": "Military Communications",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Spoken Code"
+    },
+    {
+      "id": 25,
+      "name": "Linear B",
+      "category": "Deciphered Scripts",
+      "era": "Ancient",
+      "origin": "Greece",
+      "type": "Syllabic Script"
+    },
+    {
+      "id": 26,
+      "name": "Michael Ventris",
+      "category": "Decipherers",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Architect / Philologist"
+    },
+    {
+      "id": 27,
+      "name": "Jean-Francois Champollion",
+      "category": "Decipherers",
+      "era": "Modern",
+      "origin": "France",
+      "type": "Egyptologist"
+    },
+    {
+      "id": 28,
+      "name": "Scytale of Sparta",
+      "category": "Ancient Cryptography",
+      "era": "Ancient",
+      "origin": "Sparta",
+      "type": "Transposition Tool"
+    },
+    {
+      "id": 29,
+      "name": "Polybius Square",
+      "category": "Ancient Cryptography",
+      "era": "Ancient",
+      "origin": "Greece",
+      "type": "Fractionation Grid"
+    },
+    {
+      "id": 30,
+      "name": "Al-Kindi",
+      "category": "Pioneers",
+      "era": "Medieval",
+      "origin": "Abbasid Caliphate",
+      "type": "Frequency Analysis"
+    },
+    {
+      "id": 31,
+      "name": "Jefferson Disk",
+      "category": "Mechanical Cryptography",
+      "era": "Early Modern",
+      "origin": "United States",
+      "type": "Wheel Cipher"
+    },
+    {
+      "id": 32,
+      "name": "ADFGVX Cipher",
+      "category": "Military Field Ciphers",
+      "era": "Modern",
+      "origin": "Germany",
+      "type": "Fractionation & Transposition"
+    },
+    {
+      "id": 33,
+      "name": "Purple Machine",
+      "category": "Diplomatic Ciphers",
+      "era": "Modern",
+      "origin": "Japan",
+      "type": "Stepping-Switch Cipher"
+    },
+    {
+      "id": 34,
+      "name": "Project Venona",
+      "category": "Counterintelligence",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Signal Decryption"
+    },
+    {
+      "id": 35,
+      "name": "Zimmermann Telegram",
+      "category": "Signal Intelligence",
+      "era": "Modern",
+      "origin": "Germany",
+      "type": "Diplomatic Cable"
+    },
+    {
+      "id": 36,
+      "name": "Colossus Computer",
+      "category": "Computing History",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Electronic Computer"
+    },
+    {
+      "id": 37,
+      "name": "Tommy Flowers",
+      "category": "Computing Pioneers",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Engineer"
+    },
+    {
+      "id": 38,
+      "name": "Marian Rejewski",
+      "category": "Cryptanalysts",
+      "era": "Modern",
+      "origin": "Poland",
+      "type": "Mathematician"
+    },
+    {
+      "id": 39,
+      "name": "DES Standard",
+      "category": "Block Ciphers",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Symmetric Feistel"
+    },
+    {
+      "id": 40,
+      "name": "AES Rijndael",
+      "category": "Block Ciphers",
+      "era": "Digital",
+      "origin": "Belgium",
+      "type": "Substitution-Permutation"
+    },
+    {
+      "id": 41,
+      "name": "Zero-Knowledge Proof",
+      "category": "Modern Cryptography",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Cryptographic Proof"
+    },
+    {
+      "id": 42,
+      "name": "Merkle Tree",
+      "category": "Data Structures",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Hash Tree"
+    },
+    {
+      "id": 43,
+      "name": "Ralph Merkle",
+      "category": "Pioneers",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Cryptographer"
+    },
+    {
+      "id": 44,
+      "name": "Elliptic Curve Cryptography",
+      "category": "Modern Cryptography",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Algebraic Curve"
+    },
+    {
+      "id": 45,
+      "name": "Ed25519",
+      "category": "Signature Schemes",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Edwards Curve"
+    },
+    {
+      "id": 46,
+      "name": "Daniel J. Bernstein",
+      "category": "Cryptographers",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Mathematician"
+    },
+    {
+      "id": 47,
+      "name": "PGP Pretty Good Privacy",
+      "category": "Privacy Tools",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Encrypted Email"
+    },
+    {
+      "id": 48,
+      "name": "Phil Zimmermann",
+      "category": "Cypherpunks",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Creator"
+    },
+    {
+      "id": 49,
+      "name": "Cypherpunk Manifesto",
+      "category": "Movements",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Foundational Text"
+    },
+    {
+      "id": 50,
+      "name": "Eric Hughes",
+      "category": "Cypherpunks",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Activist"
+    },
+    {
+      "id": 51,
+      "name": "Hal Finney",
+      "category": "Cypherpunks",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "RPOW Pioneer"
+    },
+    {
+      "id": 52,
+      "name": "Nick Szabo",
+      "category": "Smart Contracts",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Legal Theorist"
+    },
+    {
+      "id": 53,
+      "name": "Tor Onion Router",
+      "category": "Anonymity Networks",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Onion Routing"
+    },
+    {
+      "id": 54,
+      "name": "Signal Protocol",
+      "category": "End-to-End Encryption",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Double Ratchet"
+    },
+    {
+      "id": 55,
+      "name": "Moxie Marlinspike",
+      "category": "Cryptographers",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Security Researcher"
+    },
+    {
+      "id": 56,
+      "name": "Trusted Execution Environment",
+      "category": "Hardware Security",
+      "era": "Digital",
+      "origin": "Global",
+      "type": "Hardware Enclave"
+    },
+    {
+      "id": 57,
+      "name": "Intel SGX",
+      "category": "Hardware Security",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Enclave Architecture"
+    },
+    {
+      "id": 58,
+      "name": "NEAR Nightshade",
+      "category": "Consensus & Sharding",
+      "era": "Digital",
+      "origin": "Global",
+      "type": "Sharded Blockchain"
+    },
+    {
+      "id": 59,
+      "name": "Rainbow Bridge",
+      "category": "Trustless Bridges",
+      "era": "Digital",
+      "origin": "Global",
+      "type": "Cross-Chain Client"
+    },
+    {
+      "id": 60,
+      "name": "zk-SNARK",
+      "category": "Succinct Arguments",
+      "era": "Digital",
+      "origin": "Global",
+      "type": "Non-Interactive Proof"
+    },
+    {
+      "id": 61,
+      "name": "Shamir Secret Sharing",
+      "category": "Threshold Schemes",
+      "era": "Digital",
+      "origin": "Israel",
+      "type": "Polynomial Secret Sharing"
+    },
+    {
+      "id": 62,
+      "name": "Adi Shamir",
+      "category": "Cryptographers",
+      "era": "Digital",
+      "origin": "Israel",
+      "type": "Turing Awardee"
+    },
+    {
+      "id": 63,
+      "name": "Kerckhoffs Principle",
+      "category": "Cryptographic Axioms",
+      "era": "Modern",
+      "origin": "Netherlands",
+      "type": "Open Design Principle"
+    },
+    {
+      "id": 64,
+      "name": "Auguste Kerckhoffs",
+      "category": "Linguists & Cryptographers",
+      "era": "Modern",
+      "origin": "Netherlands",
+      "type": "Theorist"
+    }
+  ],
+  "total": 64,
+  "version": "1.0.0"
+}

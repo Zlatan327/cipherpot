@@ -1,0 +1,174 @@
+﻿CipherPot — Concrete Product & Review Spec (v1 for November 14 Deadline)
+A skill-based '20 Questions' deduction game powered by TEE-verified AI on NEAR Protocol
+1. Product Definition & Overview
+Product Name: CipherPot
+One-Liner: A skill-based '20 Questions' deduction game on NEAR Protocol played over a board of 64 candidate secrets, using TEE-signed verification to settle pot claims securely on-chain.
+Core Concept & Value Proposition
+* For Players: Human-first, low-stakes entertainment with capped loss (entry fee) and strict guess allowances to prevent agent brute-forcing.
+* For AI Agents: Autonomous earning opportunity with pre-funded contract spend limits and structured interaction endpoints.
+* For the Protocol: Sustainable fixed 4% rake per solved round in a low-friction deduction game environment.
+Track Alignment
+* Primary Track: Games With Real Economies
+* Secondary Tracks: Agent Economy, Privacy & Private AI
+2. Game Design & Core Mechanics
+Secret Selection Rules
+* Secrets are selected from a fixed board of 64 canonical candidate secrets, ensuring clear boundaries and predictable candidate pools for deduction.
+* Facts are chosen to ensure deduction skill matters while narrowing the answer space to eliminate arbitrary web-search brute forcing.
+* Verification is conducted inside a Trusted Execution Environment (TEE) that cryptographically signs guess verdicts sent to the smart contract interface.
+Round Lifecycle
+* 1. Commitment: The secret is chosen from the published set and committed via TEE (hash + salt) before round start.
+* 2. Entry & Allowances: Players pay a fixed NEAR entry fee, granting a defined question quota (up to 20 total per round across players) and a strict allowance of 3 guesses per entry fee to defeat brute-force bots.
+* 3. Question Phase & AI Record: Participants submit questions. The AI answerer records structured responses (Yes / No / Unclear) with strict anti-prompt-injection controls.
+* 4. Guess & Settlement: Guesses are processed via a TEE-signed verification flow. The contract verifies the TEE signature and releases the pot minus the 4% protocol rake to the correct claimer.
+* 5. Rollover & Reveal: If unsolved at timeout, the pot rolls over to the next round while the commitment is revealed on-chain for auditability.
+Game Modes & Monetization
+* Public Daily/Hourly Rounds: Shared canonical secret set, competitive open deduction.
+* Agent Integration: Autonomous AI agents participate via pre-funded contract deposit allowances.
+* Protocol Revenue: Fixed 4% pot rake collected upon successful round claims (private rooms and extra monetization deferred post-MVP).
+3. Architecture & Tech Stack
+Smart Contract Layer & Contract Interface (NEAR)
+* Single main Rust contract interface managing round lifecycle, TEE verification signatures, entry fees, pre-funded agent balances, guess quota enforcement, fixed 4% rake, rollover accounting, and admin pause controls.
+* Uses native NEAR payments (USDC and Intents cross-chain payments cut from initial MVP scope for simplicity).
+Backend & Answerer Service Details
+* AI Answerer & TEE: Executes inside NEAR AI Cloud TEE with strict anti-prompt-injection wrappers, outputting structured records and cryptographically signed verification verdicts.
+* Agent Interface & Indexer: Exposes HTTP/MCP/NEAR Agent Skill endpoints allowing autonomous AI agents to join, ask, and claim.
+Frontend Requirements
+* Built using Next.js/React + NEAR Wallet Selector SDK.
+* Displays live pot size, questions remaining, active countdown timer, wallet connector, question feed, guess form, and claim trigger.
+4. Trust, Fairness & Risk Mitigations
+User Journey (Steps 1–10)
+* 1. Landing & Overview: User views active pot size, countdown timer, question history, and board rules.
+* 2. Wallet Connection: User connects via NEAR Wallet Selector SDK (supporting MyNearWallet, Meteor, Sender, etc.).
+* 3. Entry & Quotas: User pays the entry fee to join the round, unlocking questions and guess allowances.
+* 4. Secret Candidate Board: User inspects the active grid of 64 candidate secrets and filters possibilities based on revealed answers.
+* 5. Question Submission: User submits yes/no deduction questions to the TEE-enforced AI answerer.
+* 6. Live Feed Updates: The public question feed updates instantly with structured responses (Yes / No / Unclear).
+* 7. Guess Submission: User submits a final secret guess using their strict guess quota.
+* 8. Verification Flow: The backend TEE verifies the guess and issues a cryptographic verdict signature.
+* 9. Claim & Settlement: If correct, user triggers pot claim; the smart contract verifies the TEE signature and releases 96% of the pot (4% rake deducted).
+* 10. Rollover & Reveal: If unsolved when the timer expires, the pot rolls over to the next round and the secret commitment is revealed on-chain.
+Frontend Interactions Table
+Component / Action
+	Trigger / Event
+	State Update / Output
+	Wallet Connector
+	Click "Connect Wallet"
+	Modal opens, sets active account ID on success.
+	Join Round Button
+	Submit `join()` transaction with NEAR entry fee
+	Increases pot size, grants guess & question allowance.
+	Question Form
+	Submit deduction question text
+	Appends to live feed with AI response status.
+	Guess Form
+	Submit guess against 64 candidate set
+	Decrements guess quota; triggers TEE verification.
+	Claim Trigger
+	Submit `claim()` with TEE signature
+	Transfers pot to winner, resets state for next round.
+	Wallet Requirements
+* SDK Integration: Built using NEAR Wallet Selector (`@near-wallet-selector/core`).
+* Supported Wallets: MyNearWallet, Meteor Wallet, Sender, and Web3Auth / Passkey options.
+* Network: NEAR Testnet during build/review phase, configured via environment variables.
+* State Persistence: Auto-reconnect active wallet session on page reload.
+Agent Build Rules
+* Endpoint Standardization: Expose structured HTTP/MCP REST endpoints alongside NEAR Agent Skill interfaces for non-browser automation.
+* Pre-Funded Balance: Allow AI agents to pre-fund round entry budgets directly on the contract via explicit spend allowances.
+* Quota Parity: Enforce identical guess and question rate limits on AI agents as human UI players to maintain fair competitive balance.
+
+
+Risk / Challenge
+	Mitigation Strategy
+	Operator tampers with secret word
+	TEE-enforced commitment (keccak256 + salt) and TEE-signed verification verdicts on submitted guesses.
+	AI hallucination / inconsistent logic
+	Strict structured system prompt and input sanitization layer to block prompt injection attacks.
+	Backend outage / Server failure
+	Round timeout triggers automatic pot rollover to the subsequent round rather than refunds.
+	Front-running guesses
+	Strict guess quotas per entry fee and pre-published candidate lists constrain the guess space.
+Spectator Mode Specifications
+* Default State & Read-Only Fetching: Spectator Mode is active whenever no wallet is connected. All game data (pot size, countdown timer, candidate list, and public question feed) is fetched via read-only RPC calls without requiring wallet authorization.
+* Always-Visible Features: Header, 64-name secret candidate board, live question feed, rule-outs, 'Verify Fairness' link, active agents panel, and 'How to Play' instructional strip remain fully visible to spectators.
+* Locked Actions & UI Banner: Interactive game actions (Submit Question, Submit Guess, Join Round) appear visible but inactive. Clicking any locked action triggers the wallet connection flow. A slim banner reading "You're watching. Connect a wallet to play." is permanently displayed at the top, along with a prompt directing users to a faucet if NEAR balance is insufficient.
+* Player Local State: Local candidate cross-offs/filters work for all users including spectators, but the "You're in" participation panel is hidden until a wallet is connected and an entry fee is paid.
+* Between-Round Handling: Upon settlement, the operator waits ~2 minutes before starting the next round, ensuring the 'Settled' summary screen remains visible to spectators.
+* Acceptance Test: Opening the DApp in a clean private/incognito window allows full read-only viewing of board, live feed, and timers without throwing errors or requiring wallet prompt on load.
+	Secret selection too easy or hard
+	Published canonical lists and standardized target text formatting (casing/spacing).
+	5. Frontend/Backend Final Build Plan (Target: Nov 14)
+Phase 0 – Project Setup
+* Deliverables: Public repo with `contracts/`, `frontend/`, `ai/`, `README.md`, compilable Rust contract (`cargo near`), frontend scaffold, and `.env.example`.
+* Acceptance Checklist: [ ] Clean repo structure  [ ] Contract compiles  [ ] Frontend runs locally  [ ] Zero secrets committed
+Phase 1 – Core Smart Contract
+* Deliverables: `create_round()`, `join()`, guess quota tracking per entry fee, pre-funded agent spend limits, TEE signature check on `claim()`, fixed 4% rake payout, admin pause controls, and rollover timeout logic.
+* Acceptance Checklist: [ ] Deploys to testnet  [ ] Admin pause works  [ ] Guess quota enforced  [ ] Valid TEE signature claims pot  [ ] Timeout triggers rollover
+Phase 2 – Minimal Playable Frontend
+* Deliverables: Wallet connection, live pot feed, remaining question/guess counter, shared question feed with mock AI answer stubs, guess form, and claim UI.
+* Acceptance Checklist: [ ] Connect & join work  [ ] Mock AI answers render  [ ] Guess limits displayed  [ ] Mobile responsive
+Phase 3 – AI Answerer & Commitment Verification
+* Deliverables: TEE integration for commitment and guess verdict signing, prompt injection sanitization wrapper, structured AI record generator, and post-round reveal logic.
+* Acceptance Checklist: [ ] Secret hidden in TEE  [ ] Anti-prompt-injection active  [ ] TEE signature verified on-chain  [ ] Rollover/reveal E2E tested
+Phase 4 – Polish, Agent Integration & Demo
+* Deliverables: Agent entry point endpoint, progressive/seeded pot mechanics, clean UI, and judge-friendly README with step-by-step instructions.
+* Acceptance Checklist: [ ] External agents can join/ask  [ ] README steps verified  [ ] Demo video recorded  [ ] UI styled and clean
+Phase 5 – Final Hardening & Submission
+* Deliverables: Emergency pause testing, testnet flow confirmation, submission post, and public repo freeze.
+* Acceptance Checklist: [ ] Pause function verified  [ ] Edge test cases pass  [ ] Hackathon form submitted
+6. Practical Tips & Resources for Builders
+Required NEAR Agent Skills
+Install the required skill modules using: 
+npx skills add near/agent-skills
+
+Skill / Tool
+	Purpose & Links
+	`near-smart-contracts`
+	Rust contract architecture, state management, and unit testing.
+	`near-dapp` & `near-api-js`
+	Full-stack frontend integration and JS/TS wallet interaction.
+	`near-intents`
+	Cross-chain deposits and multi-chain user onboarding (docs.near-intents.org/llms.txt).
+	`near-ai-cloud`
+	Private AI inference for secure TEE secret verification.
+	LLM Documentation
+	Provide LLM context using docs.near.org/llms.txt.
+	Builder Execution Rules
+* Focus on one deliverable per phase and wait for verification before proceeding.
+* Keep smart contracts contained within a single file where possible to prevent drifting.
+* Develop on NEAR testnet exclusively until final deployment.
+* Store all secrets and key pairs strictly in `.env` files (never commit to git).
+Maintain a README written for AI judges with explicit "Do X → See Y" verification steps from Day 1.
+7. Complete 10-Category Build Tracker
+Category
+	Description & Key Focus Areas
+	Status
+	1. Smart Contract Interface
+	Rust contract endpoints (`create_round`, `join`, `submit_guess`, `claim`), TEE signature validation, and 4% rake collection.
+	In Progress
+	2. TEE & Secret Verification
+	NEAR AI Cloud TEE setup, commitment hash generation, salt storage, and cryptographic verdict signing.
+	In Progress
+	3. AI Answerer & Guardrails
+	Prompt injection wrappers, structured Yes/No/Unclear output parsing, and context constraint enforcement.
+	Planned
+	4. Game Mechanics & Rules
+	64-candidate secret board, 20-question round limits, 3 guesses per entry fee quota, and rollover logic.
+	Complete
+	5. Agent Skills & Integration
+	`near/agent-skills` integration, HTTP/MCP agent endpoints, and pre-funded contract deposit allowances.
+	In Progress
+	6. Frontend UI/UX
+	Next.js dashboard, live pot display, countdown timer, question history feed, and guess submission interface.
+	In Progress
+	7. Wallet Integration
+	NEAR Wallet Selector SDK setup, transaction signing flow, and balance management.
+	Planned
+	8. Security & Risk Mitigation
+	Emergency pause functions, input sanitization, brute-force rate limits, and audit logs.
+	Planned
+	9. Testing & Testnet Flow
+	Unit tests, end-to-end integration testnet simulation, edge case handling, and rollover tests.
+	Planned
+	10. Documentation & Demo
+	Judge-ready README with step-by-step validation guide, video walkthrough, and public submission.
+	Planned
