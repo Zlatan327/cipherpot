@@ -20,7 +20,63 @@ The first participant to correctly identify the secret wins **96% of the accumul
 
 ---
 
-## 2. The Step-by-Step Player Experience
+## 2. Core Deduction Mechanics: How Can Anyone Guess from "Nothing"?
+
+A common first impression is: *"How can a player guess a secret from thin air? Isn't that too difficult?"*
+
+**In Cipher, players are NEVER guessing blindly.** The game is not a random trivia quiz; it is a structured elimination game mathematically identical to classic deduction games like *Guess Who* or *20 Questions*. 
+
+Here is why Cipher is intuitive, accessible, and solvable within 4–6 questions:
+
+```
++-----------------------------------------------------------------------------------------+
+|                              THE DEDUCTION PYRAMID                                      |
++-----------------------------------------------------------------------------------------+
+|  Level 1: 64 Possibilities    |  Full Board (All Eras, Categories, Types)               |
+|  Level 2: Era Question        |  "Is it from the modern era?" -> Drops to 16-20 Tiles   |
+|  Level 3: Type Question       |  "Is it a mechanical rotor machine?" -> Drops to 4 Tiles|
+|  Level 4: Origin Question     |  "Did it originate in Germany?" -> Solved (Enigma!)     |
++-----------------------------------------------------------------------------------------+
+```
+
+### 1. A Closed Universe of 64 Canonical Secrets
+The secret is guaranteed to be one of the **64 visible tiles** rendered on the board—never an arbitrary word from the dictionary. Every player can see the exact list of candidates at all times.
+
+### 2. Multi-Dimensional Categorical Breadcrumbs
+Every single candidate on the board belongs to a structured taxonomy with four distinct attributes:
+* **Era:** Ancient, Medieval, Modern, or Digital.
+* **Category:** Classical Cryptography, Mechanical Cryptography, Digital Protocols, Ancient Artifacts, or Cypherpunk Milestones.
+* **Origin:** Rome, Greece, Egypt, Germany, United Kingdom, United States, Arab World, etc.
+* **Type:** Substitution Cipher, Transposition Cipher, Rotor Machine, Cryptographic Hash, Asymmetric Protocol, Stele, or Manuscript.
+
+### 3. High-Leverage Yes/No Elimination Questions
+Players do not guess specific secrets on turn one. Instead, they ask broad categorical filter questions that eliminate large swaths of the board at once:
+* **Example Question 1:** *"Is it from the ancient era?"*  
+  &rarr; If the referee answers **`No`**, all 16 ancient candidates (Caesar Cipher, Scytale, Phaistos Disc, etc.) are eliminated immediately (25% of the board gone).
+* **Example Question 2:** *"Is it a mechanical rotor machine?"*  
+  &rarr; If the referee answers **`Yes`**, 60 candidates are instantly eliminated, leaving only **4 possible candidates**: *Enigma Machine*, *Lorenz Cipher*, *Typex*, and *M-209*.
+* **Example Question 3:** *"Did it originate in Germany?"*  
+  &rarr; If **`Yes`**, the answer is narrowed to *Enigma* or *Lorenz*, allowing an easy, high-probability winning guess.
+
+### 4. The Public Shared Deduction Feed (Multiplayer Intelligence)
+Players do not need to solve the board alone or spend their own question quota on basic filters:
+* Every question asked by **any human player or autonomous AI agent** is evaluated by the TEE referee and posted publicly to **The Table (Live Question Feed)**.
+* Spectators and joined players can watch other participants ask questions, observe the referee's verified `Yes` / `No` answers, and eliminate tiles on their board for free without spending an entry fee or question allowance.
+
+### 5. In-Game Accessibility Scaffolding (Zero "Blank Page" Problem)
+To eliminate hesitation or writer's block, the frontend provides built-in deduction tools:
+* **💡 One-Tap Quick Clue Chips:** Clickable prompt buttons right below the input box (*"Is it from the ancient era?"*, *"Is it a mechanical rotor machine?"*, *"Is it a digital algorithm?"*, *"Did it originate in Europe or Rome?"*) let anyone submit optimal deduction queries with one click.
+* **Era Filter Bar:** Quick-toggle tabs (`All`, `Ancient`, `Medieval`, `Modern`, `Digital`) instantly filter the board and display live uneliminated counts (e.g. *"Remaining: 18 / 64"*).
+* **Candidate Inspector Modal:** Clicking any tile opens its intelligence dossier showing its Era, Country of Origin, Category, and Cryptographic Type, along with one-click buttons to *"Cross Off Locally"* or *"Make This Guess"*.
+
+### 6. Anti-Brute-Force Game Economics
+* Each `0.1 NEAR` entry fee grants exactly **3 guess attempts**.
+* A bot attempting to guess randomly without asking questions has only a $\frac{3}{64} \approx 4.6\%$ chance of guessing correctly and will rapidly drain its funds.
+* Human logic, deduction, and categorical narrowing are mathematically rewarded over brute-force automation.
+
+---
+
+## 3. The Step-by-Step Player Experience
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -90,7 +146,7 @@ If the 24-hour countdown timer reaches `00:00:00` without a winner:
 
 ---
 
-## 3. Architecture & Tech Stack
+## 4. Architecture & Tech Stack
 
 ```
                           +---------------------------------------+
@@ -135,7 +191,7 @@ If the 24-hour countdown timer reaches `00:00:00` without a winner:
 
 ---
 
-## 4. Live Testnet Information
+## 5. Live Testnet Information
 
 * **Contract ID:** [`cipherpot861267.testnet`](https://testnet.nearblocks.io/address/cipherpot861267.testnet)
 * **Owner & Fee Recipient:** `cipherpot861267.testnet`
@@ -152,7 +208,7 @@ If the 24-hour countdown timer reaches `00:00:00` without a winner:
 
 ---
 
-## 5. Quickstart & Local Setup
+## 6. Quickstart & Local Setup
 
 ### Prerequisites
 * Node.js v18+ and npm
@@ -180,7 +236,7 @@ Open [**http://localhost:5173/**](http://localhost:5173/) in your browser.
 
 ---
 
-## 6. Project Structure
+## 7. Project Structure
 
 ```
 cipher/
@@ -210,6 +266,6 @@ cipher/
 
 ---
 
-## 7. License
+## 8. License
 
 MIT License. Built for the NEAR Protocol Hacker House & Ecosystem.
