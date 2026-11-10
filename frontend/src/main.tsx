@@ -66,6 +66,8 @@ function App() {
   const [notice, setNotice] = useState<string>('');
   const [question, setQuestion] = useState<string>('');
   const [submittingQuestion, setSubmittingQuestion] = useState(false);
+  const [eraFilter, setEraFilter] = useState<string>('All');
+  const [inspectingCandidate, setInspectingCandidate] = useState<Candidate | null>(null);
 
   // Guess Dialog State
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -462,23 +464,49 @@ function App() {
               <span className="board-count">64 <span>candidates</span></span>
             </div>
             <p className="section-intro">
-              Tap a tile to cross it off locally, or click to guess. Target entity is committed on-chain.
+              Click any tile to inspect clues and guess. Right-click to cross off locally.
             </p>
+
+            <div className="board-filters">
+              <div className="filter-pills">
+                {['All', 'Ancient', 'Medieval', 'Modern', 'Digital'].map((era) => {
+                  const count = era === 'All'
+                    ? (candidates.length || 64)
+                    : candidates.filter((c) => c.era.toLowerCase() === era.toLowerCase()).length;
+                  return (
+                    <button
+                      key={era}
+                      className={`filter-pill ${eraFilter === era ? 'active' : ''}`}
+                      onClick={() => setEraFilter(era)}
+                    >
+                      {era} <small>({count})</small>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="uneliminated-count">
+                Remaining: <b>{Math.max(0, (candidates.length || 64) - crossed.length)}</b> / {candidates.length || 64}
+              </div>
+            </div>
+
             <div className="board-grid">
               {Array.from({ length: 64 }, (_, i) => {
                 const candId = i + 1;
                 const cand = candidates.find((c) => c.id === candId);
                 const isCrossed = crossed.includes(candId);
+                const isMatchingFilter = eraFilter === 'All' || cand?.era.toLowerCase() === eraFilter.toLowerCase();
+
                 return (
                   <button
                     key={candId}
-                    onClick={() => handleSelectCandidateForGuess(cand || { id: candId, name: `Candidate ${candId}`, category: '', era: '', origin: '', type: '' })}
+                    onClick={() => setInspectingCandidate(cand || { id: candId, name: `Candidate ${candId}`, category: '', era: '', origin: '', type: '' })}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       toggleCross(candId);
                     }}
                     className={`candidate ${isCrossed ? 'crossed' : ''}`}
-                    title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Right-click to cross off.` : `Candidate ${candId}`}
+                    style={{ opacity: isMatchingFilter ? (isCrossed ? 0.32 : 1) : 0.18 }}
+                    title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Click to inspect.` : `Candidate ${candId}`}
                     aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
                   >
                     <div className="candidate-top">
@@ -492,7 +520,7 @@ function App() {
               })}
             </div>
             <div className="board-footer">
-              <span><span className="legend-dot" /> CANONICAL 64-SECRETS ACTIVE (Right-click tile to cross off)</span>
+              <span><span className="legend-dot" /> CANONICAL 64-SECRETS ACTIVE (Click tile to inspect & guess)</span>
               <button onClick={() => setCrossed([])}>Clear cross-offs</button>
             </div>
           </section>
@@ -539,6 +567,31 @@ function App() {
                 <MessageSquareText size={15} />
                 {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
               </button>
+
+              <div className="suggested-prompts">
+                <span className="suggested-label">💡 QUICK CLUES (TAP TO ASK)</span>
+                <div className="prompt-chips">
+                  {[
+                    'Is it from the ancient era?',
+                    'Is it a mechanical rotor machine?',
+                    'Is it a digital algorithm or protocol?',
+                    'Did it originate in Europe or Rome?',
+                    'Is it an asymmetric / public-key system?',
+                    'Is it a substitution cipher?',
+                  ].map((promptText) => (
+                    <button
+                      key={promptText}
+                      type="button"
+                      className="chip-btn"
+                      disabled={!isJoined || isSettled || submittingQuestion}
+                      onClick={() => setQuestion(promptText)}
+                    >
+                      {promptText}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="locked-note">
                 <LockKeyhole size={12} />
                 {isSpectator ? 'Connect a wallet and join to unlock' : 'Protected by Anti-Prompt-Injection Enclave'}
@@ -618,6 +671,94 @@ function App() {
             </section>
           </aside>
         </div>
+
+        {/* Candidate Detail Inspector Modal */}
+        {inspectingCandidate && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 999,
+            }}
+          >
+            <div
+              style={{
+                background: '#151815',
+                border: '1px solid #2e3830',
+                borderRadius: '12px',
+                padding: '24px',
+                maxWidth: '460px',
+                width: '92%',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <span style={{ font: '10px var(--mono)', color: '#86efac', background: '#1c291d', padding: '3px 8px', borderRadius: '4px' }}>
+                  CANDIDATE #{inspectingCandidate.id}
+                </span>
+                <button
+                  onClick={() => setInspectingCandidate(null)}
+                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px' }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <h2 style={{ fontSize: '20px', color: '#fff', margin: '0 0 10px 0', fontFamily: 'var(--head)' }}>
+                {inspectingCandidate.name}
+              </h2>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '18px', background: '#191f1a', padding: '12px', borderRadius: '8px' }}>
+                <div>
+                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Historical Era</small>
+                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.era || 'Unknown'}</strong>
+                </div>
+                <div>
+                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Origin</small>
+                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.origin || 'Unknown'}</strong>
+                </div>
+                <div>
+                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Category</small>
+                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.category || 'Cryptography'}</strong>
+                </div>
+                <div>
+                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Type</small>
+                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.type || 'Standard'}</strong>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button
+                  className="button"
+                  style={{ background: '#222822', color: crossed.includes(inspectingCandidate.id) ? '#4ade80' : '#f87171' }}
+                  onClick={() => {
+                    toggleCross(inspectingCandidate.id);
+                    setInspectingCandidate(null);
+                  }}
+                >
+                  {crossed.includes(inspectingCandidate.id) ? '✓ Uncross Tile' : '✕ Cross Off Locally'}
+                </button>
+
+                <button
+                  className="button button-primary"
+                  onClick={() => {
+                    const c = inspectingCandidate;
+                    setInspectingCandidate(null);
+                    handleSelectCandidateForGuess(c);
+                  }}
+                >
+                  🎯 Make This Guess
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Candidate Guess Confirmation Modal */}
         {selectedCandidate && (
