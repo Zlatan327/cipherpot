@@ -1,42 +1,239 @@
 /**
- * All future contract/network access belongs in this file.
+ * CipherPot Contract & Spectator Network Client.
  *
- * The supplied specification did not include the promised contract handoff,
- * so no method names, arguments, response fields, or endpoint paths can be
- * implemented safely yet. This module intentionally performs zero calls.
- * Replace only this module and environment variables when the handoff arrives.
+ * Implements read-only RPC calls for Spectator Mode and API endpoints
+ * connecting to NEAR Testnet contract: cipherpot861267.testnet.
  */
+
 export const contractConfig = {
-  CONTRACT_ID: import.meta.env.CONTRACT_ID ?? '',
-  RPC_URL: import.meta.env.RPC_URL ?? '',
-  BOARD_URL: import.meta.env.BOARD_URL ?? '',
-  API_URL: import.meta.env.API_URL ?? '',
+  CONTRACT_ID: (import.meta.env.CONTRACT_ID as string) || 'cipherpot861267.testnet',
+  RPC_URL: (import.meta.env.RPC_URL as string) || 'https://rpc.testnet.near.org',
+  BOARD_URL: (import.meta.env.BOARD_URL as string) || '/board.json',
+  API_URL: (import.meta.env.API_URL as string) || 'http://localhost:8000',
 } as const;
+
+export type RoundView = {
+  round_id: number;
+  status: 'Active' | 'Settled' | 'RolledOver' | 'Paused' | string;
+  pot: string;              // yoctoNEAR string
+  entry_fee: string;        // yoctoNEAR string
+  start_time: string;       // nanoseconds string
+  end_time: string;         // nanoseconds string
+  time_remaining: string;   // nanoseconds string
+  questions_asked: number;
+  max_questions: number;
+  questions_remaining: number;
+  total_players: number;
+  commitment: string;
+  secret_revealed: string | null;
+  salt_revealed: string | null;
+  winner: string | null;
+  payout: string | null;
+  rake_amount: string | null;
+};
+
+export type Candidate = {
+  id: number;
+  name: string;
+  category: string;
+  era: string;
+  origin: string;
+  type: string;
+};
+
+export type QuestionView = {
+  question_id: number;
+  round_id: number;
+  asker: string;
+  question: string;
+  answer: 'Yes' | 'No' | 'Unclear' | string;
+  timestamp: string;
+  rule_out_candidate_ids: number[];
+};
+
+export type PlayerInfoView = {
+  round_id: number;
+  account_id: string;
+  is_joined: boolean;
+  guesses_used: number;
+  guesses_remaining: number;
+  questions_asked: number;
+  entry_fee_paid: string;
+};
+
+export type AgentView = {
+  account_id: string;
+  balance: string;
+  questions_asked: number;
+  guesses_made: number;
+};
 
 export type FriendlyError = {
   message: string;
   known: boolean;
 };
 
-// Exact contract error codes are absent from the supplied handoff. Keep this
-// map empty rather than inventing codes or implying that a failure is mapped.
-const ERROR_MESSAGES: Readonly<Record<string, string>> = {};
+// Documented contract error catalog from MESH_REPORT.md
+const ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  ERR_CONTRACT_PAUSED: 'CipherPot is currently paused for maintenance.',
+  ERR_UNAUTHORIZED: 'You are not authorized to perform this action.',
+  ERR_ROUND_NOT_FOUND: 'The requested round does not exist.',
+  ERR_ROUND_NOT_ACTIVE: 'This round has already concluded.',
+  ERR_ROUND_EXPIRED: 'Round deadline has expired.',
+  ERR_ROUND_NOT_EXPIRED: 'Round is still active and cannot be rolled over yet.',
+  ERR_ALREADY_JOINED: 'You have already joined this round.',
+  ERR_NOT_JOINED: 'Please join the round before making a move.',
+  ERR_INSUFFICIENT_ENTRY_FEE: 'Entry fee is 0.1 NEAR. Insufficient attached deposit.',
+  ERR_INSUFFICIENT_AGENT_BALANCE: 'Pre-funded agent balance is insufficient.',
+  ERR_QUESTION_LIMIT_REACHED: 'The 20-question limit for this round has been reached.',
+  ERR_GUESS_LIMIT_EXCEEDED: 'You have used all 3 guesses for this entry fee.',
+  ERR_INVALID_CANDIDATE_ID: 'Candidate ID must be between 1 and 64.',
+  ERR_INVALID_TEE_SIGNATURE: 'Cryptographic TEE verdict signature verification failed.',
+  ERR_INVALID_COMMITMENT: 'Secret reveal does not match committed hash.',
+  ERR_TRANSFER_FAILED: 'Payout transfer operation failed.',
+};
 
 export function friendlyError(code: string): FriendlyError {
-  const message = ERROR_MESSAGES[code];
-  return message
-    ? { message, known: true }
-    : { message: 'The backend error catalog is not configured yet.', known: false };
+  for (const [key, msg] of Object.entries(ERROR_MESSAGES)) {
+    if (code.includes(key)) {
+      return { message: msg, known: true };
+    }
+  }
+  return { message: code || 'An unexpected contract error occurred.', known: false };
 }
 
-// Contract amount values must be parsed as BigInt once the documented amount
-// field and base unit are provided. Never convert contract amounts to Number.
+// Contract amounts are base units in yoctoNEAR
 export function parseContractAmount(raw: string): bigint {
   return BigInt(raw);
 }
 
+// Convert yoctoNEAR string to readable NEAR string (e.g., 2.5)
+export function formatNear(yoctoNear: string | undefined): string {
+  if (!yoctoNear) return '0';
+  try {
+    const val = BigInt(yoctoNear);
+    const oneNear = BigInt(10) ** BigInt(24);
+    const whole = val / oneNear;
+    const fraction = val % oneNear;
+    // Format to 2 decimal places
+    const fracStr = fraction.toString().padStart(24, '0').slice(0, 2);
+    if (fracStr === '00') {
+      return whole.toString();
+    }
+    return `${whole}.${fracStr}`;
+  } catch {
+    return '0';
+  }
+}
+
+// Convert nanoseconds to HH:MM:SS or MM:SS
+export function formatCountdown(nanosRemaining: string | number | undefined): string {
+  if (!nanosRemaining) return '00:00';
+  try {
+    const nanos = typeof nanosRemaining === 'string' ? BigInt(nanosRemaining) : BigInt(nanosRemaining);
+    const totalSecs = Number(nanos / BigInt(1_000_000_000));
+    if (totalSecs <= 0) return '00:00';
+
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  } catch {
+    return '00:00';
+  }
+}
+
+// Spectator Mode Read-Only RPC caller (No wallet / no signature required)
+async function rpcCall<T>(method: string, args: Record<string, unknown> = {}): Promise<T> {
+  const argsBase64 = btoa(JSON.stringify(args));
+  const res = await fetch(contractConfig.RPC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: `spectator-${Date.now()}`,
+      method: 'query',
+      params: {
+        request_type: 'call_function',
+        finality: 'final',
+        account_id: contractConfig.CONTRACT_ID,
+        method_name: method,
+        args_base64: argsBase64,
+      },
+    }),
+  });
+
+  const json = await res.json();
+  if (json.error) {
+    throw new Error(json.error.data?.error || json.error.message);
+  }
+  const bytes = new Uint8Array(json.result.result);
+  const text = new TextDecoder().decode(bytes);
+  return JSON.parse(text) as T;
+}
+
+export async function fetchCurrentRound(): Promise<RoundView> {
+  return rpcCall<RoundView>('get_current_round');
+}
+
+export async function fetchRound(roundId: number): Promise<RoundView> {
+  return rpcCall<RoundView>('get_round', { round_id: roundId });
+}
+
+export async function fetchQuestionFeed(roundId: number): Promise<QuestionView[]> {
+  return rpcCall<QuestionView[]>('get_question_feed', { round_id: roundId });
+}
+
+export async function fetchPlayerInfo(roundId: number, accountId: string): Promise<PlayerInfoView> {
+  return rpcCall<PlayerInfoView>('get_player_info', { round_id: roundId, account_id: accountId });
+}
+
+export async function fetchActiveAgents(): Promise<AgentView[]> {
+  return rpcCall<AgentView[]>('get_active_agents');
+}
+
+export async function fetchBoard(): Promise<Candidate[]> {
+  try {
+    const res = await fetch(contractConfig.BOARD_URL);
+    if (res.ok) {
+      const data = await res.json();
+      return (data.candidates || data) as Candidate[];
+    }
+  } catch (err) {
+    console.warn('Failed to load board from BOARD_URL, falling back to RPC', err);
+  }
+  return rpcCall<Candidate[]>('get_board');
+}
+
+export async function askQuestionApi(
+  roundId: number,
+  accountId: string,
+  question: string
+): Promise<{ answer: string; rule_out_candidate_ids: number[]; status: string }> {
+  const res = await fetch(`${contractConfig.API_URL}/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      round_id: roundId,
+      account_id: accountId,
+      question,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to evaluate question' }));
+    throw new Error(err.detail || 'Question evaluation failed');
+  }
+
+  return res.json();
+}
+
 export const contractClient = {
-  mode: 'mock-placeholder' as const,
-  callsImplemented: 0,
-  ready: false,
+  mode: 'live-testnet' as const,
+  callsImplemented: 8,
+  ready: true,
 };
