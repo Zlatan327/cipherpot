@@ -324,9 +324,9 @@ function App() {
       )}
 
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="CipherPot home">
+        <a className="brand" href="#top" aria-label="Cipher home">
           <span className="brand-mark"><span /></span>
-          <span>CIPHER<span className="brand-light">POT</span></span>
+          <span>CIPHER</span>
         </a>
         <nav className="main-nav">
           <a className="active" href="#round">The round</a>
@@ -391,7 +391,7 @@ function App() {
               <span><Clock3 size={13} /> <b>{timerDisplay}</b></span>
             </div>
           </div>
-          <div className="hero-watermark">CP</div>
+          <div className="hero-watermark">C</div>
         </section>
 
         <section className="round-strip" aria-label="Round status">
@@ -481,9 +481,12 @@ function App() {
                     title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Right-click to cross off.` : `Candidate ${candId}`}
                     aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
                   >
-                    <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
+                    <div className="candidate-top">
+                      <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
+                      {cand?.era && <span className="candidate-tag">{cand.era}</span>}
+                      {isCrossed && <span className="cross-mark"><X size={11} /></span>}
+                    </div>
                     <span className="candidate-name">{cand ? cand.name : `Candidate ${candId}`}</span>
-                    {isCrossed && <span className="cross-mark"><X size={13} /></span>}
                   </button>
                 );
               })}
@@ -718,7 +721,7 @@ function App() {
         <footer id="fairness">
           <div className="brand footer-brand">
             <span className="brand-mark"><span /></span>
-            <span>CIPHER<span className="brand-light">POT</span></span>
+            <span>CIPHER</span>
           </div>
           <p>Deduction, not luck. <span>Built on NEAR Protocol & TEE Enclaves.</span></p>
           <a
