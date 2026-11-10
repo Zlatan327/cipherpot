@@ -1,65 +1,88 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, ArrowDownRight, ArrowUpRight, Check, ChevronDown, CircleHelp, Clock3, Coins, Eye, Flame, LockKeyhole, MessageSquareText, ShieldCheck, Sparkles, Wallet, X } from 'lucide-react';
 import {
-  contractClient,
+  Activity,
+  ArrowDownRight,
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  CircleHelp,
+  Clock3,
+  Coins,
+  Eye,
+  Flame,
+  LockKeyhole,
+  MessageSquareText,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+  X,
+  Send,
+} from 'lucide-react';
+import {
   contractConfig,
   fetchCurrentRound,
   fetchBoard,
   fetchQuestionFeed,
+  fetchPlayerInfo,
   fetchActiveAgents,
   askQuestionApi,
   formatNear,
   formatCountdown,
+  friendlyError,
 } from './contractClient';
 import type {
   RoundView,
   Candidate,
   QuestionView,
+  PlayerInfoView,
   AgentView,
 } from './contractClient';
+import {
+  initWalletSelector,
+  openWalletModal,
+  signOutWallet,
+  joinRound,
+  submitQuestionOnChain,
+  submitGuessOnChain,
+  claimPotOnChain,
+} from './wallet';
 import './style.css';
 
-type ViewState = 'spectator' | 'connected' | 'joined' | 'won' | 'lost' | 'refunding';
-const scenarios: { id: ViewState; label: string }[] = [
-  { id: 'spectator', label: 'Spectator · not connected (Live)' },
-  { id: 'connected', label: 'Connected · not joined' },
-  { id: 'joined', label: 'Joined · ready to play' },
-  { id: 'won', label: 'Round ended · won' },
-  { id: 'lost', label: 'Round ended · lost' },
-  { id: 'refunding', label: 'Round ended · refunding / rollover' },
-];
-
 function App() {
-  const [state, setState] = useState<ViewState>('spectator');
-  const [crossed, setCrossed] = useState<number[]>([]);
-  const [notice, setNotice] = useState('');
-  const [question, setQuestion] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  // Real Account & Wallet State
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const isSpectator = !accountId;
 
-  // Live contract & spectator state
+  // Real On-Chain Game Data
   const [round, setRound] = useState<RoundView | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [feed, setFeed] = useState<QuestionView[]>([]);
+  const [playerInfo, setPlayerInfo] = useState<PlayerInfoView | null>(null);
   const [agents, setAgents] = useState<AgentView[]>([]);
 
-  const isSpectator = state === 'spectator';
-  const isJoined = state === 'joined';
-  const ended = ['won', 'lost', 'refunding'].includes(state);
+  // User Local Cross-offs & Form State
+  const [crossed, setCrossed] = useState<number[]>([]);
+  const [notice, setNotice] = useState<string>('');
+  const [question, setQuestion] = useState<string>('');
+  const [submittingQuestion, setSubmittingQuestion] = useState(false);
 
-  const statusText = useMemo(() => {
-    if (state === 'spectator') return 'SPECTATOR MODE (LIVE)';
-    if (state === 'connected') return 'WALLET CONNECTED';
-    if (state === 'joined') return 'YOU’RE IN';
-    if (state === 'won') return 'ROUND SETTLED · WON';
-    if (state === 'lost') return 'ROUND SETTLED · LOST';
-    return 'ROUND SETTLED';
-  }, [state]);
+  // Guess Dialog State
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [submittingGuess, setSubmittingGuess] = useState(false);
 
-  // Initial Spectator fetch from NEAR Testnet RPC & Board API
+  // Initialize Wallet Selector on load
+  useEffect(() => {
+    initWalletSelector((accId) => {
+      setAccountId(accId);
+    }).catch((err) => console.warn('Wallet selector init warning:', err));
+  }, []);
+
+  // Fetch Live On-Chain Data (Spectator Mode & Player Mode)
   useEffect(() => {
     let isMounted = true;
-    async function loadLiveData() {
+
+    async function loadData() {
       try {
         const [roundData, boardData, agentData] = await Promise.allSettled([
           fetchCurrentRound(),
@@ -70,13 +93,26 @@ function App() {
         if (!isMounted) return;
 
         if (roundData.status === 'fulfilled' && roundData.value) {
-          setRound(roundData.value);
-          // Load question feed for active round
-          fetchQuestionFeed(roundData.value.round_id)
+          const r = roundData.value;
+          setRound(r);
+
+          // Fetch Question feed
+          fetchQuestionFeed(r.round_id)
             .then((f) => {
               if (isMounted) setFeed(f);
             })
-            .catch((e) => console.warn('Could not load feed:', e));
+            .catch((e) => console.warn('Feed fetch error:', e));
+
+          // If wallet connected, fetch player status on-chain
+          if (accountId) {
+            fetchPlayerInfo(r.round_id, accountId)
+              .then((p) => {
+                if (isMounted) setPlayerInfo(p);
+              })
+              .catch((e) => console.warn('Player info fetch error:', e));
+          } else {
+            setPlayerInfo(null);
+          }
         }
 
         if (boardData.status === 'fulfilled' && boardData.value) {
@@ -87,61 +123,168 @@ function App() {
           setAgents(agentData.value);
         }
       } catch (err) {
-        console.warn('Error loading spectator data:', err);
+        console.warn('Live RPC fetch error:', err);
       }
     }
 
-    loadLiveData();
-    const interval = setInterval(loadLiveData, 30_000); // 30s spectator poll
+    loadData();
+    const timer = setInterval(loadData, 15_000); // 15s live refresh
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      clearInterval(timer);
     };
-  }, []);
+  }, [accountId]);
 
-  const lockedAction = (label: string) => {
-    if (isSpectator) {
-      setNotice(`Connect a NEAR wallet to ${label.toLowerCase()}. Supporting MyNearWallet, Meteor & Sender on Testnet.`);
-    } else {
-      setNotice(`Submitting ${label.toLowerCase()} on NEAR Testnet (${contractConfig.CONTRACT_ID}).`);
+  const isJoined = Boolean(playerInfo?.is_joined);
+  const isSettled = round?.status === 'Settled';
+  const isRolledOver = round?.status === 'RolledOver';
+
+  const statusText = useMemo(() => {
+    if (isSettled) return 'ROUND SETTLED';
+    if (isRolledOver) return 'ROUND ROLLED OVER';
+    if (isJoined) return 'YOU’RE IN (PLAYING)';
+    if (accountId) return 'WALLET CONNECTED';
+    return 'SPECTATOR MODE (LIVE)';
+  }, [isSettled, isRolledOver, isJoined, accountId]);
+
+  // Handle Joining Round on Testnet
+  const handleJoinRound = async () => {
+    if (!accountId) {
+      openWalletModal();
+      return;
+    }
+    if (!round) return;
+
+    try {
+      setNotice('Initiating Join Round transaction on NEAR Testnet (0.1 NEAR)...');
+      await joinRound(round.round_id, round.entry_fee || '100000000000000000000000');
+      setNotice('Join successful! Question and guess quotas unlocked.');
+      // Refresh player info
+      const p = await fetchPlayerInfo(round.round_id, accountId);
+      setPlayerInfo(p);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setNotice(`Join error: ${friendlyError(msg).message}`);
+    }
+  };
+
+  // Handle Question Submission via AI Referee & Smart Contract
+  const handleAskQuestion = async () => {
+    if (!question.trim() || submittingQuestion || !round || !accountId) return;
+    setSubmittingQuestion(true);
+    setNotice('');
+
+    try {
+      // 1. Evaluate with TEE AI Enclave (anti-prompt-injection & structured referee)
+      setNotice('Evaluating question with TEE AI Enclave...');
+      const evalResult = await askQuestionApi(round.round_id, accountId, question.trim());
+
+      // 2. Submit structured answer & rule-outs to NEAR contract
+      setNotice('Recording question & structured verdict on NEAR Testnet...');
+      await submitQuestionOnChain(
+        round.round_id,
+        question.trim(),
+        evalResult.answer,
+        evalResult.rule_out_candidate_ids || []
+      );
+
+      // 3. Update local feed & crossed tiles
+      const newEntry: QuestionView = {
+        question_id: feed.length + 1,
+        round_id: round.round_id,
+        asker: accountId,
+        question: question.trim(),
+        answer: evalResult.answer,
+        timestamp: String(Date.now() * 1_000_000),
+        rule_out_candidate_ids: evalResult.rule_out_candidate_ids || [],
+      };
+      setFeed((prev) => [newEntry, ...prev]);
+
+      if (evalResult.rule_out_candidate_ids?.length) {
+        setCrossed((prev) => Array.from(new Set([...prev, ...evalResult.rule_out_candidate_ids])));
+      }
+
+      setQuestion('');
+      setNotice(`AI Enclave Verdict: "${evalResult.answer}". Ruled out ${evalResult.rule_out_candidate_ids?.length || 0} candidates.`);
+
+      // Refresh player quota
+      const p = await fetchPlayerInfo(round.round_id, accountId);
+      setPlayerInfo(p);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setNotice(`Question failed: ${friendlyError(msg).message}`);
+    } finally {
+      setSubmittingQuestion(false);
+    }
+  };
+
+  // Handle Guess Submission & Claim Flow
+  const handleSelectCandidateForGuess = (cand: Candidate) => {
+    if (!isJoined) {
+      if (!accountId) openWalletModal();
+      else setNotice('You must join the round with 0.1 NEAR entry fee before making a guess.');
+      return;
+    }
+    setSelectedCandidate(cand);
+  };
+
+  const handleConfirmGuess = async () => {
+    if (!selectedCandidate || !round || !accountId || submittingGuess) return;
+    setSubmittingGuess(true);
+    setNotice('');
+
+    try {
+      // 1. Record guess attempt on-chain
+      setNotice(`Submitting guess for "${selectedCandidate.name}" on NEAR Testnet...`);
+      await submitGuessOnChain(round.round_id, selectedCandidate.id, selectedCandidate.name);
+
+      // 2. Request TEE Enclave verification
+      setNotice('Verifying secret with TEE Cryptographic Signer...');
+      const verifyRes = await fetch(`${contractConfig.API_URL}/tee/verify-guess`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          round_id: round.round_id,
+          candidate_id: selectedCandidate.id,
+          candidate_name: selectedCandidate.name,
+          account_id: accountId,
+        }),
+      }).then((r) => r.json());
+
+      if (verifyRes.is_correct) {
+        setNotice('GUESS IS CORRECT! Claiming pot with TEE signature...');
+        await claimPotOnChain(
+          round.round_id,
+          selectedCandidate.id,
+          selectedCandidate.name,
+          verifyRes.salt,
+          verifyRes.signature_hex
+        );
+        setNotice(`Congratulations! You solved Round #${round.round_id}! 96% pot payout transferred to ${accountId}.`);
+        setSelectedCandidate(null);
+        // Refresh round
+        const r = await fetchCurrentRound();
+        setRound(r);
+      } else {
+        setNotice(`Incorrect guess: "${selectedCandidate.name}". 1 guess quota consumed.`);
+        // Cross off candidate locally
+        setCrossed((prev) => Array.from(new Set([...prev, selectedCandidate.id])));
+        setSelectedCandidate(null);
+        const p = await fetchPlayerInfo(round.round_id, accountId);
+        setPlayerInfo(p);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setNotice(`Guess error: ${friendlyError(msg).message}`);
+    } finally {
+      setSubmittingGuess(false);
     }
   };
 
   const toggleCross = (candidateId: number) => {
-    setCrossed((existing) =>
-      existing.includes(candidateId) ? existing.filter((i) => i !== candidateId) : [...existing, candidateId]
+    setCrossed((prev) =>
+      prev.includes(candidateId) ? prev.filter((i) => i !== candidateId) : [...prev, candidateId]
     );
-  };
-
-  const handleAskQuestion = async () => {
-    if (!question.trim() || submitting || !round) return;
-    setSubmitting(true);
-    setNotice('');
-
-    try {
-      const res = await askQuestionApi(round.round_id, 'player.testnet', question.trim());
-      const newEntry: QuestionView = {
-        question_id: feed.length + 1,
-        round_id: round.round_id,
-        asker: 'player.testnet',
-        question: question.trim(),
-        answer: res.answer,
-        timestamp: String(Date.now() * 1_000_000),
-        rule_out_candidate_ids: res.rule_out_candidate_ids || [],
-      };
-
-      setFeed((prev) => [newEntry, ...prev]);
-      if (res.rule_out_candidate_ids?.length) {
-        setCrossed((prev) => Array.from(new Set([...prev, ...res.rule_out_candidate_ids])));
-      }
-      setQuestion('');
-      setNotice(`AI Referee response: "${res.answer}". Candidate rule-outs updated.`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setNotice(`Error asking question: ${msg}`);
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const potDisplay = useMemo(() => {
@@ -159,18 +302,24 @@ function App() {
     return '20 / 20';
   }, [round]);
 
+  const guessesRemainingDisplay = useMemo(() => {
+    if (!isJoined) return '—';
+    if (playerInfo) return `${playerInfo.guesses_remaining} / 3`;
+    return '3 / 3';
+  }, [isJoined, playerInfo]);
+
   return (
     <div className="app-shell">
-      <div className="watch-banner">
-        <Eye size={14} />
-        <span>
-          You’re watching.{' '}
-          <button onClick={() => setState('connected')}>
-            Connect a wallet to play.
-          </button>
-        </span>
-        <span className="banner-note">Live Testnet Spectator Mode · no wallet required</span>
-      </div>
+      {isSpectator && (
+        <div className="watch-banner">
+          <Eye size={14} />
+          <span>
+            You’re watching.{' '}
+            <button onClick={openWalletModal}>Connect a wallet to play.</button>
+          </span>
+          <span className="banner-note">Live Testnet Spectator Mode · no wallet required</span>
+        </div>
+      )}
 
       <header className="topbar">
         <a className="brand" href="#top" aria-label="CipherPot home">
@@ -184,39 +333,23 @@ function App() {
         </nav>
         <div className="header-right">
           <span className="network"><i /> TESTNET</span>
-          <button
-            className="wallet-button"
-            onClick={() => (isSpectator ? setState('connected') : setState('spectator'))}
-          >
-            <Wallet size={16} />
-            {isSpectator ? 'Connect wallet' : 'player.testnet'}
-            <ChevronDown size={14} />
-          </button>
+          {accountId ? (
+            <button className="wallet-button" onClick={signOutWallet} title="Click to disconnect">
+              <Wallet size={16} />
+              {accountId}
+              <ChevronDown size={14} />
+            </button>
+          ) : (
+            <button className="wallet-button" onClick={openWalletModal}>
+              <Wallet size={16} />
+              Connect wallet
+              <ChevronDown size={14} />
+            </button>
+          )}
         </div>
       </header>
 
       <main id="top">
-        <div className="demo-controls">
-          <span className="demo-label">PRESENTATION STATE</span>
-          <select
-            aria-label="Choose presentation state"
-            value={state}
-            onChange={(event) => {
-              setState(event.target.value as ViewState);
-              setNotice('');
-            }}
-          >
-            {scenarios.map((scenario) => (
-              <option key={scenario.id} value={scenario.id}>
-                {scenario.label}
-              </option>
-            ))}
-          </select>
-          <span className="mock-tag" style={{ background: '#1c281e', color: '#4ade80', borderColor: '#22c55e40' }}>
-            ● TESTNET CONNECTED
-          </span>
-        </div>
-
         <section className="hero" id="round">
           <div className="hero-copy">
             <div className="eyebrow">
@@ -225,17 +358,16 @@ function App() {
             <h1>One secret.<br /><em>Sixty-four</em> possibilities.</h1>
             <p className="hero-sub">Ask sharp questions. Read the clues. Find the secret before someone else does.</p>
             <div className="hero-buttons">
-              <button
-                className="button button-primary"
-                onClick={() => {
-                  if (isSpectator) setState('joined');
-                  else lockedAction('join the round');
-                }}
-              >
-                <Sparkles size={16} />
-                {isJoined ? 'You’re in' : 'Join the round'}
-                <span className="button-cost">0.1 NEAR</span>
-              </button>
+              {isJoined ? (
+                <button className="button button-primary" disabled>
+                  <Sparkles size={16} /> You’re in
+                </button>
+              ) : (
+                <button className="button button-primary" onClick={handleJoinRound}>
+                  <Sparkles size={16} /> Join the round
+                  <span className="button-cost">0.1 NEAR</span>
+                </button>
+              )}
               <a className="text-link" href="#how">How to play <ArrowDownRight size={15} /></a>
             </div>
           </div>
@@ -253,7 +385,7 @@ function App() {
               Testnet Pot ({contractConfig.CONTRACT_ID})
             </div>
             <div className="pot-card-bottom">
-              <span><span className="live-dot" /> LIVE ROUND</span>
+              <span><span className="live-dot" /> {isSettled ? 'SETTLED' : 'LIVE ROUND'}</span>
               <span><Clock3 size={13} /> <b>{timerDisplay}</b></span>
             </div>
           </div>
@@ -275,13 +407,13 @@ function App() {
           </div>
           <div className="strip-item">
             <small>YOUR GUESSES</small>
-            <strong>{isJoined ? '3' : '—'} <span className="strip-muted">/ 3</span></strong>
+            <strong>{guessesRemainingDisplay}</strong>
             <span className="strip-foot">per entry fee</span>
           </div>
           <div className="strip-item">
             <small>PLAYERS IN</small>
             <strong>{round ? round.total_players : 0}</strong>
-            <span className="strip-foot">active in round</span>
+            <span className="strip-foot">joined this round</span>
           </div>
           <div className="strip-link">
             <ShieldCheck size={17} />
@@ -303,20 +435,16 @@ function App() {
           </div>
         )}
 
-        {ended && (
-          <section className={`settled-card settled-${state}`}>
-            <span className="settled-icon">
-              {state === 'won' ? <Check size={18} /> : state === 'lost' ? <X size={18} /> : <Clock3 size={18} />}
-            </span>
+        {isSettled && round && (
+          <section className="settled-card settled-won">
+            <span className="settled-icon"><Check size={18} /></span>
             <div>
-              <small>ROUND SETTLED</small>
-              <h2>{state === 'won' ? 'You solved it!' : state === 'lost' ? 'The round has ended.' : 'Rollover initiated.'}</h2>
+              <small>ROUND #{round.round_id} SETTLED</small>
+              <h2>Winner: {round.winner}</h2>
               <p>
-                {state === 'won'
-                  ? 'Your guess was verified by the TEE Enclave. 96% pot payout was transferred to your wallet.'
-                  : state === 'lost'
-                  ? 'The round secret has been revealed and verified on-chain. Join the next daily round.'
-                  : 'Timer expired unsolved. Unclaimed pot rolls over to fund the subsequent round.'}
+                Secret entity revealed: <b>{round.secret_revealed}</b>.
+                Payout: {formatNear(round.payout || '0')} NEAR (96% of pot).
+                Protocol fee: {formatNear(round.rake_amount || '0')} NEAR (4% rake).
               </p>
             </div>
           </section>
@@ -332,7 +460,7 @@ function App() {
               <span className="board-count">64 <span>candidates</span></span>
             </div>
             <p className="section-intro">
-              Tap a tile to cross it off locally. Filter possibilities using public clues and deduction answers.
+              Tap a tile to cross it off locally, or click to guess. Target entity is committed on-chain.
             </p>
             <div className="board-grid">
               {Array.from({ length: 64 }, (_, i) => {
@@ -342,9 +470,13 @@ function App() {
                 return (
                   <button
                     key={candId}
-                    onClick={() => toggleCross(candId)}
+                    onClick={() => handleSelectCandidateForGuess(cand || { id: candId, name: `Candidate ${candId}`, category: '', era: '', origin: '', type: '' })}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      toggleCross(candId);
+                    }}
                     className={`candidate ${isCrossed ? 'crossed' : ''}`}
-                    title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category})` : `Candidate ${candId}`}
+                    title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Right-click to cross off.` : `Candidate ${candId}`}
                     aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
                   >
                     <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
@@ -355,7 +487,7 @@ function App() {
               })}
             </div>
             <div className="board-footer">
-              <span><span className="legend-dot" /> CANONICAL 64-SECRETS ACTIVE</span>
+              <span><span className="legend-dot" /> CANONICAL 64-SECRETS ACTIVE (Right-click tile to cross off)</span>
               <button onClick={() => setCrossed([])}>Clear cross-offs</button>
             </div>
           </section>
@@ -365,10 +497,10 @@ function App() {
               <section className="youre-in panel">
                 <div className="mini-eyebrow"><Check size={13} /> PARTICIPATION</div>
                 <h3>You’re in.</h3>
-                <p>Entry fee paid (0.1 NEAR). You have full question and guess allowances.</p>
+                <p>Entry fee paid (0.1 NEAR). You have full deduction and guess allowances.</p>
                 <div className="youre-in-stats">
                   <span>Questions Left <b>{round ? round.questions_remaining : 20}</b></span>
-                  <span>Guesses Left <b>3 / 3</b></span>
+                  <span>Guesses Left <b>{playerInfo ? playerInfo.guesses_remaining : 3} / 3</b></span>
                 </div>
               </section>
             )}
@@ -384,7 +516,7 @@ function App() {
                 </span>
               </div>
               <p className="section-intro">
-                A good question eliminates possibilities. Ask something with a yes-or-no answer.
+                Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
               </p>
               <label className="input-label" htmlFor="question">YOUR QUESTION</label>
               <textarea
@@ -392,15 +524,15 @@ function App() {
                 placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                disabled={!isJoined || ended || submitting}
+                disabled={!isJoined || isSettled || submittingQuestion}
               />
               <button
                 className="button button-dark full"
-                disabled={!isJoined || ended || !question.trim() || submitting}
+                disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
                 onClick={handleAskQuestion}
               >
                 <MessageSquareText size={15} />
-                {submitting ? 'Evaluating with TEE...' : 'Submit question'}
+                {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
               </button>
               <div className="locked-note">
                 <LockKeyhole size={12} />
@@ -426,7 +558,7 @@ function App() {
                   </div>
                 </div>
               ) : (
-                <div className="feed-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="feed-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
                   {feed.map((entry) => (
                     <div
                       key={entry.question_id}
@@ -446,7 +578,7 @@ function App() {
                       <div style={{ fontSize: '13px', marginTop: '4px', color: '#e5e7eb' }}>{entry.question}</div>
                       {entry.rule_out_candidate_ids?.length > 0 && (
                         <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
-                          Eliminated {entry.rule_out_candidate_ids.length} candidates
+                          Ruled out {entry.rule_out_candidate_ids.length} candidates
                         </div>
                       )}
                     </div>
@@ -481,6 +613,81 @@ function App() {
             </section>
           </aside>
         </div>
+
+        {/* Candidate Guess Confirmation Modal */}
+        {selectedCandidate && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                background: '#151815',
+                border: '1px solid #2e3830',
+                borderRadius: '12px',
+                padding: '24px',
+                maxWidth: '440px',
+                width: '90%',
+              }}
+            >
+              <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '18px' }}>
+                Submit Candidate Guess
+              </h3>
+              <p style={{ margin: '0 0 16px 0', color: '#9ca3af', fontSize: '13px' }}>
+                You are submitting a secret guess for:
+              </p>
+              <div
+                style={{
+                  background: '#1c221e',
+                  border: '1px solid #22c55e40',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                }}
+              >
+                <div style={{ fontSize: '16px', fontWeight: 600, color: '#4ade80' }}>
+                  #{selectedCandidate.id} — {selectedCandidate.name}
+                </div>
+                {selectedCandidate.category && (
+                  <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                    {selectedCandidate.era} · {selectedCandidate.origin} · {selectedCandidate.category}
+                  </div>
+                )}
+              </div>
+              <p style={{ fontSize: '12px', color: '#eab308', margin: '0 0 16px 0' }}>
+                ⚠️ This consumes 1 of your 3 guess quotas. If correct, 96% pot payout will be claimed.
+              </p>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  className="button"
+                  style={{ background: '#262c27', color: '#ccc' }}
+                  onClick={() => setSelectedCandidate(null)}
+                  disabled={submittingGuess}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="button button-primary"
+                  onClick={handleConfirmGuess}
+                  disabled={submittingGuess}
+                >
+                  <Send size={14} />
+                  {submittingGuess ? 'Verifying with TEE...' : 'Confirm Guess'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section className="how-section" id="how">
           <div>
@@ -524,7 +731,7 @@ function App() {
 
       <div className="dev-corner" title="NEAR Testnet Connected">
         <span className="dev-pip" style={{ background: '#22c55e' }} />
-        {contractClient.mode} · {contractConfig.CONTRACT_ID}
+        NEAR Testnet · {contractConfig.CONTRACT_ID}
       </div>
     </div>
   );
