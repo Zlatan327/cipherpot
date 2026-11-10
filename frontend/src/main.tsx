@@ -82,11 +82,17 @@ function App() {
   useEffect(() => {
     let isMounted = true;
 
+    // Load board candidates immediately without waiting for RPC
+    fetchBoard()
+      .then((b) => {
+        if (isMounted && b?.length) setCandidates(b);
+      })
+      .catch((e) => console.warn('Board load error:', e));
+
     async function loadData() {
       try {
-        const [roundData, boardData, agentData] = await Promise.allSettled([
+        const [roundData, agentData] = await Promise.allSettled([
           fetchCurrentRound(),
-          fetchBoard(),
           fetchActiveAgents(),
         ]);
 
@@ -113,10 +119,6 @@ function App() {
           } else {
             setPlayerInfo(null);
           }
-        }
-
-        if (boardData.status === 'fulfilled' && boardData.value) {
-          setCandidates(boardData.value);
         }
 
         if (agentData.status === 'fulfilled' && agentData.value) {
