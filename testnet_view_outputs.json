@@ -5,13 +5,32 @@
     "accumulated_fees": "44000000000000000000000",
     "tee_public_key": "33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14",
     "paused": false,
-    "current_round_id": 1,
+    "current_round_id": 3,
     "default_entry_fee": "100000000000000000000000",
     "total_candidates": 64,
     "max_questions_per_round": 20,
     "guesses_per_entry": 3
   },
   "get_current_round": {
+    "round_id": 3,
+    "status": "Active",
+    "pot": "2600000000000000000000000",
+    "entry_fee": "100000000000000000000000",
+    "start_time": "1794510072184799892",
+    "end_time": "1794596472184799892",
+    "time_remaining": "86096781253951",
+    "questions_asked": 1,
+    "max_questions": 20,
+    "questions_remaining": 19,
+    "total_players": 1,
+    "commitment": "df83542772583eaf45a554c2f91db19368f52b6a39b896f41d70baa78936c18f",
+    "secret_revealed": null,
+    "salt_revealed": null,
+    "winner": null,
+    "payout": null,
+    "rake_amount": null
+  },
+  "get_round_1": {
     "round_id": 1,
     "status": "Settled",
     "pot": "1100000000000000000000000",
@@ -30,540 +49,126 @@
     "payout": "1056000000000000000000000",
     "rake_amount": "44000000000000000000000"
   },
-  "get_round": {
-    "round_id": 1,
-    "status": "Settled",
-    "pot": "1100000000000000000000000",
+  "get_round_2": {
+    "round_id": 2,
+    "status": "RolledOver",
+    "pot": "2500000000000000000000000",
     "entry_fee": "100000000000000000000000",
-    "start_time": "1794345129294180697",
-    "end_time": "1794348729294180697",
+    "start_time": "1794345771256551365",
+    "end_time": "1794432171256551365",
     "time_remaining": "0",
+    "questions_asked": 0,
+    "max_questions": 20,
+    "questions_remaining": 20,
+    "total_players": 0,
+    "commitment": "98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9",
+    "secret_revealed": "Enigma Machine",
+    "salt_revealed": "cipherpot_salt_round_2_active_4821",
+    "winner": null,
+    "payout": null,
+    "rake_amount": null
+  },
+  "get_round_3": {
+    "round_id": 3,
+    "status": "Active",
+    "pot": "2600000000000000000000000",
+    "entry_fee": "100000000000000000000000",
+    "start_time": "1794510072184799892",
+    "end_time": "1794596472184799892",
+    "time_remaining": "86094924595278",
     "questions_asked": 1,
     "max_questions": 20,
     "questions_remaining": 19,
     "total_players": 1,
-    "commitment": "3cc07f7cee9c4b29e9154010b48cddb9b5d688badf0e231a9db7f21d5ea09df3",
-    "secret_revealed": "Caesar Cipher",
-    "salt_revealed": "cipherpot_salt_round_1_seed_9831",
-    "winner": "cipherpot861267.testnet",
-    "payout": "1056000000000000000000000",
-    "rake_amount": "44000000000000000000000"
+    "commitment": "df83542772583eaf45a554c2f91db19368f52b6a39b896f41d70baa78936c18f",
+    "secret_revealed": null,
+    "salt_revealed": null,
+    "winner": null,
+    "payout": null,
+    "rake_amount": null
   },
-  "get_board": [
-    {
-      "id": 1,
-      "name": "Caesar Cipher",
-      "category": "Classical Cryptography",
-      "era": "Ancient",
-      "origin": "Rome",
-      "type": "Substitution"
-    },
-    {
-      "id": 2,
-      "name": "Enigma Machine",
-      "category": "Mechanical Cryptography",
-      "era": "Modern",
-      "origin": "Germany",
-      "type": "Rotor Machine"
-    },
-    {
-      "id": 3,
-      "name": "Rosetta Stone",
-      "category": "Ancient Artifacts",
-      "era": "Ancient",
-      "origin": "Egypt",
-      "type": "Stele"
-    },
-    {
-      "id": 4,
-      "name": "Antikythera Mechanism",
-      "category": "Ancient Technology",
-      "era": "Ancient",
-      "origin": "Greece",
-      "type": "Analog Computer"
-    },
-    {
-      "id": 5,
-      "name": "Voynich Manuscript",
-      "category": "Mysterious Codices",
-      "era": "Medieval",
-      "origin": "Europe",
-      "type": "Illustrated Manuscript"
-    },
-    {
-      "id": 6,
-      "name": "RSA Algorithm",
-      "category": "Modern Cryptography",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Public Key"
-    },
-    {
-      "id": 7,
-      "name": "Diffie-Hellman Key Exchange",
-      "category": "Modern Cryptography",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Key Protocol"
-    },
-    {
-      "id": 8,
-      "name": "SHA-256",
-      "category": "Cryptographic Primitives",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Hash Function"
-    },
-    {
-      "id": 9,
-      "name": "Bitcoin Whitepaper",
-      "category": "Decentralized Systems",
-      "era": "Digital",
-      "origin": "Cyberspace",
-      "type": "Protocol Spec"
-    },
-    {
-      "id": 10,
-      "name": "Satoshi Nakamoto",
-      "category": "Cypherpunks",
-      "era": "Digital",
-      "origin": "Unknown",
-      "type": "Pseudonym"
-    },
-    {
-      "id": 11,
-      "name": "Alan Turing",
-      "category": "Pioneers",
-      "era": "Modern",
-      "origin": "United Kingdom",
-      "type": "Cryptanalyst"
-    },
-    {
-      "id": 12,
-      "name": "Claude Shannon",
-      "category": "Information Theory",
-      "era": "Modern",
-      "origin": "United States",
-      "type": "Mathematician"
-    },
-    {
-      "id": 13,
-      "name": "Bletchley Park",
-      "category": "Cryptanalysis Centers",
-      "era": "Modern",
-      "origin": "United Kingdom",
-      "type": "Historic Estate"
-    },
-    {
-      "id": 14,
-      "name": "Lorenz Cipher",
-      "category": "Mechanical Cryptography",
-      "era": "Modern",
-      "origin": "Germany",
-      "type": "Teleprinter Cipher"
-    },
-    {
-      "id": 15,
-      "name": "One-Time Pad",
-      "category": "Information-Theoretic Security",
-      "era": "Modern",
-      "origin": "United States",
-      "type": "Perfect Secrecy"
-    },
-    {
-      "id": 16,
-      "name": "Beale Ciphers",
-      "category": "Unsolved Mysteries",
-      "era": "Modern",
-      "origin": "United States",
-      "type": "Book Cipher"
-    },
-    {
-      "id": 17,
-      "name": "Kryptos Sculpture",
-      "category": "Art & Cryptography",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Sculpture"
-    },
-    {
-      "id": 18,
-      "name": "Zodiac 340 Cipher",
-      "category": "Serial Cryptography",
-      "era": "Modern",
-      "origin": "United States",
-      "type": "Homophonic Cipher"
-    },
-    {
-      "id": 19,
-      "name": "Phaistos Disc",
-      "category": "Ancient Artifacts",
-      "era": "Ancient",
-      "origin": "Crete",
-      "type": "Clay Disc"
-    },
-    {
-      "id": 20,
-      "name": "Babington Plot",
-      "category": "Historical Espionage",
-      "era": "Early Modern",
-      "origin": "England",
-      "type": "Coded Conspiracy"
-    },
-    {
-      "id": 21,
-      "name": "Mary Queen of Scots",
-      "category": "Historical Figures",
-      "era": "Early Modern",
-      "origin": "Scotland",
-      "type": "Monarch"
-    },
-    {
-      "id": 22,
-      "name": "Vigenere Cipher",
-      "category": "Classical Cryptography",
-      "era": "Early Modern",
-      "origin": "France",
-      "type": "Polyalphabetic"
-    },
-    {
-      "id": 23,
-      "name": "Playfair Cipher",
-      "category": "Classical Cryptography",
-      "era": "Modern",
-      "origin": "United Kingdom",
-      "type": "Digraphic Substitution"
-    },
-    {
-      "id": 24,
-      "name": "Navajo Code Talkers",
-      "category": "Military Communications",
-      "era": "Modern",
-      "origin": "United States",
-      "type": "Spoken Code"
-    },
-    {
-      "id": 25,
-      "name": "Linear B",
-      "category": "Deciphered Scripts",
-      "era": "Ancient",
-      "origin": "Greece",
-      "type": "Syllabic Script"
-    },
-    {
-      "id": 26,
-      "name": "Michael Ventris",
-      "category": "Decipherers",
-      "era": "Modern",
-      "origin": "United Kingdom",
-      "type": "Architect / Philologist"
-    },
-    {
-      "id": 27,
-      "name": "Jean-Francois Champollion",
-      "category": "Decipherers",
-      "era": "Modern",
-      "origin": "France",
-      "type": "Egyptologist"
-    },
-    {
-      "id": 28,
-      "name": "Scytale of Sparta",
-      "category": "Ancient Cryptography",
-      "era": "Ancient",
-      "origin": "Sparta",
-      "type": "Transposition Tool"
-    },
-    {
-      "id": 29,
-      "name": "Polybius Square",
-      "category": "Ancient Cryptography",
-      "era": "Ancient",
-      "origin": "Greece",
-      "type": "Fractionation Grid"
-    },
-    {
-      "id": 30,
-      "name": "Al-Kindi",
-      "category": "Pioneers",
-      "era": "Medieval",
-      "origin": "Abbasid Caliphate",
-      "type": "Frequency Analysis"
-    },
-    {
-      "id": 31,
-      "name": "Jefferson Disk",
-      "category": "Mechanical Cryptography",
-      "era": "Early Modern",
-      "origin": "United States",
-      "type": "Wheel Cipher"
-    },
-    {
-      "id": 32,
-      "name": "ADFGVX Cipher",
-      "category": "Military Field Ciphers",
-      "era": "Modern",
-      "origin": "Germany",
-      "type": "Fractionation & Transposition"
-    },
-    {
-      "id": 33,
-      "name": "Purple Machine",
-      "category": "Diplomatic Ciphers",
-      "era": "Modern",
-      "origin": "Japan",
-      "type": "Stepping-Switch Cipher"
-    },
-    {
-      "id": 34,
-      "name": "Project Venona",
-      "category": "Counterintelligence",
-      "era": "Modern",
-      "origin": "United States",
-      "type": "Signal Decryption"
-    },
-    {
-      "id": 35,
-      "name": "Zimmermann Telegram",
-      "category": "Signal Intelligence",
-      "era": "Modern",
-      "origin": "Germany",
-      "type": "Diplomatic Cable"
-    },
-    {
-      "id": 36,
-      "name": "Colossus Computer",
-      "category": "Computing History",
-      "era": "Modern",
-      "origin": "United Kingdom",
-      "type": "Electronic Computer"
-    },
-    {
-      "id": 37,
-      "name": "Tommy Flowers",
-      "category": "Computing Pioneers",
-      "era": "Modern",
-      "origin": "United Kingdom",
-      "type": "Engineer"
-    },
-    {
-      "id": 38,
-      "name": "Marian Rejewski",
-      "category": "Cryptanalysts",
-      "era": "Modern",
-      "origin": "Poland",
-      "type": "Mathematician"
-    },
-    {
-      "id": 39,
-      "name": "DES Standard",
-      "category": "Block Ciphers",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Symmetric Feistel"
-    },
-    {
-      "id": 40,
-      "name": "AES Rijndael",
-      "category": "Block Ciphers",
-      "era": "Digital",
-      "origin": "Belgium",
-      "type": "Substitution-Permutation"
-    },
-    {
-      "id": 41,
-      "name": "Zero-Knowledge Proof",
-      "category": "Modern Cryptography",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Cryptographic Proof"
-    },
-    {
-      "id": 42,
-      "name": "Merkle Tree",
-      "category": "Data Structures",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Hash Tree"
-    },
-    {
-      "id": 43,
-      "name": "Ralph Merkle",
-      "category": "Pioneers",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Cryptographer"
-    },
-    {
-      "id": 44,
-      "name": "Elliptic Curve Cryptography",
-      "category": "Modern Cryptography",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Algebraic Curve"
-    },
-    {
-      "id": 45,
-      "name": "Ed25519",
-      "category": "Signature Schemes",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Edwards Curve"
-    },
-    {
-      "id": 46,
-      "name": "Daniel J. Bernstein",
-      "category": "Cryptographers",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Mathematician"
-    },
-    {
-      "id": 47,
-      "name": "PGP Pretty Good Privacy",
-      "category": "Privacy Tools",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Encrypted Email"
-    },
-    {
-      "id": 48,
-      "name": "Phil Zimmermann",
-      "category": "Cypherpunks",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Creator"
-    },
-    {
-      "id": 49,
-      "name": "Cypherpunk Manifesto",
-      "category": "Movements",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Foundational Text"
-    },
-    {
-      "id": 50,
-      "name": "Eric Hughes",
-      "category": "Cypherpunks",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Activist"
-    },
-    {
-      "id": 51,
-      "name": "Hal Finney",
-      "category": "Cypherpunks",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "RPOW Pioneer"
-    },
-    {
-      "id": 52,
-      "name": "Nick Szabo",
-      "category": "Smart Contracts",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Legal Theorist"
-    },
-    {
-      "id": 53,
-      "name": "Tor Onion Router",
-      "category": "Anonymity Networks",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Onion Routing"
-    },
-    {
-      "id": 54,
-      "name": "Signal Protocol",
-      "category": "End-to-End Encryption",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Double Ratchet"
-    },
-    {
-      "id": 55,
-      "name": "Moxie Marlinspike",
-      "category": "Cryptographers",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Security Researcher"
-    },
-    {
-      "id": 56,
-      "name": "Trusted Execution Environment",
-      "category": "Hardware Security",
-      "era": "Digital",
-      "origin": "Global",
-      "type": "Hardware Enclave"
-    },
-    {
-      "id": 57,
-      "name": "Intel SGX",
-      "category": "Hardware Security",
-      "era": "Digital",
-      "origin": "United States",
-      "type": "Enclave Architecture"
-    },
-    {
-      "id": 58,
-      "name": "NEAR Nightshade",
-      "category": "Consensus & Sharding",
-      "era": "Digital",
-      "origin": "Global",
-      "type": "Sharded Blockchain"
-    },
-    {
-      "id": 59,
-      "name": "Rainbow Bridge",
-      "category": "Trustless Bridges",
-      "era": "Digital",
-      "origin": "Global",
-      "type": "Cross-Chain Client"
-    },
-    {
-      "id": 60,
-      "name": "zk-SNARK",
-      "category": "Succinct Arguments",
-      "era": "Digital",
-      "origin": "Global",
-      "type": "Non-Interactive Proof"
-    },
-    {
-      "id": 61,
-      "name": "Shamir Secret Sharing",
-      "category": "Threshold Schemes",
-      "era": "Digital",
-      "origin": "Israel",
-      "type": "Polynomial Secret Sharing"
-    },
-    {
-      "id": 62,
-      "name": "Adi Shamir",
-      "category": "Cryptographers",
-      "era": "Digital",
-      "origin": "Israel",
-      "type": "Turing Awardee"
-    },
-    {
-      "id": 63,
-      "name": "Kerckhoffs Principle",
-      "category": "Cryptographic Axioms",
-      "era": "Modern",
-      "origin": "Netherlands",
-      "type": "Open Design Principle"
-    },
-    {
-      "id": 64,
-      "name": "Auguste Kerckhoffs",
-      "category": "Linguists & Cryptographers",
-      "era": "Modern",
-      "origin": "Netherlands",
-      "type": "Theorist"
+  "get_active_agents_round_3": [
+    {
+      "account_id": "cipherpot861267.testnet",
+      "balance": "400000000000000000000000",
+      "questions_asked": 1,
+      "guesses_made": 0
     }
   ],
-  "get_question_feed": [
+  "get_question_feed_round_3": [
+    {
+      "question_id": 1,
+      "round_id": 3,
+      "asker": "cipherpot861267.testnet",
+      "question": "Is it an ancient artifact or manuscript?",
+      "answer": "Yes",
+      "timestamp": "1794510183080600867",
+      "rule_out_candidate_ids": [
+        1,
+        2,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
+      ]
+    }
+  ],
+  "get_question_feed_round_1": [
     {
       "question_id": 1,
       "round_id": 1,
@@ -583,20 +188,5 @@
         40
       ]
     }
-  ],
-  "get_player_info": {
-    "round_id": 1,
-    "account_id": "cipherpot861267.testnet",
-    "is_joined": true,
-    "guesses_used": 1,
-    "guesses_remaining": 2,
-    "questions_asked": 1,
-    "entry_fee_paid": "100000000000000000000000"
-  },
-  "get_active_agents": [],
-  "is_paused": false,
-  "get_protocol_fee_recipient": "cipherpot861267.testnet",
-  "get_accumulated_fees": "44000000000000000000000",
-  "get_agent_balance": "0",
-  "get_tee_public_key": null
+  ]
 }

@@ -16,7 +16,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/near-rpc': {
-        target: 'https://rpc.testnet.near.org',
+        target: 'https://test.rpc.fastnear.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/near-rpc/, ''),
       },

@@ -25,6 +25,7 @@ import {
 import {
   contractConfig,
   fetchCurrentRound,
+  fetchRound,
   fetchBoard,
   fetchQuestionFeed,
   fetchPlayerInfo,
@@ -97,6 +98,26 @@ function App() {
     }
   };
 
+  const handleLoadRound = async (id: number) => {
+    try {
+      setNotice(`Querying Round #${id} on-chain data from NEAR Testnet...`);
+      const r = await fetchRound(id);
+      if (r) {
+        setRound(r);
+        const [agentData, feedData] = await Promise.allSettled([
+          fetchActiveAgents(r.round_id),
+          fetchQuestionFeed(r.round_id),
+        ]);
+        if (agentData.status === 'fulfilled') setAgents(agentData.value);
+        if (feedData.status === 'fulfilled') setFeed(feedData.value);
+        setNotice(`Loaded Round #${id} state from NEAR Testnet contract.`);
+      }
+    } catch (e) {
+      console.warn('Error loading round', e);
+      setNotice(`Failed to load Round #${id}`);
+    }
+  };
+
   // Initialize Wallet Selector on load
   useEffect(() => {
     initWalletSelector((accId) => {
@@ -117,38 +138,33 @@ function App() {
 
     async function loadData() {
       try {
-        const [roundData, agentData] = await Promise.allSettled([
-          fetchCurrentRound(),
-          fetchActiveAgents(),
+        const roundRes = await fetchCurrentRound();
+        if (!isMounted || !roundRes) return;
+        setRound(roundRes);
+
+        const [agentData, feedData] = await Promise.allSettled([
+          fetchActiveAgents(roundRes.round_id),
+          fetchQuestionFeed(roundRes.round_id),
         ]);
 
-        if (!isMounted) return;
-
-        if (roundData.status === 'fulfilled' && roundData.value) {
-          const r = roundData.value;
-          setRound(r);
-
-          // Fetch Question feed
-          fetchQuestionFeed(r.round_id)
-            .then((f) => {
-              if (isMounted) setFeed(f);
-            })
-            .catch((e) => console.warn('Feed fetch error:', e));
-
-          // If wallet connected, fetch player status on-chain
-          if (accountId) {
-            fetchPlayerInfo(r.round_id, accountId)
-              .then((p) => {
-                if (isMounted) setPlayerInfo(p);
-              })
-              .catch((e) => console.warn('Player info fetch error:', e));
-          } else {
-            setPlayerInfo(null);
+        if (isMounted) {
+          if (agentData.status === 'fulfilled' && agentData.value) {
+            setAgents(agentData.value);
+          }
+          if (feedData.status === 'fulfilled' && feedData.value) {
+            setFeed(feedData.value);
           }
         }
 
-        if (agentData.status === 'fulfilled' && agentData.value) {
-          setAgents(agentData.value);
+        // If wallet connected, fetch player status on-chain
+        if (accountId) {
+          fetchPlayerInfo(roundRes.round_id, accountId)
+            .then((p) => {
+              if (isMounted) setPlayerInfo(p);
+            })
+            .catch((e) => console.warn('Player info fetch error:', e));
+        } else {
+          setPlayerInfo(null);
         }
       } catch (err) {
         console.warn('Live RPC fetch error:', err);
@@ -453,8 +469,62 @@ function App() {
       <main id="top">
         <section className="hero" id="round">
           <div className="hero-copy">
-            <div className="eyebrow">
-              <span className="live-dot" /> DAILY DEDUCTION <span className="eyebrow-divider">/</span> ROUND #{round ? round.round_id : 2}
+            <div className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span className="live-dot" /> DAILY DEDUCTION <span className="eyebrow-divider">/</span>
+              <span style={{ color: '#fff', fontWeight: 600 }}>ROUND #{round ? round.round_id : 3}</span>
+              <div style={{ display: 'inline-flex', gap: '4px', marginLeft: '6px' }}>
+                <button
+                  type="button"
+                  style={{
+                    background: (round?.round_id === 3) ? '#283820' : '#181d18',
+                    border: '1px solid',
+                    borderColor: (round?.round_id === 3) ? 'var(--lime)' : '#2e382d',
+                    color: (round?.round_id === 3) ? 'var(--lime)' : '#8b9787',
+                    borderRadius: '4px',
+                    fontSize: '9px',
+                    fontFamily: 'var(--mono)',
+                    padding: '2px 6px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleLoadRound(3)}
+                >
+                  R#3 (Active)
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: (round?.round_id === 2) ? '#283820' : '#181d18',
+                    border: '1px solid',
+                    borderColor: (round?.round_id === 2) ? 'var(--lime)' : '#2e382d',
+                    color: (round?.round_id === 2) ? 'var(--lime)' : '#8b9787',
+                    borderRadius: '4px',
+                    fontSize: '9px',
+                    fontFamily: 'var(--mono)',
+                    padding: '2px 6px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleLoadRound(2)}
+                >
+                  R#2 (Rolled Over)
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: (round?.round_id === 1) ? '#283820' : '#181d18',
+                    border: '1px solid',
+                    borderColor: (round?.round_id === 1) ? 'var(--lime)' : '#2e382d',
+                    color: (round?.round_id === 1) ? 'var(--lime)' : '#8b9787',
+                    borderRadius: '4px',
+                    fontSize: '9px',
+                    fontFamily: 'var(--mono)',
+                    padding: '2px 6px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleLoadRound(1)}
+                >
+                  R#1 (Settled Won)
+                </button>
+              </div>
             </div>
             <h1>One secret.<br /><em>Sixty-four</em> possibilities.</h1>
             <p className="hero-sub">Ask sharp questions. Read the clues. Find the secret before someone else does.</p>
@@ -570,6 +640,20 @@ function App() {
                   <Share2 size={13} /> Replay Deduction & Share Card
                 </button>
               </div>
+            </div>
+          </section>
+        )}
+
+        {isRolledOver && round && (
+          <section className="settled-card settled-refunding">
+            <span className="settled-icon"><Clock3 size={18} /></span>
+            <div style={{ flex: 1 }}>
+              <small>ROUND #{round.round_id} TIMED OUT & ROLLED OVER</small>
+              <h2>Progressive Jackpot Rolled Over to Round #{round.round_id + 1}</h2>
+              <p>
+                Round reached 24h timeout without a winner. Secret revealed on-chain: <b>{round.secret_revealed}</b> (Salt: <code>{round.salt_revealed}</code>).
+                100% of accumulated pot ({formatNear(round.pot)} NEAR) rolled over to expand Round #{round.round_id + 1}'s prize pool!
+              </p>
             </div>
           </section>
         )}
@@ -828,56 +912,53 @@ function App() {
               <div className="section-heading compact">
                 <div>
                   <div className="eyebrow">AGENT / HUMAN ARENA</div>
-                  <h2>Active agents & Win Rates</h2>
+                  <h2>Autonomous Agents</h2>
                 </div>
-                <span className="agent-count">{agents.length || 2}</span>
+                <span className="agent-count">{agents.length}</span>
               </div>
               <div className="agent-metrics-row">
                 <div className="agent-metric-box">
-                  <small>HUMAN SOLVE RATE</small>
-                  <strong>58%</strong>
-                  <span>Avg 4.8 questions</span>
+                  <small>AGENT PRE-FUNDED POOL</small>
+                  <strong>{formatNear(agents.reduce((acc, a) => acc + BigInt(a.balance || 0), BigInt(0)).toString())} NEAR</strong>
+                  <span>On-chain allowance</span>
                 </div>
                 <div className="agent-metric-box">
-                  <small>AI AGENT (MCP) RATE</small>
-                  <strong>42%</strong>
-                  <span>Avg 5.2 questions</span>
+                  <small>AGENT QUESTIONS IN R#{round ? round.round_id : 3}</small>
+                  <strong>{agents.reduce((acc, a) => acc + (a.questions_asked || 0), 0)} Qs</strong>
+                  <span>Verified on contract</span>
                 </div>
               </div>
               <p className="section-intro" style={{ margin: '0 0 10px 0' }}>
-                Agents compete directly via Model Context Protocol (MCP) tool calls on NEAR testnet:
+                Agents compete autonomously via Model Context Protocol (MCP) tool calls on NEAR testnet:
               </p>
               {agents.length === 0 ? (
-                <>
-                  <div className="agent-row">
-                    <span className="agent-avatar"><Flame size={14} /></span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <strong style={{ fontSize: '11px', color: '#e5e7eb' }}>entropy-agent.testnet</strong>
-                      <span style={{ fontSize: '9px', color: '#889284' }}>Autonomous Info-Gain Solver</span>
-                    </div>
-                    <span className="agent-placeholder" style={{ color: '#4ade80' }}>1.85 NEAR</span>
+                <div className="feed-empty" style={{ marginTop: '4px' }}>
+                  <div className="feed-empty-icon"><Cpu size={16} /></div>
+                  <div>
+                    <b>No external agents in this round yet</b>
+                    <span>Agents deposit spend allowance via <code>deposit_agent_funds()</code></span>
                   </div>
-                  <div className="agent-row">
-                    <span className="agent-avatar"><Cpu size={14} /></span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <strong style={{ fontSize: '11px', color: '#e5e7eb' }}>cipher-bot.near</strong>
-                      <span style={{ fontSize: '9px', color: '#889284' }}>Claude 3.5 Sonnet + MCP</span>
-                    </div>
-                    <span className="agent-placeholder" style={{ color: '#4ade80' }}>2.10 NEAR</span>
-                  </div>
-                </>
+                </div>
               ) : (
                 agents.map((ag) => (
                   <div className="agent-row" key={ag.account_id}>
                     <span className="agent-avatar"><Flame size={14} /></span>
-                    <div>
-                      <strong style={{ fontSize: '11px', color: '#e5e7eb' }}>{ag.account_id}</strong>
-                      <span style={{ fontSize: '9px', color: '#889284', display: 'block' }}>MCP Agent · {ag.questions_asked} Qs</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ fontSize: '11px', color: '#e5e7eb', wordBreak: 'break-all', display: 'block' }}>{ag.account_id}</strong>
+                      <span style={{ fontSize: '9px', color: '#889284', display: 'block' }}>
+                        MCP Agent · {ag.questions_asked} Qs asked · {ag.guesses_made} guesses
+                      </span>
                     </div>
-                    <span className="agent-placeholder">{formatNear(ag.balance)} NEAR</span>
+                    <span className="agent-placeholder" style={{ color: '#4ade80' }}>{formatNear(ag.balance)} NEAR</span>
                   </div>
                 ))
               )}
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #283227', fontSize: '9px', color: '#7a8576' }}>
+                <span style={{ fontFamily: 'var(--mono)', color: 'var(--lime)', display: 'block', marginBottom: '2px' }}>
+                  MCP TOOL CALL ENDPOINT:
+                </span>
+                <code>POST /mcp/call &rarr; &#123;"name":"ask_question"&#125;</code>
+              </div>
             </section>
           </aside>
         </div>

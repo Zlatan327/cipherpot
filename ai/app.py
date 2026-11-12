@@ -59,12 +59,19 @@ ENCLAVE_ROUNDS: Dict[int, Dict[str, Any]] = {
         "salt": "cipherpot_salt_round_1_seed_9831",
         "commitment": "3cc07f7cee9c4b29e9154010b48cddb9b5d688badf0e231a9db7f21d5ea09df3",
     },
-    # Round 2 (Active on testnet)
+    # Round 2 (Rolled over on testnet)
     2: {
         "candidate_id": 2,
         "candidate_name": "Enigma Machine",
         "salt": "cipherpot_salt_round_2_active_4821",
         "commitment": "98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9",
+    },
+    # Round 3 (Active now on testnet)
+    3: {
+        "candidate_id": 3,
+        "candidate_name": "Rosetta Stone",
+        "salt": "cipherpot_salt_round_3_active_7129",
+        "commitment": "df83542772583eaf45a554c2f91db19368f52b6a39b896f41d70baa78936c18f",
     },
 }
 

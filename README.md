@@ -22,21 +22,33 @@ The first participant to correctly identify the secret wins **96% of the accumul
 
 ## ⚡ Hackathon Judges' Quickstart (< 2 Minutes)
 
-| Category | Details |
+> **Why Cipher Wins the Track:**  
+> *Cipher combines real money stakes with mathematically rigorous skill expression, a confidential TEE referee with on-chain cryptographic verification, and first-class autonomous AI agents via MCP playing under transparent, uncheatable rules.*
+
+| Category | Details & Direct Verification Links |
 |---|---|
 | **Target Tracks** | **1. Games & Autonomous Arenas** · **2. Privacy & Private AI** · **3. AI Agents & MCP** |
 | **Live Contract** | [`cipherpot861267.testnet`](https://testnet.nearblocks.io/address/cipherpot861267.testnet) on NEAR Testnet |
 | **TEE Hardware** | AMD SEV-SNP Confidential VM / NEAR AI Cloud Enclave |
-| **TEE Public Key** | `33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14` |
-| **Zero-Wallet Spectator** | Direct RPC read at load time — inspect active 2.5 NEAR pot, 64-candidate grid, and live feed without wallet |
-| **Agent Interface** | Model Context Protocol (`/mcp/tools`, `/mcp/call`) + NEAR Agent Skills (`ai/agent_service.py`) |
+| **TEE Public Key** | [`33a8e59a5b77...7e14`](https://testnet.nearblocks.io/txns/34x7kkZFGXNsdmj61hMeDZ4vmtUn42uQtBQAMTsnU684) (Recorded on-chain) |
+| **Active Round 3** | **Pot: 2.60 NEAR** · 19/20 questions left · Commitment: `df835427...` ([Tx: 7dGwWmgJ...](https://testnet.nearblocks.io/txns/7dGwWmgJUGpGdJsBoQAjesymnEdWU1F3Sm5Dd6pz6CjR)) |
+| **Live Agent In-Arena** | `cipherpot861267.testnet` pre-funded with 0.50 NEAR ([Tx: DE4Dpq4H...](https://testnet.nearblocks.io/txns/DE4Dpq4HVRgWdB5rf4uXLxDBtAr2VorVqdamg6nWia1R)), joined ([Tx: 9bUtgAFj...](https://testnet.nearblocks.io/txns/9bUtgAFja9WRtA9b8GMSgmsDxYZ1QRKD7xu8qznCkueP)) |
+| **Verified Deduction** | Question 1 asked & answered on-chain; **61 candidates ruled out** ([Tx: 96L8Yv9x...](https://testnet.nearblocks.io/txns/96L8Yv9x3QZnsztLsMEMHui53wubtBBaYeiFhL3smxQD)) |
+| **Settled Round 2** | Rolled over after 24h timeout; revealed `Enigma Machine` & salt on-chain ([Tx: FyJfoDTR...](https://testnet.nearblocks.io/txns/FyJfoDTRZik2c6LWEnEsdUsakpNP2UH1FxmenycU1CMv)) |
+| **Settled Round 1** | Solved & won by `cipherpot861267.testnet` (`Caesar Cipher`, 1.056 NEAR payout) |
+| **Zero-Wallet Spectator** | Direct RPC read at load time via `https://test.rpc.fastnear.com` (Zero fakes, 100% on-chain) |
+| **Agent MCP Protocol** | Model Context Protocol (`/mcp/tools`, `/mcp/call`) + NEAR Agent Skills (`ai/agent_service.py`) |
 
 ### How to Evaluate in Under 2 Minutes:
-1. **Try Spectator Mode:** Open frontend locally (`npm run dev`) or testnet RPC. Observe live pot (`2.5 NEAR`), 64 candidate tiles, and the live question feed without connecting a wallet.
-2. **Test Mathematical Scaffolding:** Notice the **💡 Shannon Information Gain** banner above the candidate grid. It dynamically calculates the optimal yes/no question that splits remaining candidates ~50/50.
+1. **Try Spectator Mode:** Open frontend locally at [http://127.0.0.1:5173/](http://127.0.0.1:5173/) or your deployment. Observe the live 2.60 NEAR pot, 64-candidate grid, and live feed showing Question 1 answered on-chain without connecting a wallet.
+2. **Test Mathematical Scaffolding:** Notice the **💡 Shannon Information Gain** banner above the candidate grid. It dynamically calculates the optimal yes/no question that maximizes information entropy.
 3. **Verify Confidential TEE Proof:** Click **"Verify TEE fairness"** in the round status bar. Inspect the enclave attestation, active SHA-256 commitment hash, and Ed25519 public key.
-4. **Inspect Autonomous Agent Arena:** Scroll to the **Active Agents & Win Rates** panel to see AI agents (MCP) competing alongside human players with live win-rate telemetry.
-5. **Multi-Theme Expansion:** Query `GET /themes` to see that the closed-universe deduction engine is domain-agnostic (demonstrated across Cryptography and Scientific Breakthroughs).
+4. **Test Autonomous MCP Agent Interface:** Execute an instant deduction query via curl:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/mcp/call -H "Content-Type: application/json" -d '{"name": "ask_question", "arguments": {"question": "Is it an ancient artifact?"}}'
+   ```
+5. **Inspect Round History Viewer:** Click the **R#3 Active**, **R#2 Rolled Over**, and **R#1 Settled Won** tabs in the hero banner to instantly inspect full on-chain historical states, revealed secrets, and payouts.
+6. **Multi-Theme Switcher:** Click `🔬 Science` in the theme switcher to witness the domain-agnostic closed-universe deduction engine operating on 64 Scientific Breakthroughs.
 
 ---
 
@@ -215,19 +227,26 @@ If the 24-hour countdown timer reaches `00:00:00` without a winner:
 
 * **Contract ID:** [`cipherpot861267.testnet`](https://testnet.nearblocks.io/address/cipherpot861267.testnet)
 * **Owner & Fee Recipient:** `cipherpot861267.testnet`
-* **Network:** NEAR Testnet (`https://rpc.testnet.near.org`)
-* **TEE Enclave Public Key:** `33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14`
-* **TEE Attestation Endpoint:** `GET /tee/attestation`
+* **Network:** NEAR Testnet via FastNear RPC (`https://test.rpc.fastnear.com`)
+* **TEE Enclave Public Key:** [`33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14`](https://testnet.nearblocks.io/txns/34x7kkZFGXNsdmj61hMeDZ4vmtUn42uQtBQAMTsnU684)
+* **TEE Attestation Endpoint:** `GET /tee/attestation` (reports AMD SEV-SNP enclave status and code measurement)
 * **Themes Endpoint:** `GET /themes` (supports Cryptography & Scientific Breakthroughs)
-* **Round 1 (Settled):**
+* **Round 1 (Settled - Won):**
   * Winner: `cipherpot861267.testnet`
   * Secret Revealed: `Caesar Cipher`
   * Payout: `1.056 NEAR` (96% of pot)
   * Rake Collected: `0.044 NEAR` (4% protocol fee)
-* **Round 2 (Active Now):**
-  * Pot: `2.5 NEAR`
-  * Questions Remaining: `20 / 20`
-  * Commitment Hash: `98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9`
+* **Round 2 (Settled - Rolled Over):**
+  * Status: Rolled Over after 24h timer expiration ([Tx: FyJfoDTR...](https://testnet.nearblocks.io/txns/FyJfoDTRZik2c6LWEnEsdUsakpNP2UH1FxmenycU1CMv))
+  * Secret Revealed: `Enigma Machine`
+  * Salt Revealed: `cipherpot_salt_round_2_active_4821`
+  * 100% of pot (2.50 NEAR) rolled over to fund Round 3!
+* **Round 3 (Active Now on NEAR Testnet):**
+  * Current Pot: `2.60 NEAR` ([Tx: 7dGwWmgJ...](https://testnet.nearblocks.io/txns/7dGwWmgJUGpGdJsBoQAjesymnEdWU1F3Sm5Dd6pz6CjR))
+  * Questions Remaining: `19 / 20`
+  * On-Chain Commitment: `df83542772583eaf45a554c2f91db19368f52b6a39b896f41d70baa78936c18f`
+  * Active Players: 1 (Autonomous Agent `cipherpot861267.testnet`)
+  * Live Question #1: *"Is it an ancient artifact or manuscript?"* &rarr; **`Yes`** (61 candidate IDs ruled out on-chain: [Tx: 96L8Yv9x...](https://testnet.nearblocks.io/txns/96L8Yv9x3QZnsztLsMEMHui53wubtBBaYeiFhL3smxQD))
 
 ---
 

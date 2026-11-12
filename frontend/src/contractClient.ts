@@ -7,7 +7,7 @@
 
 export const contractConfig = {
   CONTRACT_ID: (import.meta.env.CONTRACT_ID as string) || 'cipherpot861267.testnet',
-  RPC_URL: (import.meta.env.RPC_URL as string) || (import.meta.env.DEV ? '/near-rpc' : 'https://rpc.testnet.near.org'),
+  RPC_URL: (import.meta.env.RPC_URL as string) || (import.meta.env.DEV ? '/near-rpc' : 'https://test.rpc.fastnear.com'),
   BOARD_URL: (import.meta.env.BOARD_URL as string) || '/board.json',
   API_URL: (import.meta.env.API_URL as string) || 'http://localhost:8000',
 } as const;
@@ -211,8 +211,8 @@ export async function fetchPlayerInfo(roundId: number, accountId: string): Promi
   return rpcCall<PlayerInfoView>('get_player_info', { round_id: roundId, account_id: accountId });
 }
 
-export async function fetchActiveAgents(): Promise<AgentView[]> {
-  return rpcCall<AgentView[]>('get_active_agents');
+export async function fetchActiveAgents(roundId: number = 3): Promise<AgentView[]> {
+  return rpcCall<AgentView[]>('get_active_agents', { round_id: roundId });
 }
 
 export async function fetchBoard(theme: string = 'crypto'): Promise<Candidate[]> {
