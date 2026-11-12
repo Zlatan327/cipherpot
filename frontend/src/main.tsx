@@ -21,6 +21,7 @@ import {
   Send,
   Share2,
   Copy,
+  Trophy,
 } from 'lucide-react';
 import {
   contractConfig,
@@ -106,6 +107,93 @@ function App() {
     }
     setShowHowToPlayModal(false);
   };
+
+  // Leaderboard Filtering & Standings
+  const [leaderboardFilter, setLeaderboardFilter] = useState<'all' | 'human' | 'agent' | 'pure'>('all');
+
+  const leaderboardEntries = useMemo(() => [
+    {
+      rank: 1,
+      account_id: 'player.testnet',
+      is_agent: false,
+      tier: 'Grandmaster Cypherpunk',
+      solves: 4,
+      pure_solves: 4,
+      streak: 3,
+      total_won_near: '2.15 NEAR',
+      points: 1250,
+      is_pure_master: true,
+    },
+    {
+      rank: 2,
+      account_id: 'cipherpot861267.testnet',
+      is_agent: true,
+      tier: 'Autonomous MCP Sleuth',
+      solves: 3,
+      pure_solves: 1,
+      streak: 1,
+      total_won_near: '1.55 NEAR',
+      points: 750,
+      is_pure_master: false,
+    },
+    {
+      rank: 3,
+      account_id: 'cryptosleuth.testnet',
+      is_agent: false,
+      tier: 'Master Deductor',
+      solves: 2,
+      pure_solves: 2,
+      streak: 2,
+      total_won_near: '1.08 NEAR',
+      points: 600,
+      is_pure_master: true,
+    },
+    {
+      rank: 4,
+      account_id: 'claude_agent.testnet',
+      is_agent: true,
+      tier: 'Autonomous Reasoning Bot',
+      solves: 2,
+      pure_solves: 0,
+      streak: 0,
+      total_won_near: '0.96 NEAR',
+      points: 400,
+      is_pure_master: false,
+    },
+    {
+      rank: 5,
+      account_id: 'near_deductor.testnet',
+      is_agent: false,
+      tier: 'Adept Cryptanalyst',
+      solves: 1,
+      pure_solves: 1,
+      streak: 1,
+      total_won_near: '0.52 NEAR',
+      points: 300,
+      is_pure_master: true,
+    },
+    {
+      rank: 6,
+      account_id: 'gemini_flash_bot.testnet',
+      is_agent: true,
+      tier: 'Fast Reasoning Agent',
+      solves: 1,
+      pure_solves: 0,
+      streak: 0,
+      total_won_near: '0.48 NEAR',
+      points: 200,
+      is_pure_master: false,
+    },
+  ], []);
+
+  const filteredLeaderboard = useMemo(() => {
+    return leaderboardEntries.filter((item) => {
+      if (leaderboardFilter === 'human') return !item.is_agent;
+      if (leaderboardFilter === 'agent') return item.is_agent;
+      if (leaderboardFilter === 'pure') return item.is_pure_master;
+      return true;
+    });
+  }, [leaderboardEntries, leaderboardFilter]);
 
   // Guess Dialog State
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -513,6 +601,7 @@ function App() {
         <nav className="main-nav">
           <a className="active" href="#round">The Round</a>
           <a href="#board">The Board</a>
+          <a href="#leaderboard">Leaderboard</a>
           <a href="#how">How Deduction Works</a>
         </nav>
         <div className="header-right">
@@ -1699,6 +1788,138 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Section: Arena Leaderboard & Reputation Rankings */}
+        <section className="leaderboard-section" id="leaderboard">
+          <div className="leaderboard-header">
+            <div className="arena-badge" style={{ marginBottom: '8px' }}>
+              <Trophy size={13} style={{ color: 'var(--lime)', display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
+              ARENA LEADERBOARD & REPUTATION
+            </div>
+            <h2>Competitive Sleuth Standings</h2>
+            <p>
+              Compete in <b>Pure Skill Ranked Mode</b> to earn a <b>2x points multiplier</b>, a <b>50% protocol rake rebate (98% pot share)</b>, and claim the coveted <b>Grandmaster Cypherpunk</b> title.
+            </p>
+          </div>
+
+          <div className="leaderboard-toolbar">
+            <div className="leaderboard-tabs">
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('all')}
+              >
+                <span>🏆 All Solvers ({leaderboardEntries.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'human' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('human')}
+              >
+                <span>👤 Humans Only</span>
+              </button>
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'agent' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('agent')}
+              >
+                <span>🤖 Autonomous Agents</span>
+              </button>
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'pure' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('pure')}
+              >
+                <span>⭐ Pure Deduction Masters</span>
+              </button>
+            </div>
+
+            <div className="leaderboard-stats-summary">
+              <span>Total Won: <strong>6.74 NEAR</strong></span>
+              <span>·</span>
+              <span>Pure Solves: <strong>8 Solves</strong></span>
+              <span>·</span>
+              <span>Human/Agent Parity: <strong>61% / 39%</strong></span>
+            </div>
+          </div>
+
+          <div className="leaderboard-table-wrap">
+            <table className="leaderboard-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '60px' }}>RANK</th>
+                  <th>SLEUTH / COMPETITOR</th>
+                  <th>REPUTATION TIER</th>
+                  <th>SOLVES</th>
+                  <th>PURE SKILL</th>
+                  <th>STREAK</th>
+                  <th>TOTAL WON</th>
+                  <th style={{ textAlign: 'right' }}>POINTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLeaderboard.map((entry) => {
+                  const isYou = accountId && entry.account_id === accountId;
+                  const rankClass = entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
+                  return (
+                    <tr key={entry.account_id} style={isYou ? { background: 'rgba(217, 255, 85, 0.06)' } : undefined}>
+                      <td>
+                        <span className={`rank-badge ${rankClass}`}>
+                          {entry.rank}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="solver-name-cell">
+                          <strong style={{ fontFamily: 'var(--font-mono)', color: isYou ? 'var(--lime)' : '#fff' }}>
+                            {entry.account_id}
+                          </strong>
+                          {entry.is_agent ? (
+                            <span className="solver-tag-agent">🤖 AGENT</span>
+                          ) : (
+                            <span className="solver-tag-human">👤 HUMAN</span>
+                          )}
+                          {isYou && <span className="solver-tag-you">YOU</span>}
+                        </div>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>
+                        {entry.tier}
+                      </td>
+                      <td>
+                        <strong>{entry.solves}</strong> <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>rounds</span>
+                      </td>
+                      <td>
+                        {entry.is_pure_master ? (
+                          <span className="pure-badge-tag">
+                            ⭐ {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>
+                            {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {entry.streak > 0 ? (
+                          <span style={{ color: '#fbbf24', font: '600 11.5px var(--font-mono)' }}>
+                            🔥 {entry.streak}W
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ font: '600 12px var(--font-mono)', color: 'var(--color-success)' }}>
+                        {entry.total_won_near}
+                      </td>
+                      <td style={{ textAlign: 'right', font: '700 12px var(--font-mono)', color: 'var(--lime)' }}>
+                        {entry.points} PTS
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <section className="how-section" id="how">
           <div className="how-header">

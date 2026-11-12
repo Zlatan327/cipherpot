@@ -2590,3 +2590,184 @@ footer button:hover {
   color: var(--text-secondary);
   line-height: 1.4;
 }
+
+/* ==========================================================================
+   ARENA LEADERBOARD & DEDUCTION RANKINGS
+   ========================================================================== */
+.leaderboard-section {
+  padding: 48px 0;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 48px;
+}
+
+.leaderboard-header {
+  margin-bottom: 24px;
+}
+
+.leaderboard-header h2 {
+  font-size: 24px;
+  color: #fff;
+  font-family: var(--font-head);
+  margin: 0 0 8px 0;
+}
+
+.leaderboard-header p {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.leaderboard-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.leaderboard-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.leaderboard-tab-btn {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font: 600 11.5px var(--font-mono);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leaderboard-tab-btn:hover {
+  color: #fff;
+  border-color: var(--text-muted);
+}
+
+.leaderboard-tab-btn.active {
+  background: var(--lime);
+  color: #000;
+  border-color: var(--lime);
+}
+
+.leaderboard-stats-summary {
+  display: flex;
+  gap: 16px;
+  font: 11.5px var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.leaderboard-stats-summary span strong {
+  color: var(--lime);
+}
+
+.leaderboard-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface-subtle);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  background: #111710;
+  color: var(--text-muted);
+  font: 600 11px var(--font-mono);
+  letter-spacing: 0.05em;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+
+.leaderboard-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.leaderboard-table tr:last-child td {
+  border-bottom: none;
+}
+
+.leaderboard-table tr:hover td {
+  background: rgba(217, 255, 85, 0.03);
+}
+
+.rank-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font: 700 11.5px var(--font-mono);
+  background: #1e261b;
+  color: var(--text-secondary);
+}
+
+.rank-badge.gold {
+  background: #fbbf24;
+  color: #000;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.rank-badge.silver {
+  background: #94a3b8;
+  color: #000;
+}
+
+.rank-badge.bronze {
+  background: #d97706;
+  color: #000;
+}
+
+.solver-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.solver-tag-agent {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font: 600 10px var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.solver-tag-human {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  font: 600 10px var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.solver-tag-you {
+  background: var(--lime);
+  color: #000;
+  font: 700 10px var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.pure-badge-tag {
+  color: #fbbf24;
+  font-weight: 600;
+}
