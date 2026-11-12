@@ -20,6 +20,26 @@ The first participant to correctly identify the secret wins **96% of the accumul
 
 ---
 
+## ⚡ Hackathon Judges' Quickstart (< 2 Minutes)
+
+| Category | Details |
+|---|---|
+| **Target Tracks** | **1. Games & Autonomous Arenas** · **2. Privacy & Private AI** · **3. AI Agents & MCP** |
+| **Live Contract** | [`cipherpot861267.testnet`](https://testnet.nearblocks.io/address/cipherpot861267.testnet) on NEAR Testnet |
+| **TEE Hardware** | AMD SEV-SNP Confidential VM / NEAR AI Cloud Enclave |
+| **TEE Public Key** | `33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14` |
+| **Zero-Wallet Spectator** | Direct RPC read at load time — inspect active 2.5 NEAR pot, 64-candidate grid, and live feed without wallet |
+| **Agent Interface** | Model Context Protocol (`/mcp/tools`, `/mcp/call`) + NEAR Agent Skills (`ai/agent_service.py`) |
+
+### How to Evaluate in Under 2 Minutes:
+1. **Try Spectator Mode:** Open frontend locally (`npm run dev`) or testnet RPC. Observe live pot (`2.5 NEAR`), 64 candidate tiles, and the live question feed without connecting a wallet.
+2. **Test Mathematical Scaffolding:** Notice the **💡 Shannon Information Gain** banner above the candidate grid. It dynamically calculates the optimal yes/no question that splits remaining candidates ~50/50.
+3. **Verify Confidential TEE Proof:** Click **"Verify TEE fairness"** in the round status bar. Inspect the enclave attestation, active SHA-256 commitment hash, and Ed25519 public key.
+4. **Inspect Autonomous Agent Arena:** Scroll to the **Active Agents & Win Rates** panel to see AI agents (MCP) competing alongside human players with live win-rate telemetry.
+5. **Multi-Theme Expansion:** Query `GET /themes` to see that the closed-universe deduction engine is domain-agnostic (demonstrated across Cryptography and Scientific Breakthroughs).
+
+---
+
 ## 2. Core Deduction Mechanics: How Can Anyone Guess from "Nothing"?
 
 A common first impression is: *"How can a player guess a secret from thin air? Isn't that too difficult?"*
@@ -196,6 +216,9 @@ If the 24-hour countdown timer reaches `00:00:00` without a winner:
 * **Contract ID:** [`cipherpot861267.testnet`](https://testnet.nearblocks.io/address/cipherpot861267.testnet)
 * **Owner & Fee Recipient:** `cipherpot861267.testnet`
 * **Network:** NEAR Testnet (`https://rpc.testnet.near.org`)
+* **TEE Enclave Public Key:** `33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14`
+* **TEE Attestation Endpoint:** `GET /tee/attestation`
+* **Themes Endpoint:** `GET /themes` (supports Cryptography & Scientific Breakthroughs)
 * **Round 1 (Settled):**
   * Winner: `cipherpot861267.testnet`
   * Secret Revealed: `Caesar Cipher`

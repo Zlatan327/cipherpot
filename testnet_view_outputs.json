@@ -3,7 +3,7 @@
     "owner_id": "cipherpot861267.testnet",
     "protocol_fee_recipient": "cipherpot861267.testnet",
     "accumulated_fees": "44000000000000000000000",
-    "tee_public_key": null,
+    "tee_public_key": "33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14",
     "paused": false,
     "current_round_id": 1,
     "default_entry_fee": "100000000000000000000000",

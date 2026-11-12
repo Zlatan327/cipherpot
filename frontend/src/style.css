@@ -27,3 +27,43 @@
 .filter-pill:hover,.filter-pill.active{background:#253120;border-color:var(--lime);color:var(--lime)}
 .uneliminated-count{font-size:10px;font-family:var(--mono);color:#a4b0a0}
 .uneliminated-count b{color:var(--lime)}
+
+/* Scaffolding: Information Gain & Optimal Deduction Banner */
+.info-gain-card{background:linear-gradient(90deg,#1c271b 0%,#161e16 100%);border:1px solid #364831;border-radius:6px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.info-gain-left{display:flex;align-items:center;gap:10px}
+.info-gain-badge{background:#2e4425;color:var(--lime);border:1px solid #486a3b;border-radius:4px;font:8px var(--mono);padding:2px 6px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.info-gain-text{font-size:11px;color:#d5e0cd}
+.info-gain-text em{color:var(--lime);font-style:normal;font-weight:600}
+.info-gain-btn{background:var(--lime);color:#192015;border:0;border-radius:4px;font-size:9.5px;font-weight:600;padding:5px 9px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.info-gain-btn:hover{background:#e7ff7d;transform:translateY(-1px)}
+
+/* Global vs Local Rule-Out Distinctions */
+.candidate.globally-ruled{opacity:.28;background:#140e0e;border-color:#3a1d1d}
+.candidate.globally-ruled .candidate-name{text-decoration:line-through;color:#7f4d4d}
+.candidate.locally-crossed{opacity:.4;background:#151610;border-color:#38361f}
+.candidate.locally-crossed .candidate-name{text-decoration:line-through;color:#858252}
+.status-pill-global{font:7px var(--mono);color:#f87171;background:#381616;padding:1px 3px;border-radius:2px;letter-spacing:.02em}
+.status-pill-local{font:7px var(--mono);color:#facc15;background:#312d14;padding:1px 3px;border-radius:2px;letter-spacing:.02em}
+
+/* Agent Arena & Hybrid Intelligence */
+.agent-metrics-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;margin-bottom:12px}
+.agent-metric-box{background:#1a201a;border:1px solid #2d382c;border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
+.agent-metric-box small{font:8px var(--mono);color:#83907e;letter-spacing:.06em}
+.agent-metric-box strong{font:600 13px var(--head);color:#e2ecd9}
+.agent-metric-box span{font:8px var(--mono);color:var(--lime)}
+
+/* Modal Dialogs (Attestation & Deduction Replay) */
+.cipher-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1100;backdrop-filter:blur(3px)}
+.cipher-modal-body{background:#151915;border:1px solid #334032;border-radius:10px;padding:24px;max-width:520px;width:92%;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.8)}
+.code-box{background:#0d110d;border:1px solid #252e24;border-radius:6px;padding:10px 12px;font:10px/1.4 var(--mono);color:#a8ef9f;word-break:break-all;margin:10px 0}
+.checklist-item{display:flex;align-items:center;gap:8px;font-size:11px;color:#cdd7c6;margin:6px 0}
+.checklist-item svg{color:var(--lime);flex-shrink:0}
+
+/* Multi-Theme Switcher Bar */
+.theme-switcher-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #283127;flex-wrap:wrap}
+.theme-label{font:8px var(--mono);color:#8d988a;letter-spacing:.08em}
+.theme-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.theme-btn{background:#161c16;border:1px solid #2e3a2c;color:#a3af9e;border-radius:5px;font-size:10px;padding:5px 9px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.theme-btn small{font:8px var(--mono);color:#73816f}
+.theme-btn:hover,.theme-btn.active{background:#23311f;border-color:var(--lime);color:#eaffb5}
+.theme-btn.active small{color:var(--lime)}

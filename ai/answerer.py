@@ -28,6 +28,7 @@ class AIAnswerer:
                     break
 
         self.candidates: List[Dict[str, Any]] = []
+        self._eval_cache: Dict[str, Dict[str, Any]] = {}
         if board_path and os.path.exists(board_path):
             with open(board_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -55,26 +56,44 @@ class AIAnswerer:
     ) -> Dict[str, Any]:
         """
         Evaluate a sanitized deduction question against the active round's secret candidate.
-        Returns:
-            {
-                "answer": "Yes" | "No" | "Unclear",
-                "rule_out_candidate_ids": list of candidate IDs eliminated,
-                "confidence": float,
-                "method": "llm" | "deterministic"
-            }
+        Cost-controlled architecture:
+        1. In-memory exact cache check
+        2. Deterministic attribute & keyword evaluator (0 token cost, instant)
+        3. LLM fallback (Gemini Flash) only for complex edge cases
         """
-        # Try LLM if GEMINI_API_KEY is available
+        norm_q = sanitized_question.strip().lower()
+        secret_id = secret_candidate.get("id", 0)
+        cache_key = f"{secret_id}::{norm_q}"
+
+        # 1. Fast Cache Hit
+        if cache_key in self._eval_cache:
+            hit = dict(self._eval_cache[cache_key])
+            hit["cached"] = True
+            return hit
+
+        # 2. Deterministic Primary Evaluation (0 token cost)
+        det_res = self._evaluate_deterministically(secret_candidate, sanitized_question)
+        if det_res.get("answer") in ("Yes", "No"):
+            det_res["cached"] = False
+            self._eval_cache[cache_key] = det_res
+            return det_res
+
+        # 3. LLM Edge-Case Fallback (Gemini Flash)
         gemini_api_key = os.getenv("GEMINI_API_KEY")
         if gemini_api_key:
             try:
                 llm_res = self._evaluate_with_gemini(secret_candidate, sanitized_question, gemini_api_key)
-                if llm_res:
+                if llm_res and llm_res.get("answer") in ("Yes", "No", "Unclear"):
+                    llm_res["cached"] = False
+                    self._eval_cache[cache_key] = llm_res
                     return llm_res
             except Exception as e:
                 print(f"LLM evaluation fallback triggered: {e}")
 
-        # Deterministic evaluation using structured candidate attributes
-        return self._evaluate_deterministically(secret_candidate, sanitized_question)
+        # Default fallback
+        det_res["cached"] = False
+        self._eval_cache[cache_key] = det_res
+        return det_res
 
     def _evaluate_with_gemini(
         self,

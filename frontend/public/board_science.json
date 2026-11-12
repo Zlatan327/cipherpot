@@ -1,0 +1,519 @@
+{
+  "theme": "science_inventions",
+  "title": "Greatest Scientific Breakthroughs & Inventions",
+  "total": 64,
+  "candidates": [
+    {
+      "id": 1,
+      "name": "Wheel",
+      "category": "Ancient Technology",
+      "era": "Ancient",
+      "origin": "Mesopotamia",
+      "type": "Mechanical Tool"
+    },
+    {
+      "id": 2,
+      "name": "Abacus",
+      "category": "Ancient Computing",
+      "era": "Ancient",
+      "origin": "Mesopotamia",
+      "type": "Calculating Device"
+    },
+    {
+      "id": 3,
+      "name": "Papyrus",
+      "category": "Materials & Writing",
+      "era": "Ancient",
+      "origin": "Egypt",
+      "type": "Writing Medium"
+    },
+    {
+      "id": 4,
+      "name": "Sundial",
+      "category": "Timekeeping",
+      "era": "Ancient",
+      "origin": "Egypt",
+      "type": "Astronomical Instrument"
+    },
+    {
+      "id": 5,
+      "name": "Water Clock",
+      "category": "Timekeeping",
+      "era": "Ancient",
+      "origin": "Egypt",
+      "type": "Hydraulic Device"
+    },
+    {
+      "id": 6,
+      "name": "Archimedes Screw",
+      "category": "Mechanical Engineering",
+      "era": "Ancient",
+      "origin": "Greece",
+      "type": "Hydraulic Pump"
+    },
+    {
+      "id": 7,
+      "name": "Astrolabe",
+      "category": "Astronomy",
+      "era": "Ancient",
+      "origin": "Greece",
+      "type": "Navigational Tool"
+    },
+    {
+      "id": 8,
+      "name": "Antikythera Mechanism",
+      "category": "Ancient Computing",
+      "era": "Ancient",
+      "origin": "Greece",
+      "type": "Gear Calendar"
+    },
+    {
+      "id": 9,
+      "name": "Compass",
+      "category": "Navigation",
+      "era": "Ancient",
+      "origin": "China",
+      "type": "Magnetic Pointer"
+    },
+    {
+      "id": 10,
+      "name": "Paper Making",
+      "category": "Materials & Writing",
+      "era": "Ancient",
+      "origin": "China",
+      "type": "Information Medium"
+    },
+    {
+      "id": 11,
+      "name": "Seismoscope",
+      "category": "Earth Sciences",
+      "era": "Ancient",
+      "origin": "China",
+      "type": "Earthquake Detector"
+    },
+    {
+      "id": 12,
+      "name": "Phaistos Disc",
+      "category": "Ancient Artifacts",
+      "era": "Ancient",
+      "origin": "Crete",
+      "type": "Impressed Inscription"
+    },
+    {
+      "id": 13,
+      "name": "Roman Concrete",
+      "category": "Materials Engineering",
+      "era": "Ancient",
+      "origin": "Rome",
+      "type": "Hydraulic Mortar"
+    },
+    {
+      "id": 14,
+      "name": "Hero's Aeolipile",
+      "category": "Thermodynamics",
+      "era": "Ancient",
+      "origin": "Alexandria",
+      "type": "Steam Reaction Turbine"
+    },
+    {
+      "id": 15,
+      "name": "Pinhole Camera",
+      "category": "Optics",
+      "era": "Ancient",
+      "origin": "China",
+      "type": "Light Projection"
+    },
+    {
+      "id": 16,
+      "name": "Glass Blowing",
+      "category": "Materials Science",
+      "era": "Ancient",
+      "origin": "Syria",
+      "type": "Vessel Manufacturing"
+    },
+    {
+      "id": 17,
+      "name": "Printing Press",
+      "category": "Information & Media",
+      "era": "Medieval",
+      "origin": "Germany",
+      "type": "Movable Type"
+    },
+    {
+      "id": 18,
+      "name": "Mechanical Clock",
+      "category": "Timekeeping",
+      "era": "Medieval",
+      "origin": "Europe",
+      "type": "Escapement Clock"
+    },
+    {
+      "id": 19,
+      "name": "Gunpowder",
+      "category": "Chemical Engineering",
+      "era": "Medieval",
+      "origin": "China",
+      "type": "Explosive Mixture"
+    },
+    {
+      "id": 20,
+      "name": "Spectacles",
+      "category": "Optics",
+      "era": "Medieval",
+      "origin": "Italy",
+      "type": "Convex Glass Lenses"
+    },
+    {
+      "id": 21,
+      "name": "Hourglass",
+      "category": "Timekeeping",
+      "era": "Medieval",
+      "origin": "Europe",
+      "type": "Sand Glass Timer"
+    },
+    {
+      "id": 22,
+      "name": "Windmill",
+      "category": "Mechanical Engineering",
+      "era": "Medieval",
+      "origin": "Persia",
+      "type": "Rotary Power Mill"
+    },
+    {
+      "id": 23,
+      "name": "Blast Furnace",
+      "category": "Metallurgy",
+      "era": "Medieval",
+      "origin": "Europe",
+      "type": "Iron Smelting"
+    },
+    {
+      "id": 24,
+      "name": "Sternpost Rudder",
+      "category": "Maritime Engineering",
+      "era": "Medieval",
+      "origin": "China",
+      "type": "Directional Rudder"
+    },
+    {
+      "id": 25,
+      "name": "Alembic Still",
+      "category": "Alchemy & Chemistry",
+      "era": "Medieval",
+      "origin": "Arab World",
+      "type": "Distillation Vessel"
+    },
+    {
+      "id": 26,
+      "name": "Camera Obscura",
+      "category": "Optics",
+      "era": "Medieval",
+      "origin": "Arab World",
+      "type": "Dark Room Projection"
+    },
+    {
+      "id": 27,
+      "name": "Paper Mill",
+      "category": "Manufacturing",
+      "era": "Medieval",
+      "origin": "Arab World",
+      "type": "Watermill Pulverizer"
+    },
+    {
+      "id": 28,
+      "name": "Dry Mariners Compass",
+      "category": "Maritime Navigation",
+      "era": "Medieval",
+      "origin": "Italy",
+      "type": "Gimbal Compass"
+    },
+    {
+      "id": 29,
+      "name": "Equestrian Stirrup",
+      "category": "Military Engineering",
+      "era": "Medieval",
+      "origin": "China",
+      "type": "Saddle Support"
+    },
+    {
+      "id": 30,
+      "name": "Spinning Wheel",
+      "category": "Textile Engineering",
+      "era": "Medieval",
+      "origin": "India",
+      "type": "Spindle Mechanism"
+    },
+    {
+      "id": 31,
+      "name": "Counterweight Trebuchet",
+      "category": "Ballistics",
+      "era": "Medieval",
+      "origin": "France",
+      "type": "Gravity Lever Siege"
+    },
+    {
+      "id": 32,
+      "name": "Astrolabic Quadrant",
+      "category": "Astronomy",
+      "era": "Medieval",
+      "origin": "Arab World",
+      "type": "Solar Alt-azimuth Tool"
+    },
+    {
+      "id": 33,
+      "name": "Telescope",
+      "category": "Astronomy & Optics",
+      "era": "Modern",
+      "origin": "Netherlands",
+      "type": "Refracting Optical Tube"
+    },
+    {
+      "id": 34,
+      "name": "Microscope",
+      "category": "Biology & Optics",
+      "era": "Modern",
+      "origin": "Netherlands",
+      "type": "Compound Microscope"
+    },
+    {
+      "id": 35,
+      "name": "Mercury Barometer",
+      "category": "Atmospheric Physics",
+      "era": "Modern",
+      "origin": "Italy",
+      "type": "Torricellian Vacuum"
+    },
+    {
+      "id": 36,
+      "name": "Watt Steam Engine",
+      "category": "Industrial Revolution",
+      "era": "Modern",
+      "origin": "Scotland",
+      "type": "Condenser Steam Engine"
+    },
+    {
+      "id": 37,
+      "name": "Lightning Rod",
+      "category": "Atmospheric Electricity",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Grounding Conductor"
+    },
+    {
+      "id": 38,
+      "name": "Voltaic Pile",
+      "category": "Electromagnetism",
+      "era": "Modern",
+      "origin": "Italy",
+      "type": "Chemical Battery"
+    },
+    {
+      "id": 39,
+      "name": "Electric Motor",
+      "category": "Electromagnetism",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Rotary Field Coil"
+    },
+    {
+      "id": 40,
+      "name": "Telegraph",
+      "category": "Telecommunications",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Electromagnetic Morse Relay"
+    },
+    {
+      "id": 41,
+      "name": "Dynamite",
+      "category": "Chemical Engineering",
+      "era": "Modern",
+      "origin": "Sweden",
+      "type": "Kieselguhr Nitroglycerin"
+    },
+    {
+      "id": 42,
+      "name": "Telephone",
+      "category": "Telecommunications",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Acoustic-Electric Diaphragm"
+    },
+    {
+      "id": 43,
+      "name": "Incandescent Lamp",
+      "category": "Lighting & Power",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Carbon Filament Bulb"
+    },
+    {
+      "id": 44,
+      "name": "Wireless Radio",
+      "category": "Telecommunications",
+      "era": "Modern",
+      "origin": "Italy",
+      "type": "Radiofrequency Spark Gap"
+    },
+    {
+      "id": 45,
+      "name": "X-Ray Tube",
+      "category": "Medical Physics",
+      "era": "Modern",
+      "origin": "Germany",
+      "type": "Roentgen Vacuum Ray"
+    },
+    {
+      "id": 46,
+      "name": "Wright Flyer",
+      "category": "Aviation Engineering",
+      "era": "Modern",
+      "origin": "United States",
+      "type": "Powered Biplane"
+    },
+    {
+      "id": 47,
+      "name": "Penicillin",
+      "category": "Medicine & Pharmacology",
+      "era": "Modern",
+      "origin": "United Kingdom",
+      "type": "Antibiotic Mold Secretion"
+    },
+    {
+      "id": 48,
+      "name": "Electron Microscope",
+      "category": "Nanotechnology",
+      "era": "Modern",
+      "origin": "Germany",
+      "type": "Electromagnetic Lens Beam"
+    },
+    {
+      "id": 49,
+      "name": "Transistor",
+      "category": "Semiconductor Physics",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Solid State Switch"
+    },
+    {
+      "id": 50,
+      "name": "DNA Double Helix",
+      "category": "Molecular Genetics",
+      "era": "Digital",
+      "origin": "United Kingdom",
+      "type": "Base Pair Polymer"
+    },
+    {
+      "id": 51,
+      "name": "Polio Vaccine",
+      "category": "Immunology",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Inactivated Virus"
+    },
+    {
+      "id": 52,
+      "name": "Integrated Circuit",
+      "category": "Semiconductor Electronics",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Monolithic Silicon Chip"
+    },
+    {
+      "id": 53,
+      "name": "Optical Laser",
+      "category": "Quantum Electronics",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Stimulated Emission Beam"
+    },
+    {
+      "id": 54,
+      "name": "ARPANET Protocol",
+      "category": "Distributed Systems",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Packet Switching IMP"
+    },
+    {
+      "id": 55,
+      "name": "Personal Computer",
+      "category": "Computing",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Microprocessor Terminal"
+    },
+    {
+      "id": 56,
+      "name": "MRI Scanner",
+      "category": "Medical Physics",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Nuclear Magnetic Imager"
+    },
+    {
+      "id": 57,
+      "name": "PCR Gene Amplification",
+      "category": "Biotechnology",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Taq Polymerase Cycling"
+    },
+    {
+      "id": 58,
+      "name": "World Wide Web",
+      "category": "Hypermedia Systems",
+      "era": "Digital",
+      "origin": "Switzerland",
+      "type": "HTTP/HTML Protocol"
+    },
+    {
+      "id": 59,
+      "name": "GPS Constellation",
+      "category": "Satellite Navigation",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Atomic Clock Orbiters"
+    },
+    {
+      "id": 60,
+      "name": "Lithium-Ion Battery",
+      "category": "Energy Storage",
+      "era": "Digital",
+      "origin": "Japan",
+      "type": "Intercalation Power Cell"
+    },
+    {
+      "id": 61,
+      "name": "CRISPR-Cas9",
+      "category": "Genetic Engineering",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Targeted RNA Endonuclease"
+    },
+    {
+      "id": 62,
+      "name": "Superconducting Qubit",
+      "category": "Quantum Computing",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Josephson Junction Qubit"
+    },
+    {
+      "id": 63,
+      "name": "Transformer Model",
+      "category": "Artificial Intelligence",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Self-Attention Neural Network"
+    },
+    {
+      "id": 64,
+      "name": "Fusion Net Ignition",
+      "category": "Energy Physics",
+      "era": "Digital",
+      "origin": "United States",
+      "type": "Inertial Confinement Target"
+    }
+  ]
+}
