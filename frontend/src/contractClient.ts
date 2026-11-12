@@ -7,7 +7,7 @@
 
 export const contractConfig = {
   CONTRACT_ID: (import.meta.env.CONTRACT_ID as string) || 'cipherpot861267.testnet',
-  RPC_URL: (import.meta.env.RPC_URL as string) || 'https://rpc.testnet.near.org',
+  RPC_URL: (import.meta.env.RPC_URL as string) || (import.meta.env.DEV ? '/near-rpc' : 'https://rpc.testnet.near.org'),
   BOARD_URL: (import.meta.env.BOARD_URL as string) || '/board.json',
   API_URL: (import.meta.env.API_URL as string) || 'http://localhost:8000',
 } as const;
