@@ -1722,6 +1722,13 @@ footer button:hover {
   }
 }
 
+@media (max-width: 960px) {
+  .network,
+  .player-progression-pill {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .topbar {
     height: 60px;
@@ -2533,10 +2540,13 @@ footer button:hover {
   gap: 8px;
   background: #141a13;
   border: 1px solid #2a3d24;
-  border-radius: 20px;
-  padding: 4px 12px;
+  border-radius: 6px;
+  padding: 0 12px;
+  height: 36px;
+  box-sizing: border-box;
   font: 600 11px var(--font-mono);
   color: var(--lime);
+  white-space: nowrap;
 }
 
 .arena-telemetry-ticker {
