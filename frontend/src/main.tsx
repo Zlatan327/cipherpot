@@ -162,8 +162,14 @@ function App() {
     setQuestion(clueText);
     setIsCurrentQuestionAssisted(true);
     setCluesUsed((prev) => prev + 1);
-    const el = document.getElementById('question');
-    if (el) el.focus();
+    handleTabChange('round');
+    setTimeout(() => {
+      const el = document.getElementById('question');
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
   };
 
   const handleSwitchTheme = async (theme: 'crypto' | 'science') => {
@@ -600,7 +606,15 @@ function App() {
 
       <header className="topbar">
         <div className="header-left">
-          <a className="brand" href="#top" aria-label="Cipher home">
+          <a
+            className="brand"
+            href="#round"
+            onClick={(e) => {
+              e.preventDefault();
+              handleTabChange('round');
+            }}
+            aria-label="Cipher home"
+          >
             <span className="brand-mark"><span /></span>
             <span>CIPHER</span>
           </a>
@@ -1132,12 +1146,19 @@ function App() {
                 <p>Click any card to inspect candidate traits or submit a cryptographic guess. Struck-out tiles are ruled out globally.</p>
               </div>
               <div className="board-view-actions">
+                <div className="board-stats-pill">
+                  <span>Questions Left: <b>{questionsLeftDisplay}</b></span>
+                  <span>·</span>
+                  <span>Your Guesses: <b>{guessesRemainingDisplay}</b></span>
+                  <span>·</span>
+                  <span>Pot: <b style={{ color: 'var(--lime)' }}>{potDisplay} NEAR</b></span>
+                </div>
                 <button
                   type="button"
                   className="button button-secondary"
                   onClick={() => handleTabChange('round')}
                 >
-                  <MessageSquareText size={14} /> Back to Live Feed & Ask Questions
+                  <MessageSquareText size={14} /> Live Feed & Ask Console &rarr;
                 </button>
               </div>
             </div>
@@ -1523,9 +1544,16 @@ function App() {
                       </td>
                       <td>
                         <div className="solver-name-cell">
-                          <strong style={{ fontFamily: 'var(--font-mono)', color: isYou ? 'var(--lime)' : '#fff' }}>
-                            {entry.account_id}
-                          </strong>
+                          <a
+                            href={`https://testnet.nearblocks.io/address/${entry.account_id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontFamily: 'var(--font-mono)', color: isYou ? 'var(--lime)' : '#fff', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                            title="View on NearBlocks Testnet Explorer"
+                          >
+                            <strong>{entry.account_id}</strong>
+                            <ArrowUpRight size={11} style={{ opacity: 0.5 }} />
+                          </a>
                           {entry.is_agent ? (
                             <span className="solver-tag-agent"><Bot size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> AGENT</span>
                           ) : (

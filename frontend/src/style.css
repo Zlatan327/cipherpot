@@ -774,6 +774,27 @@ main {
   margin: 0;
 }
 
+.board-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.board-stats-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 0 12px;
+  height: 36px;
+  font: 11.5px var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 .panel {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -1823,11 +1844,39 @@ footer button:hover {
 
 @media (max-width: 640px) {
   .topbar {
-    height: 60px;
-    padding: 0 14px;
+    height: auto;
+    min-height: 56px;
+    padding: 10px 14px 6px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .header-left {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
   }
   .main-nav {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    width: 100%;
+    padding: 6px 0 2px 0;
+    border-top: 1px solid var(--border-subtle);
+    gap: 16px;
+    height: 38px;
+  }
+  .main-nav::-webkit-scrollbar {
     display: none;
+  }
+  .main-nav a,
+  .main-nav button {
+    height: 36px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .header-right {
+    margin-left: auto;
   }
   .hero {
     padding: 24px 20px;
