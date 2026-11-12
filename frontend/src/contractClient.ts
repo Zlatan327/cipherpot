@@ -328,18 +328,13 @@ export async function fetchTeeAttestation(): Promise<TeeAttestation> {
 }
 
 export interface ArenaStats {
-  human_solves: number;
-  agent_solves: number;
-  pure_skill_solves: number;
-  assisted_solves: number;
-  total_pot_distributed_near: string;
-  total_tiles_eliminated: number;
-  active_participants: number;
-  competitive_balance: {
-    human_win_rate: string;
-    agent_win_rate: string;
-    pure_skill_win_rate: string;
-  };
+  contract_id: string;
+  rounds_managed: number;
+  settled_round_1_winner: string;
+  settled_round_1_payout_near: string;
+  round_2_rolled_over_near: string;
+  active_round_3_pot_near: string;
+  total_season_pot_near: string;
   economic_incentives: {
     pure_skill_pot_share: string;
     assisted_pot_share: string;

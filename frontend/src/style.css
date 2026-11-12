@@ -128,7 +128,7 @@ textarea:focus-visible {
 
 .banner-note {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   opacity: 0.85;
 }
@@ -506,7 +506,7 @@ main {
 }
 
 .strip-status small, .strip-item small {
-  font: 10px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--text-muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -529,7 +529,7 @@ main {
 }
 
 .strip-foot {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--text-dim);
 }
 
@@ -739,7 +739,7 @@ main {
 }
 
 .theme-pill small {
-  font: 10px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--text-dim);
 }
 
@@ -793,7 +793,7 @@ main {
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-subtle);
   color: var(--lime);
-  font: 10px var(--font-mono);
+  font: 11px var(--font-mono);
   padding: 1px 6px;
   border-radius: 10px;
 }
@@ -822,7 +822,7 @@ main {
   color: var(--lime);
   border: 1px solid var(--border-strong);
   border-radius: 4px;
-  font: 10.5px var(--font-mono);
+  font: 11px var(--font-mono);
   font-weight: 600;
   padding: 3px 8px;
   white-space: nowrap;
@@ -943,13 +943,13 @@ main {
 }
 
 .candidate-num {
-  font: 10px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--text-muted);
   font-weight: 600;
 }
 
 .candidate-tag {
-  font: 9.5px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--lime);
   background: var(--lime-dim);
   padding: 1px 5px;
@@ -990,7 +990,7 @@ main {
 }
 
 .status-pill-global {
-  font: 9.5px var(--font-mono);
+  font: 11px var(--font-mono);
   font-weight: 600;
   color: var(--color-danger);
   background: rgba(248, 113, 113, 0.18);
@@ -999,7 +999,7 @@ main {
 }
 
 .status-pill-local {
-  font: 9.5px var(--font-mono);
+  font: 11px var(--font-mono);
   font-weight: 600;
   color: var(--color-warning);
   background: rgba(250, 204, 21, 0.18);
@@ -1105,7 +1105,7 @@ main {
 }
 
 .contender-tag {
-  font: 10px var(--font-mono);
+  font: 11px var(--font-mono);
   background: var(--lime-dim);
   color: var(--text-secondary);
   padding: 2px 6px;
@@ -1177,7 +1177,7 @@ main {
 }
 
 .status-tag {
-  font: 10.5px var(--font-mono);
+  font: 11px var(--font-mono);
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1255,7 +1255,7 @@ textarea:disabled {
 }
 
 .suggested-label {
-  font: 10.5px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--text-muted);
   letter-spacing: 0.04em;
 }
@@ -1386,7 +1386,7 @@ textarea:disabled {
 }
 
 .agent-metric-box small {
-  font: 9.5px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--text-muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1398,7 +1398,7 @@ textarea:disabled {
 }
 
 .agent-metric-box span {
-  font: 10px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--lime);
 }
 
@@ -1758,7 +1758,7 @@ footer button:hover {
 
 .modal-grid-item small {
   color: var(--text-muted);
-  font: 10.5px var(--font-mono);
+  font: 11px var(--font-mono);
   display: block;
   text-transform: uppercase;
   margin-bottom: 2px;
@@ -1809,7 +1809,7 @@ footer button:hover {
 .replay-step-header {
   display: flex;
   justify-content: space-between;
-  font: 10.5px var(--font-mono);
+  font: 11px var(--font-mono);
   color: var(--color-success);
   margin-bottom: 4px;
 }
@@ -1993,7 +1993,7 @@ footer button:hover {
 .info-gain-tag {
   background: var(--lime);
   color: var(--lime-ink);
-  font: 700 10.5px var(--font-mono);
+  font: 700 11px var(--font-mono);
   padding: 3px 8px;
   border-radius: 4px;
   display: inline-flex;
@@ -2241,7 +2241,7 @@ footer button:hover {
 }
 
 .mode-btn small {
-  font: 9.5px var(--font-mono);
+  font: 11px var(--font-mono);
   text-transform: uppercase;
   color: var(--text-dim);
 }
@@ -2292,7 +2292,7 @@ footer button:hover {
   background: #78350f;
   color: #fef08a;
   border: 1px solid #d97706;
-  font: 700 10.5px var(--font-mono);
+  font: 700 11px var(--font-mono);
   padding: 3px 8px;
   border-radius: 4px;
   white-space: nowrap;
@@ -2371,7 +2371,7 @@ footer button:hover {
 }
 
 .mini-sandbox-badge {
-  font: 600 10.5px var(--font-mono);
+  font: 600 11px var(--font-mono);
   background: rgba(217, 255, 85, 0.12);
   color: var(--lime);
   padding: 2px 8px;
@@ -2424,7 +2424,7 @@ footer button:hover {
 }
 
 .mini-card-era {
-  font-size: 9.5px;
+  font-size: 11px;
   color: var(--text-muted);
   display: block;
   margin-top: 2px;
@@ -2488,7 +2488,7 @@ footer button:hover {
 .spectator-urgent-badge {
   background: #d97706;
   color: #000;
-  font: 800 10.5px var(--font-mono);
+  font: 800 11px var(--font-mono);
   padding: 3px 8px;
   border-radius: 4px;
   letter-spacing: 0.05em;
@@ -2745,7 +2745,7 @@ footer button:hover {
   background: rgba(56, 189, 248, 0.12);
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.3);
-  font: 600 10px var(--font-mono);
+  font: 600 11px var(--font-mono);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -2754,7 +2754,7 @@ footer button:hover {
   background: rgba(74, 222, 128, 0.12);
   color: #4ade80;
   border: 1px solid rgba(74, 222, 128, 0.3);
-  font: 600 10px var(--font-mono);
+  font: 600 11px var(--font-mono);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -2762,7 +2762,7 @@ footer button:hover {
 .solver-tag-you {
   background: var(--lime);
   color: #000;
-  font: 700 10px var(--font-mono);
+  font: 700 11px var(--font-mono);
   padding: 1px 6px;
   border-radius: 4px;
 }

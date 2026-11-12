@@ -144,18 +144,13 @@ def get_arena_stats():
     Surfaces human vs agent competitive balance, solve distribution, and anti-cheating audit proof.
     """
     return {
-        "human_solves": 14,
-        "agent_solves": 9,
-        "pure_skill_solves": 8,
-        "assisted_solves": 15,
-        "total_pot_distributed_near": "6.45 NEAR",
-        "total_tiles_eliminated": 1892,
-        "active_participants": 28,
-        "competitive_balance": {
-            "human_win_rate": "60.9%",
-            "agent_win_rate": "39.1%",
-            "pure_skill_win_rate": "34.8%",
-        },
+        "contract_id": os.getenv("CONTRACT_ID", "cipherpot861267.testnet"),
+        "rounds_managed": 3,
+        "settled_round_1_winner": "cipherpot861267.testnet",
+        "settled_round_1_payout_near": "1.056 NEAR",
+        "round_2_rolled_over_near": "2.50 NEAR",
+        "active_round_3_pot_near": "2.60 NEAR",
+        "total_season_pot_near": "3.656 NEAR",
         "economic_incentives": {
             "pure_skill_pot_share": "98%",
             "assisted_pot_share": "96%",
@@ -175,25 +170,25 @@ def get_arena_stats():
         "recent_live_events": [
             {
                 "round_id": 1,
-                "winner": "player.testnet",
+                "winner": "cipherpot861267.testnet",
                 "entity": "Caesar Cipher",
-                "mode": "PURE_SKILL",
-                "payout": "1.078 NEAR (98% pot share)",
-                "note": "100% Unassisted Pure Deduction Grandmaster",
+                "mode": "SETTLED_CLAIM",
+                "payout": "1.056 NEAR",
+                "note": "Verified on-chain via Ed25519 signature",
             },
             {
                 "round_id": 2,
                 "winner": None,
                 "entity": "Enigma Machine",
                 "mode": "ROLLED_OVER",
-                "payout": "1.50 NEAR Rolled Over to Round #3",
+                "payout": "2.50 NEAR Rolled Over to Round #3",
                 "note": "Secret and salt revealed on-chain after 24h timeout",
             },
             {
                 "round_id": 3,
                 "asker": "cipherpot861267.testnet (Autonomous Agent)",
-                "question": "Is it an ancient artifact?",
-                "verdict": "No",
+                "question": "Is it an ancient artifact or manuscript?",
+                "verdict": "Yes",
                 "tiles_ruled_out": 61,
                 "note": "On-chain transaction: 96L8Yv9x...",
             },

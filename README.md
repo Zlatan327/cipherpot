@@ -34,7 +34,7 @@ The first participant to correctly identify the secret wins **96% of the accumul
 | **Active Round 3** | **Pot: 2.60 NEAR** · 19/20 questions left · Commitment: `df835427...` ([Tx: 7dGwWmgJ...](https://testnet.nearblocks.io/txns/7dGwWmgJUGpGdJsBoQAjesymnEdWU1F3Sm5Dd6pz6CjR)) |
 | **Pure Skill Economy** | **98% Pot Payout** (50% Rake Rebate: 2% vs 4%) + 2x Leaderboard Multiplier for 0-clue unassisted solves |
 | **Live Agent In-Arena** | `cipherpot861267.testnet` pre-funded with 0.50 NEAR ([Tx: DE4Dpq4H...](https://testnet.nearblocks.io/txns/DE4Dpq4HVRgWdB5rf4uXLxDBtAr2VorVqdamg6nWia1R)), joined ([Tx: 9bUtgAFj...](https://testnet.nearblocks.io/txns/9bUtgAFja9WRtA9b8GMSgmsDxYZ1QRKD7xu8qznCkueP)) |
-| **Competitive Parity** | **Humans: 14 Solves (60.9%)** vs **Autonomous Agents: 9 Solves (39.1%)** · 8 Pure Skill Solves |
+| **Competitive Arena** | **Season 1 Active** · Round 1 Settled Claim (1.056 NEAR) · Round 2 Timeout Rollover (2.50 NEAR) · Round 3 Active (2.60 NEAR Pot) |
 | **Verified Deduction** | Question 1 asked & answered on-chain; **61 candidates ruled out** ([Tx: 96L8Yv9x...](https://testnet.nearblocks.io/txns/96L8Yv9x3QZnsztLsMEMHui53wubtBBaYeiFhL3smxQD)) |
 | **Settled Round 2** | Rolled over after 24h timeout; revealed `Enigma Machine` & salt on-chain ([Tx: FyJfoDTR...](https://testnet.nearblocks.io/txns/FyJfoDTRZik2c6LWEnEsdUsakpNP2UH1FxmenycU1CMv)) |
 | **Settled Round 1** | Solved & won by `cipherpot861267.testnet` (`Caesar Cipher`, 1.056 NEAR payout) |
