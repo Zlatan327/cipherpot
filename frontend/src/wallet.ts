@@ -26,7 +26,13 @@ export async function initWalletSelector(
   }
 
   selector = await setupWalletSelector({
-    network: 'testnet',
+    network: {
+      networkId: 'testnet',
+      nodeUrl: 'https://test.rpc.fastnear.com',
+      helperUrl: 'https://helper.testnet.near.org',
+      explorerUrl: 'https://testnet.nearblocks.io',
+      indexerUrl: 'https://testnet-api.kitwallet.app',
+    },
     modules: [setupMyNearWallet(), setupMeteorWallet()],
   });
 

@@ -82,9 +82,28 @@ function App() {
   const [showReplayModal, setShowReplayModal] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
 
+  // Priority 1: How to Play Onboarding Modal (Auto-open on first visit)
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState(() => {
+    try {
+      return !localStorage.getItem('cipher_seen_how_to_play_v1');
+    } catch {
+      return false;
+    }
+  });
+
+  const handleCloseHowToPlay = () => {
+    try {
+      localStorage.setItem('cipher_seen_how_to_play_v1', 'true');
+    } catch (e) {
+      console.warn(e);
+    }
+    setShowHowToPlayModal(false);
+  };
+
   // Guess Dialog State
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [submittingGuess, setSubmittingGuess] = useState(false);
+  const [viewMode, setViewMode] = useState<'contenders' | 'all'>('contenders');
 
   const handleSwitchTheme = async (theme: 'crypto' | 'science') => {
     setActiveTheme(theme);
@@ -429,12 +448,12 @@ function App() {
     <div className="app-shell">
       {isSpectator && (
         <div className="watch-banner">
-          <Eye size={14} />
+          <Eye size={15} />
           <span>
-            You’re watching.{' '}
+            You’re in Spectator Mode.{' '}
             <button onClick={openWalletModal}>Connect a wallet to play.</button>
           </span>
-          <span className="banner-note">Live Testnet Spectator Mode · no wallet required</span>
+          <span className="banner-note">Live Testnet Feed · No wallet required</span>
         </div>
       )}
 
@@ -444,12 +463,21 @@ function App() {
           <span>CIPHER</span>
         </a>
         <nav className="main-nav">
-          <a className="active" href="#round">The round</a>
-          <a href="#board">The board</a>
-          <a href="#how">How to play</a>
+          <a className="active" href="#round">The Round</a>
+          <a href="#board">The Board</a>
+          <a href="#how">How Deduction Works</a>
         </nav>
         <div className="header-right">
-          <span className="network"><i /> TESTNET</span>
+          {/* Priority 1: Persistent How to Play button */}
+          <button
+            className="how-to-play-btn"
+            onClick={() => setShowHowToPlayModal(true)}
+            title="How to Play Cipher in 30 seconds"
+          >
+            <CircleHelp size={16} />
+            <span>How to Play</span>
+          </button>
+          <span className="network"><i /> NEAR TESTNET</span>
           {accountId ? (
             <button className="wallet-button" onClick={signOutWallet} title="Click to disconnect">
               <Wallet size={16} />
@@ -459,7 +487,7 @@ function App() {
           ) : (
             <button className="wallet-button" onClick={openWalletModal}>
               <Wallet size={16} />
-              Connect wallet
+              Connect Wallet
               <ChevronDown size={14} />
             </button>
           )}
@@ -469,69 +497,18 @@ function App() {
       <main id="top">
         <section className="hero" id="round">
           <div className="hero-copy">
-            <div className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span className="live-dot" /> DAILY DEDUCTION <span className="eyebrow-divider">/</span>
-              <span style={{ color: '#fff', fontWeight: 600 }}>ROUND #{round ? round.round_id : 3}</span>
-              <div style={{ display: 'inline-flex', gap: '4px', marginLeft: '6px' }}>
-                <button
-                  type="button"
-                  style={{
-                    background: (round?.round_id === 3) ? '#283820' : '#181d18',
-                    border: '1px solid',
-                    borderColor: (round?.round_id === 3) ? 'var(--lime)' : '#2e382d',
-                    color: (round?.round_id === 3) ? 'var(--lime)' : '#8b9787',
-                    borderRadius: '4px',
-                    fontSize: '9px',
-                    fontFamily: 'var(--mono)',
-                    padding: '2px 6px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => handleLoadRound(3)}
-                >
-                  R#3 (Active)
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    background: (round?.round_id === 2) ? '#283820' : '#181d18',
-                    border: '1px solid',
-                    borderColor: (round?.round_id === 2) ? 'var(--lime)' : '#2e382d',
-                    color: (round?.round_id === 2) ? 'var(--lime)' : '#8b9787',
-                    borderRadius: '4px',
-                    fontSize: '9px',
-                    fontFamily: 'var(--mono)',
-                    padding: '2px 6px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => handleLoadRound(2)}
-                >
-                  R#2 (Rolled Over)
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    background: (round?.round_id === 1) ? '#283820' : '#181d18',
-                    border: '1px solid',
-                    borderColor: (round?.round_id === 1) ? 'var(--lime)' : '#2e382d',
-                    color: (round?.round_id === 1) ? 'var(--lime)' : '#8b9787',
-                    borderRadius: '4px',
-                    fontSize: '9px',
-                    fontFamily: 'var(--mono)',
-                    padding: '2px 6px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => handleLoadRound(1)}
-                >
-                  R#1 (Settled Won)
-                </button>
-              </div>
+            <div className="arena-badge">
+              <span className="live-dot" /> Round #{round ? round.round_id : 3} · Live Deduction Arena
             </div>
-            <h1>One secret.<br /><em>Sixty-four</em> possibilities.</h1>
-            <p className="hero-sub">Ask sharp questions. Read the clues. Find the secret before someone else does.</p>
+            <h1>One secret.<br /><span className="highlight">Sixty-four</span> possibilities.</h1>
+            <p className="hero-sub">
+              64 canonical entities committed to NEAR Protocol with confidential TEE hardware validation.
+              Ask sharp yes/no questions, eliminate tiles, and claim the <b>{potDisplay} NEAR</b> pot.
+            </p>
             <div className="hero-buttons">
               {isJoined ? (
                 <button className="button button-primary" disabled>
-                  <Sparkles size={16} /> You’re in
+                  <Sparkles size={16} /> You’re in (Active)
                 </button>
               ) : (
                 <button className="button button-primary" onClick={handleJoinRound}>
@@ -539,50 +516,58 @@ function App() {
                   <span className="button-cost">0.1 NEAR</span>
                 </button>
               )}
-              <a className="text-link" href="#how">How to play <ArrowDownRight size={15} /></a>
+              {/* Prominent Quickstart Modal Trigger */}
+              <button
+                className="button button-secondary"
+                onClick={() => setShowHowToPlayModal(true)}
+              >
+                <CircleHelp size={15} /> How to Play in 30s
+              </button>
+              <a className="text-link" href="#how">
+                Deduction Funnel <ArrowDownRight size={15} />
+              </a>
             </div>
           </div>
 
           <div className="pot-card">
             <div className="pot-card-top">
-              <span className="eyebrow">CURRENT POT</span>
-              <span className="pot-icon"><Coins size={19} /></span>
+              <span className="pot-label">Current Pot</span>
+              <span className="pot-icon"><Coins size={18} /></span>
             </div>
             <div className="pot-amount">
               <span className="pot-number">{potDisplay}</span>
               <span className="pot-unit">NEAR</span>
             </div>
-            <div className="pot-placeholder" style={{ color: '#86efac' }}>
-              Testnet Pot ({contractConfig.CONTRACT_ID})
+            <div className="pot-network-note">
+              NEAR Testnet Pot ({contractConfig.CONTRACT_ID})
             </div>
             <div className="pot-card-bottom">
               <span><span className="live-dot" /> {isSettled ? 'SETTLED' : 'LIVE ROUND'}</span>
               <span><Clock3 size={13} /> <b>{timerDisplay}</b></span>
             </div>
           </div>
-          <div className="hero-watermark">C</div>
         </section>
 
         <section className="round-strip" aria-label="Round status">
           <div className="strip-status">
             <span className="status-icon"><Activity size={16} /></span>
             <div>
-              <small>ROUND STATUS</small>
+              <small>Round Status</small>
               <strong>{statusText}</strong>
             </div>
           </div>
           <div className="strip-item">
-            <small>QUESTIONS LEFT</small>
+            <small>Questions Left</small>
             <strong>{questionsLeftDisplay}</strong>
             <span className="strip-foot">across all players</span>
           </div>
           <div className="strip-item">
-            <small>YOUR GUESSES</small>
+            <small>Your Guesses</small>
             <strong>{guessesRemainingDisplay}</strong>
             <span className="strip-foot">per entry fee</span>
           </div>
           <div className="strip-item">
-            <small>PLAYERS IN</small>
+            <small>Players In</small>
             <strong>{round ? round.total_players : 0}</strong>
             <span className="strip-foot">joined this round</span>
           </div>
@@ -594,23 +579,49 @@ function App() {
                 setTeeAttestation(att);
                 setShowAttestationModal(true);
               }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--lime)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                font: 'inherit',
-                padding: 0,
-              }}
               title="Inspect Confidential TEE Hardware Attestation & Public Key"
             >
               Verify TEE fairness <ArrowUpRight size={13} />
             </button>
           </div>
         </section>
+
+        <div className="inspector-bar">
+          <div className="inspector-group">
+            <span className="inspector-label">ARCHIVED ROUNDS:</span>
+            <button
+              type="button"
+              className={`inspector-pill ${round?.round_id === 3 ? 'active' : ''}`}
+              onClick={() => handleLoadRound(3)}
+            >
+              ● R#3 (Active · 2.60 NEAR)
+            </button>
+            <button
+              type="button"
+              className={`inspector-pill ${round?.round_id === 2 ? 'active' : ''}`}
+              onClick={() => handleLoadRound(2)}
+            >
+              R#2 (Rolled Over)
+            </button>
+            <button
+              type="button"
+              className={`inspector-pill ${round?.round_id === 1 ? 'active' : ''}`}
+              onClick={() => handleLoadRound(1)}
+            >
+              R#1 (Settled Won)
+            </button>
+          </div>
+          <div>
+            <a
+              href={`https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-link"
+            >
+              Verified on NearBlocks <ArrowUpRight size={12} />
+            </a>
+          </div>
+        </div>
 
         {notice && (
           <div className="notice" role="status">
@@ -624,20 +635,19 @@ function App() {
           <section className="settled-card settled-won">
             <span className="settled-icon"><Check size={18} /></span>
             <div style={{ flex: 1 }}>
-              <small>ROUND #{round.round_id} SETTLED</small>
-              <h2>Winner: {round.winner}</h2>
-              <p>
+              <div className="inspector-label">ROUND #{round.round_id} SETTLED</div>
+              <h2 style={{ margin: '6px 0', fontSize: '18px' }}>Winner: {round.winner}</h2>
+              <p style={{ margin: '0 0 10px 0', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
                 Secret entity revealed: <b>{round.secret_revealed}</b>.
                 Payout: {formatNear(round.payout || '0')} NEAR (96% of pot).
                 Protocol fee: {formatNear(round.rake_amount || '0')} NEAR (4% rake).
               </p>
-              <div style={{ marginTop: '10px' }}>
+              <div>
                 <button
                   className="button button-primary"
                   onClick={() => setShowReplayModal(true)}
-                  style={{ height: '32px', fontSize: '10px' }}
                 >
-                  <Share2 size={13} /> Replay Deduction & Share Card
+                  <Share2 size={14} /> Replay Deduction & Share Card
                 </button>
               </div>
             </div>
@@ -648,10 +658,10 @@ function App() {
           <section className="settled-card settled-refunding">
             <span className="settled-icon"><Clock3 size={18} /></span>
             <div style={{ flex: 1 }}>
-              <small>ROUND #{round.round_id} TIMED OUT & ROLLED OVER</small>
-              <h2>Progressive Jackpot Rolled Over to Round #{round.round_id + 1}</h2>
-              <p>
-                Round reached 24h timeout without a winner. Secret revealed on-chain: <b>{round.secret_revealed}</b> (Salt: <code>{round.salt_revealed}</code>).
+              <div className="inspector-label">ROUND #{round.round_id} TIMED OUT & ROLLED OVER</div>
+              <h2 style={{ margin: '6px 0', fontSize: '18px' }}>Progressive Jackpot Rolled Over to Round #{round.round_id + 1}</h2>
+              <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                Round reached 24h timeout without a winner. Secret revealed on-chain: <b>{round.secret_revealed}</b>.
                 100% of accumulated pot ({formatNear(round.pot)} NEAR) rolled over to expand Round #{round.round_id + 1}'s prize pool!
               </p>
             </div>
@@ -660,19 +670,19 @@ function App() {
 
         <div className="content-grid">
           <section className="board-section panel" id="board">
-            <div className="theme-switcher-bar">
-              <span className="theme-label">ROTATING ARENA THEME:</span>
-              <div className="theme-buttons">
+            <div className="theme-bar">
+              <span className="inspector-label">ARENA THEME:</span>
+              <div className="theme-pill-group">
                 <button
                   type="button"
-                  className={`theme-btn ${activeTheme === 'crypto' ? 'active' : ''}`}
+                  className={`theme-pill ${activeTheme === 'crypto' ? 'active' : ''}`}
                   onClick={() => handleSwitchTheme('crypto')}
                 >
                   🏛️ Cryptography History <small>(Live Testnet)</small>
                 </button>
                 <button
                   type="button"
-                  className={`theme-btn ${activeTheme === 'science' ? 'active' : ''}`}
+                  className={`theme-pill ${activeTheme === 'science' ? 'active' : ''}`}
                   onClick={() => handleSwitchTheme('science')}
                 >
                   🔬 Scientific Breakthroughs <small>(Preview)</small>
@@ -680,120 +690,230 @@ function App() {
               </div>
             </div>
 
-            <div className="section-heading">
+            <div className="section-header">
               <div>
-                <div className="eyebrow">
-                  THE CANDIDATE SET · {activeTheme === 'crypto' ? 'CRYPTOGRAPHY' : 'SCIENCE & INVENTIONS'}
-                </div>
-                <h2>{activeTheme === 'crypto' ? 'Find the secret cipher.' : 'Find the breakthrough invention.'}</h2>
+                <h2 className="section-title">
+                  {activeTheme === 'crypto' ? 'The Cryptography Board' : 'The Scientific Breakthroughs'}
+                </h2>
               </div>
-              <span className="board-count">64 <span>candidates</span></span>
+              <div className="view-tabs">
+                <button
+                  type="button"
+                  className={`view-tab ${viewMode === 'contenders' ? 'active' : ''}`}
+                  onClick={() => setViewMode('contenders')}
+                >
+                  <Sparkles size={13} /> Active Contenders <span className="badge">{remainingCandidates.length}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`view-tab ${viewMode === 'all' ? 'active' : ''}`}
+                  onClick={() => setViewMode('all')}
+                >
+                  <Eye size={13} /> Full 64 Board <span className="badge">64</span>
+                </button>
+              </div>
             </div>
             <p className="section-intro">
               {activeTheme === 'crypto'
-                ? 'Click any tile to inspect clues and guess. Right-click to take private notes.'
+                ? 'The confidential secret is committed to NEAR testnet. Ask questions to rule out tiles or make a candidate guess to claim the pot.'
                 : 'Previewing rotating general knowledge theme: 64 milestone discoveries from the Wheel to Quantum Qubits.'}
             </p>
 
-            {optimalDeduction && (
-              <div className="info-gain-card">
-                <div className="info-gain-left">
-                  <span className="info-gain-badge">💡 Max Info Gain</span>
-                  <div className="info-gain-text">
-                    Optimal split: <em>"{optimalDeduction.question}"</em> — eliminates ~50% of remaining candidates.
-                  </div>
+            {/* Priority 3: Large, Live "X Cards Remaining" Scoreboard */}
+            <div className="cards-remaining-scoreboard">
+              <div className="scoreboard-main">
+                <div className="scoreboard-left">
+                  <span className="count-big">{remainingCandidates.length}</span>
+                  <span className="count-total">/ {candidates.length || 64}</span>
                 </div>
-                <button
-                  className="info-gain-btn"
-                  onClick={() => setQuestion(optimalDeduction.question)}
-                  disabled={!isJoined || isSettled}
-                >
-                  Use Clue
-                </button>
+                <div className="scoreboard-title-group">
+                  <span className="scoreboard-title">Active Cards Remaining</span>
+                  <span className="scoreboard-sub">
+                    {64 - remainingCandidates.length} eliminated ({Math.round(((64 - remainingCandidates.length) / 64) * 100)}% of board ruled out)
+                  </span>
+                </div>
+              </div>
+              <div className="scoreboard-progress-bar">
+                <div
+                  className="scoreboard-progress-fill"
+                  style={{ width: `${Math.round(((64 - remainingCandidates.length) / 64) * 100)}%` }}
+                />
+              </div>
+              <div className="scoreboard-breakdown">
+                <span className="breakdown-tag">
+                  <span className="dot dot-green" /> <b>{remainingCandidates.length}</b> Active Contenders
+                </span>
+                <span className="breakdown-tag">
+                  <span className="dot dot-red" /> <b>{globallyRuledOut.length}</b> Ruled Out by AI Referee
+                </span>
+                {locallyCrossed.length > 0 && (
+                  <span className="breakdown-tag">
+                    <span className="dot dot-yellow" /> <b>{locallyCrossed.length}</b> Private Notes
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Priority 2: Prominent Shannon Information Gain Suggestion */}
+            {optimalDeduction && (
+              <div className="info-gain-prominent">
+                <div className="info-gain-header">
+                  <span className="info-gain-tag">
+                    <Sparkles size={13} /> MATHEMATICAL SHORTCUT · SHANNON INFORMATION GAIN
+                  </span>
+                  <span className="info-gain-metric">
+                    Eliminates ~50% of active board ({optimalDeduction.yesCount} YES / {optimalDeduction.noCount} NO)
+                  </span>
+                </div>
+                <div className="info-gain-question-row">
+                  <div className="info-gain-question">
+                    "{optimalDeduction.question}"
+                  </div>
+                  <button
+                    className="info-gain-action-btn"
+                    onClick={() => {
+                      setQuestion(optimalDeduction.question);
+                      const el = document.getElementById('question');
+                      if (el) el.focus();
+                    }}
+                    disabled={!isJoined || isSettled}
+                  >
+                    ⚡ Use Clue Now
+                  </button>
+                </div>
               </div>
             )}
 
-            <div className="board-filters">
-              <div className="filter-pills">
-                {['All', 'Ancient', 'Medieval', 'Modern', 'Digital'].map((era) => {
-                  const count = era === 'All'
-                    ? (candidates.length || 64)
-                    : candidates.filter((c) => c.era.toLowerCase() === era.toLowerCase()).length;
-                  return (
-                    <button
-                      key={era}
-                      className={`filter-pill ${eraFilter === era ? 'active' : ''}`}
-                      onClick={() => setEraFilter(era)}
+            {viewMode === 'contenders' ? (
+              <div className="contenders-spotlight">
+                <div className="contenders-banner-top">
+                  <span className="contenders-badge">
+                    <Sparkles size={13} /> {remainingCandidates.length} CONTENDERS REMAINING
+                  </span>
+                  <p className="contenders-headline">
+                    The TEE referee ruled out <b>{globallyRuledOut.length}</b> candidates. One of these <b>{remainingCandidates.length}</b> holds the <b>{potDisplay} NEAR</b> prize pool!
+                  </p>
+                </div>
+
+                <div className="contenders-grid">
+                  {remainingCandidates.map((cand) => (
+                    <div
+                      key={cand.id}
+                      className="contender-card"
+                      onClick={() => setInspectingCandidate(cand)}
                     >
-                      {era} <small>({count})</small>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="uneliminated-count">
-                Active Candidates: <b>{remainingCandidates.length}</b> / {candidates.length || 64}
-                {globallyRuledOut.length > 0 && (
-                  <span style={{ color: '#f87171', marginLeft: '6px' }}>
-                    ({globallyRuledOut.length} ruled out by referee)
-                  </span>
-                )}
-                {locallyCrossed.length > 0 && (
-                  <span style={{ color: '#facc15', marginLeft: '6px' }}>
-                    ({locallyCrossed.length} my notes)
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="board-grid">
-              {Array.from({ length: 64 }, (_, i) => {
-                const candId = i + 1;
-                const cand = candidates.find((c) => c.id === candId);
-                const isGlobal = globallyRuledOut.includes(candId);
-                const isLocal = locallyCrossed.includes(candId);
-                const isEliminated = isGlobal || isLocal;
-                const isMatchingFilter = eraFilter === 'All' || cand?.era.toLowerCase() === eraFilter.toLowerCase();
-
-                let cardClass = 'candidate';
-                if (isGlobal) cardClass += ' globally-ruled';
-                else if (isLocal) cardClass += ' locally-crossed';
-
-                return (
-                  <button
-                    key={candId}
-                    onClick={() => setInspectingCandidate(cand || { id: candId, name: `Candidate ${candId}`, category: '', era: '', origin: '', type: '' })}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      toggleLocalCross(candId);
-                    }}
-                    className={cardClass}
-                    style={{ opacity: isMatchingFilter ? (isEliminated ? 0.32 : 1) : 0.18 }}
-                    title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Left-click to inspect, right-click to note.` : `Candidate ${candId}`}
-                    aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
-                  >
-                    <div className="candidate-top">
-                      <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
-                      {cand?.era && <span className="candidate-tag">{cand.era}</span>}
-                      {isGlobal && <span className="status-pill-global">RULED</span>}
-                      {!isGlobal && isLocal && <span className="status-pill-local">NOTE</span>}
+                      <div>
+                        <div className="contender-top">
+                          <span className="contender-num">#{String(cand.id).padStart(2, '0')}</span>
+                          <span className="contender-tag">{cand.era}</span>
+                        </div>
+                        <h4 className="contender-name">{cand.name}</h4>
+                        <div className="contender-meta">
+                          <div>🏛️ Origin: <b>{cand.origin}</b></div>
+                          <div>📜 Category: <b>{cand.category}</b></div>
+                          <div>🔑 Type: <b>{cand.type}</b></div>
+                        </div>
+                      </div>
+                      <button
+                        className="contender-guess-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectCandidateForGuess(cand);
+                        }}
+                      >
+                        🎯 Guess This Candidate
+                      </button>
                     </div>
-                    <span className="candidate-name">{cand ? cand.name : `Candidate ${candId}`}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="board-footer">
-              <span><span className="legend-dot" /> CANONICAL 64-SECRETS ACTIVE (Left-click inspect/guess · Right-click note)</span>
-              <button onClick={() => setLocallyCrossed([])}>Clear my notes</button>
-            </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="board-filters">
+                  <div className="filter-pills">
+                    {['All', 'Ancient', 'Medieval', 'Modern', 'Digital'].map((era) => {
+                      const count = era === 'All'
+                        ? (candidates.length || 64)
+                        : candidates.filter((c) => c.era.toLowerCase() === era.toLowerCase()).length;
+                      return (
+                        <button
+                          key={era}
+                          className={`filter-pill ${eraFilter === era ? 'active' : ''}`}
+                          onClick={() => setEraFilter(era)}
+                        >
+                          {era} <small>({count})</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="uneliminated-count">
+                    Active Candidates: <b>{remainingCandidates.length}</b> / {candidates.length || 64}
+                    {globallyRuledOut.length > 0 && (
+                      <span style={{ color: 'var(--color-danger)', marginLeft: '8px' }}>
+                        ({globallyRuledOut.length} ruled out)
+                      </span>
+                    )}
+                    {locallyCrossed.length > 0 && (
+                      <span style={{ color: 'var(--color-warning)', marginLeft: '8px' }}>
+                        ({locallyCrossed.length} my notes)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="board-grid">
+                  {Array.from({ length: 64 }, (_, i) => {
+                    const candId = i + 1;
+                    const cand = candidates.find((c) => c.id === candId);
+                    const isGlobal = globallyRuledOut.includes(candId);
+                    const isLocal = locallyCrossed.includes(candId);
+                    const isEliminated = isGlobal || isLocal;
+                    const isMatchingFilter = eraFilter === 'All' || cand?.era.toLowerCase() === eraFilter.toLowerCase();
+
+                    let cardClass = 'candidate';
+                    if (isGlobal) cardClass += ' globally-ruled';
+                    else if (isLocal) cardClass += ' locally-crossed';
+
+                    return (
+                      <button
+                        key={candId}
+                        onClick={() => setInspectingCandidate(cand || { id: candId, name: `Candidate ${candId}`, category: '', era: '', origin: '', type: '' })}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          toggleLocalCross(candId);
+                        }}
+                        className={cardClass}
+                        style={{ opacity: isMatchingFilter ? (isEliminated ? 0.35 : 1) : 0.2 }}
+                        title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Left-click to inspect, right-click to note.` : `Candidate ${candId}`}
+                        aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
+                      >
+                        <div className="candidate-top">
+                          <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
+                          {cand?.era && <span className="candidate-tag">{cand.era}</span>}
+                          {isGlobal && <span className="status-pill-global">RULED</span>}
+                          {!isGlobal && isLocal && <span className="status-pill-local">NOTE</span>}
+                        </div>
+                        <span className="candidate-name">{cand ? cand.name : `Candidate ${candId}`}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="board-footer">
+                  <span>Canonical 64-Secrets Active · Left-click to inspect/guess · Right-click for private notes</span>
+                  <button onClick={() => setLocallyCrossed([])}>Clear my notes</button>
+                </div>
+              </>
+            )}
           </section>
 
           <aside className="side-column">
             {isJoined && (
               <section className="youre-in panel">
-                <div className="mini-eyebrow"><Check size={13} /> PARTICIPATION</div>
-                <h3>You’re in.</h3>
-                <p>Entry fee paid (0.1 NEAR). You have full deduction and guess allowances.</p>
+                <div className="panel-header-inline">
+                  <h3>Participation status</h3>
+                  <span className="status-tag"><Check size={12} /> Unlocked</span>
+                </div>
+                <p>Entry fee paid (0.1 NEAR). You have full deduction questions and guess allowances.</p>
                 <div className="youre-in-stats">
                   <span>Questions Left <b>{round ? round.questions_remaining : 20}</b></span>
                   <span>Guesses Left <b>{playerInfo ? playerInfo.guesses_remaining : 3} / 3</b></span>
@@ -802,19 +922,16 @@ function App() {
             )}
 
             <section className="panel ask-panel">
-              <div className="section-heading compact">
-                <div>
-                  <div className="eyebrow">MAKE YOUR MOVE</div>
-                  <h2>Ask a question.</h2>
-                </div>
-                <span className="lock-label">
-                  <LockKeyhole size={13} /> {isJoined ? 'READY' : 'JOIN TO PLAY'}
+              <div className="panel-header-inline">
+                <h2>Ask a question</h2>
+                <span className="status-tag">
+                  <LockKeyhole size={12} /> {isJoined ? 'Ready' : 'Join to Play'}
                 </span>
               </div>
               <p className="section-intro">
                 Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
               </p>
-              <label className="input-label" htmlFor="question">YOUR QUESTION</label>
+              <label className="input-label" htmlFor="question">Your Question</label>
               <textarea
                 id="question"
                 placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
@@ -823,7 +940,7 @@ function App() {
                 disabled={!isJoined || isSettled || submittingQuestion}
               />
               <button
-                className="button button-dark full"
+                className="button-submit-question"
                 disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
                 onClick={handleAskQuestion}
               >
@@ -831,25 +948,34 @@ function App() {
                 {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
               </button>
 
-              <div className="suggested-prompts">
-                <span className="suggested-label">💡 QUICK CLUES (TAP TO ASK)</span>
-                <div className="prompt-chips">
+              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips */}
+              <div className="prominent-clues-section">
+                <div className="prominent-clues-title">
+                  <span>⚡ ONE-TAP QUICK CLUES</span>
+                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Tap to populate</span>
+                </div>
+                <div className="prominent-clue-grid">
                   {[
-                    'Is it from the ancient era?',
-                    'Is it a mechanical rotor machine?',
-                    'Is it a digital algorithm or protocol?',
-                    'Did it originate in Europe or Rome?',
-                    'Is it an asymmetric / public-key system?',
-                    'Is it a substitution cipher?',
-                  ].map((promptText) => (
+                    { label: '🏛️ Ancient Era?', query: 'Is it from the ancient era?' },
+                    { label: '⚙️ Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
+                    { label: '💻 Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
+                    { label: '🌍 Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
+                    { label: '🔑 Public Key?', query: 'Is it an asymmetric or public-key system?' },
+                    { label: '🔄 Substitution?', query: 'Is it a substitution cipher?' },
+                  ].map((item) => (
                     <button
-                      key={promptText}
+                      key={item.label}
                       type="button"
-                      className="chip-btn"
+                      className="prominent-chip"
                       disabled={!isJoined || isSettled || submittingQuestion}
-                      onClick={() => setQuestion(promptText)}
+                      onClick={() => {
+                        setQuestion(item.query);
+                        const el = document.getElementById('question');
+                        if (el) el.focus();
+                      }}
                     >
-                      {promptText}
+                      <span>{item.label}</span>
+                      <span style={{ color: 'var(--lime)', fontSize: '10px' }}>&rarr;</span>
                     </button>
                   ))}
                 </div>
@@ -862,43 +988,40 @@ function App() {
             </section>
 
             <section className="panel feed-panel">
-              <div className="section-heading compact">
-                <div>
-                  <div className="eyebrow">THE TABLE</div>
-                  <h2>Question feed</h2>
-                </div>
-                <span className="feed-live"><i /> LIVE</span>
+              <div className="panel-header-inline">
+                <h2>Live question feed</h2>
+                <span className="feed-live"><i /> Live</span>
               </div>
               <p className="section-intro">Public answers from the TEE deduction referee:</p>
               {feed.length === 0 ? (
                 <div className="feed-empty">
                   <div className="feed-empty-icon"><MessageSquareText size={18} /></div>
                   <div>
-                    <b>No verified entries yet</b>
-                    <span>Be the first to submit a deduction question</span>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>No verified entries yet</div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Be the first to submit a deduction question</div>
                   </div>
                 </div>
               ) : (
-                <div className="feed-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
+                <div className="feed-list">
                   {feed.map((entry) => (
                     <div
                       key={entry.question_id}
-                      style={{
-                        padding: '10px 12px',
-                        background: '#161917',
-                        borderRadius: '6px',
-                        borderLeft: entry.answer === 'Yes' ? '3px solid #22c55e' : entry.answer === 'No' ? '3px solid #ef4444' : '3px solid #eab308',
-                      }}
+                      className={`feed-item ${entry.answer === 'Yes' ? 'yes' : entry.answer === 'No' ? 'no' : 'unclear'}`}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9ca3af' }}>
-                        <span>{entry.asker}</span>
-                        <strong style={{ color: entry.answer === 'Yes' ? '#4ade80' : entry.answer === 'No' ? '#f87171' : '#facc15' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)' }}>{entry.asker}</span>
+                        <strong style={{
+                          fontFamily: 'var(--font-mono)',
+                          color: entry.answer === 'Yes' ? 'var(--color-success)' : entry.answer === 'No' ? 'var(--color-danger)' : 'var(--color-warning)'
+                        }}>
                           {entry.answer.toUpperCase()}
                         </strong>
                       </div>
-                      <div style={{ fontSize: '13px', marginTop: '4px', color: '#e5e7eb' }}>{entry.question}</div>
+                      <div style={{ fontSize: '13px', marginTop: '4px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {entry.question}
+                      </div>
                       {entry.rule_out_candidate_ids?.length > 0 && (
-                        <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
                           Ruled out {entry.rule_out_candidate_ids.length} candidates
                         </div>
                       )}
@@ -909,21 +1032,18 @@ function App() {
             </section>
 
             <section className="panel agents-panel">
-              <div className="section-heading compact">
-                <div>
-                  <div className="eyebrow">AGENT / HUMAN ARENA</div>
-                  <h2>Autonomous Agents</h2>
-                </div>
+              <div className="panel-header-inline">
+                <h2>Autonomous agents</h2>
                 <span className="agent-count">{agents.length}</span>
               </div>
               <div className="agent-metrics-row">
                 <div className="agent-metric-box">
-                  <small>AGENT PRE-FUNDED POOL</small>
+                  <small>Agent Pool Balance</small>
                   <strong>{formatNear(agents.reduce((acc, a) => acc + BigInt(a.balance || 0), BigInt(0)).toString())} NEAR</strong>
                   <span>On-chain allowance</span>
                 </div>
                 <div className="agent-metric-box">
-                  <small>AGENT QUESTIONS IN R#{round ? round.round_id : 3}</small>
+                  <small>Agent Questions (R#{round ? round.round_id : 3})</small>
                   <strong>{agents.reduce((acc, a) => acc + (a.questions_asked || 0), 0)} Qs</strong>
                   <span>Verified on contract</span>
                 </div>
@@ -932,11 +1052,11 @@ function App() {
                 Agents compete autonomously via Model Context Protocol (MCP) tool calls on NEAR testnet:
               </p>
               {agents.length === 0 ? (
-                <div className="feed-empty" style={{ marginTop: '4px' }}>
+                <div className="feed-empty">
                   <div className="feed-empty-icon"><Cpu size={16} /></div>
                   <div>
-                    <b>No external agents in this round yet</b>
-                    <span>Agents deposit spend allowance via <code>deposit_agent_funds()</code></span>
+                    <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>No external agents in this round yet</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agents deposit spend allowance via <code>deposit_agent_funds()</code></div>
                   </div>
                 </div>
               ) : (
@@ -944,17 +1064,21 @@ function App() {
                   <div className="agent-row" key={ag.account_id}>
                     <span className="agent-avatar"><Flame size={14} /></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <strong style={{ fontSize: '11px', color: '#e5e7eb', wordBreak: 'break-all', display: 'block' }}>{ag.account_id}</strong>
-                      <span style={{ fontSize: '9px', color: '#889284', display: 'block' }}>
+                      <strong style={{ fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', display: 'block', fontFamily: 'var(--font-mono)' }}>
+                        {ag.account_id}
+                      </strong>
+                      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block' }}>
                         MCP Agent · {ag.questions_asked} Qs asked · {ag.guesses_made} guesses
                       </span>
                     </div>
-                    <span className="agent-placeholder" style={{ color: '#4ade80' }}>{formatNear(ag.balance)} NEAR</span>
+                    <span style={{ color: 'var(--color-success)', font: '600 11.5px var(--font-mono)' }}>
+                      {formatNear(ag.balance)} NEAR
+                    </span>
                   </div>
                 ))
               )}
-              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #283227', fontSize: '9px', color: '#7a8576' }}>
-                <span style={{ fontFamily: 'var(--mono)', color: 'var(--lime)', display: 'block', marginBottom: '2px' }}>
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--lime)', display: 'block', marginBottom: '2px' }}>
                   MCP TOOL CALL ENDPOINT:
                 </span>
                 <code>POST /mcp/call &rarr; &#123;"name":"ask_question"&#125;</code>
@@ -963,77 +1087,126 @@ function App() {
           </aside>
         </div>
 
-        {/* Candidate Detail Inspector Modal */}
-        {inspectingCandidate && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.85)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 999,
-            }}
-          >
-            <div
-              style={{
-                background: '#151815',
-                border: '1px solid #2e3830',
-                borderRadius: '12px',
-                padding: '24px',
-                maxWidth: '460px',
-                width: '92%',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <span style={{ font: '10px var(--mono)', color: '#86efac', background: '#1c291d', padding: '3px 8px', borderRadius: '4px' }}>
-                  CANDIDATE #{inspectingCandidate.id}
+        {/* Priority 1: "How to Play" Onboarding Modal */}
+        {showHowToPlayModal && (
+          <div className="cipher-modal-overlay" onClick={handleCloseHowToPlay}>
+            <div className="cipher-modal-body" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-row">
+                <span className="info-gain-badge">
+                  <CircleHelp size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
+                  QUICKSTART GUIDE
                 </span>
-                <button
-                  onClick={() => setInspectingCandidate(null)}
-                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px' }}
-                >
+                <button className="modal-close-btn" onClick={handleCloseHowToPlay} aria-label="Close">
                   <X size={18} />
                 </button>
               </div>
 
-              <h2 style={{ fontSize: '20px', color: '#fff', margin: '0 0 10px 0', fontFamily: 'var(--head)' }}>
+              <h2 style={{ fontSize: '24px', color: '#fff', margin: '0 0 10px 0', fontFamily: 'var(--font-head)' }}>
+                How Cipher Works (In 30 Seconds)
+              </h2>
+
+              <div className="not-trivia-banner">
+                <span className="banner-icon">🛑</span>
+                <div>
+                  <div className="not-trivia-title">NOT A TRIVIA QUIZ!</div>
+                  <p className="not-trivia-desc">
+                    The app does <b>NOT</b> test your history knowledge. <b>YOU</b> interrogate the AI referee with yes/no questions to eliminate cards—just like playing <i>Guess Who?</i> or <i>20 Questions</i> with money on the line.
+                  </p>
+                </div>
+              </div>
+
+              <div className="onboarding-steps">
+                <div className="onboarding-step-card">
+                  <span className="onboarding-num">1</span>
+                  <div className="onboarding-step-body">
+                    <h4>64 Face-Up Cards</h4>
+                    <p>Every possible secret is displayed on the board from the start. All historical eras, categories, and attributes are known.</p>
+                  </div>
+                </div>
+
+                <div className="onboarding-step-card">
+                  <span className="onboarding-num">2</span>
+                  <div className="onboarding-step-body">
+                    <h4>1 Secret Chosen by AI</h4>
+                    <p>An AI referee isolated inside a confidential TEE enclave randomly locks in 1 secret tile. Nobody knows which one it is.</p>
+                  </div>
+                </div>
+
+                <div className="onboarding-step-card">
+                  <span className="onboarding-num">3</span>
+                  <div className="onboarding-step-body">
+                    <h4>You Ask Yes / No Questions</h4>
+                    <p>Ask sharp questions (or tap one-click clue chips). The referee responds with <b>YES</b> or <b>NO</b>, automatically crossing off disqualified cards for everyone.</p>
+                  </div>
+                </div>
+
+                <div className="onboarding-step-card">
+                  <span className="onboarding-num">4</span>
+                  <div className="onboarding-step-body">
+                    <h4>First Correct Guess Wins the Pot</h4>
+                    <p>When the candidate pool is narrowed down, guess the secret tile. The first player to guess correctly wins <b>96% of the prize pot</b>!</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: 0 }}>
+                <button
+                  className="button button-primary"
+                  style={{ width: '100%', height: '42px', fontSize: '13px' }}
+                  onClick={handleCloseHowToPlay}
+                >
+                  Got It — Let’s Play!
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Candidate Detail Inspector Modal */}
+        {inspectingCandidate && (
+          <div className="cipher-modal-overlay" onClick={() => setInspectingCandidate(null)}>
+            <div className="cipher-modal-body" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-row">
+                <span className="info-gain-badge">
+                  CANDIDATE #{inspectingCandidate.id}
+                </span>
+                <button className="modal-close-btn" onClick={() => setInspectingCandidate(null)} aria-label="Close">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <h2 style={{ fontSize: '22px', color: '#fff', margin: '0 0 12px 0', fontFamily: 'var(--font-head)' }}>
                 {inspectingCandidate.name}
               </h2>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '18px', background: '#191f1a', padding: '12px', borderRadius: '8px' }}>
-                <div>
-                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Historical Era</small>
-                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.era || 'Unknown'}</strong>
+              <div className="modal-grid-2">
+                <div className="modal-grid-item">
+                  <small>Historical Era</small>
+                  <strong>{inspectingCandidate.era || 'Unknown'}</strong>
                 </div>
-                <div>
-                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Origin</small>
-                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.origin || 'Unknown'}</strong>
+                <div className="modal-grid-item">
+                  <small>Origin</small>
+                  <strong>{inspectingCandidate.origin || 'Unknown'}</strong>
                 </div>
-                <div>
-                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Category</small>
-                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.category || 'Cryptography'}</strong>
+                <div className="modal-grid-item">
+                  <small>Category</small>
+                  <strong>{inspectingCandidate.category || 'Cryptography'}</strong>
                 </div>
-                <div>
-                  <small style={{ color: '#6b7280', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Type</small>
-                  <strong style={{ color: '#e5e7eb', fontSize: '12px' }}>{inspectingCandidate.type || 'Standard'}</strong>
+                <div className="modal-grid-item">
+                  <small>Type</small>
+                  <strong>{inspectingCandidate.type || 'Standard'}</strong>
                 </div>
               </div>
 
               {globallyRuledOut.includes(inspectingCandidate.id) && (
-                <div style={{ background: '#2d1515', border: '1px solid #7f1d1d', borderRadius: '6px', padding: '8px 10px', marginBottom: '14px', fontSize: '11px', color: '#fca5a5' }}>
+                <div className="modal-alert">
                   ⚠️ This candidate was ruled out globally by the TEE referee in the public question feed.
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <div className="modal-actions">
                 <button
-                  className="button"
-                  style={{ background: '#222822', color: locallyCrossed.includes(inspectingCandidate.id) ? '#4ade80' : '#facc15' }}
+                  className="button button-secondary"
                   onClick={() => {
                     toggleLocalCross(inspectingCandidate.id);
                     setInspectingCandidate(null);
@@ -1060,61 +1233,43 @@ function App() {
 
         {/* Candidate Guess Confirmation Modal */}
         {selectedCandidate && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.8)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-            }}
-          >
-            <div
-              style={{
-                background: '#151815',
-                border: '1px solid #2e3830',
-                borderRadius: '12px',
-                padding: '24px',
-                maxWidth: '440px',
-                width: '90%',
-              }}
-            >
-              <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '18px' }}>
+          <div className="cipher-modal-overlay" onClick={() => setSelectedCandidate(null)}>
+            <div className="cipher-modal-body" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-row">
+                <span className="info-gain-badge">CONFIRM CANDIDATE GUESS</span>
+                <button className="modal-close-btn" onClick={() => setSelectedCandidate(null)} aria-label="Close">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '18px', fontFamily: 'var(--font-head)' }}>
                 Submit Candidate Guess
               </h3>
-              <p style={{ margin: '0 0 16px 0', color: '#9ca3af', fontSize: '13px' }}>
+              <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '13px' }}>
                 You are submitting a secret guess for:
               </p>
-              <div
-                style={{
-                  background: '#1c221e',
-                  border: '1px solid #22c55e40',
-                  borderRadius: '8px',
-                  padding: '12px',
-                  marginBottom: '16px',
-                }}
-              >
-                <div style={{ fontSize: '16px', fontWeight: 600, color: '#4ade80' }}>
+              <div style={{
+                background: 'var(--bg-surface-subtle)',
+                border: '1px solid var(--border-default)',
+                borderRadius: '6px',
+                padding: '14px',
+                marginBottom: '16px'
+              }}>
+                <div style={{ fontSize: '17px', fontWeight: 600, color: 'var(--lime)', fontFamily: 'var(--font-head)' }}>
                   #{selectedCandidate.id} — {selectedCandidate.name}
                 </div>
                 {selectedCandidate.category && (
-                  <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
                     {selectedCandidate.era} · {selectedCandidate.origin} · {selectedCandidate.category}
                   </div>
                 )}
               </div>
-              <p style={{ fontSize: '12px', color: '#eab308', margin: '0 0 16px 0' }}>
+              <div className="modal-alert-warning">
                 ⚠️ This consumes 1 of your 3 guess quotas. If correct, 96% pot payout will be claimed.
-              </p>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              </div>
+              <div className="modal-actions">
                 <button
-                  className="button"
-                  style={{ background: '#262c27', color: '#ccc' }}
+                  className="button button-secondary"
                   onClick={() => setSelectedCandidate(null)}
                   disabled={submittingGuess}
                 >
@@ -1137,74 +1292,66 @@ function App() {
         {showAttestationModal && (
           <div className="cipher-modal-overlay" onClick={() => setShowAttestationModal(false)}>
             <div className="cipher-modal-body" onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div className="modal-header-row">
                 <span className="info-gain-badge">
-                  <ShieldCheck size={12} style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
+                  <ShieldCheck size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
                   HARDWARE TEE ATTESTATION
                 </span>
-                <button
-                  onClick={() => setShowAttestationModal(false)}
-                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px' }}
-                >
+                <button className="modal-close-btn" onClick={() => setShowAttestationModal(false)} aria-label="Close">
                   <X size={18} />
                 </button>
               </div>
 
-              <h2 style={{ fontSize: '20px', color: '#fff', margin: '0 0 8px 0', fontFamily: 'var(--head)' }}>
+              <h2 style={{ fontSize: '21px', color: '#fff', margin: '0 0 8px 0', fontFamily: 'var(--font-head)' }}>
                 Confidential TEE Referee Proof
               </h2>
-              <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-                Cipher runs inside an isolated Trusted Execution Environment (AMD SEV-SNP / Confidential VM) on NEAR AI Cloud. Secrets never touch smart contract storage.
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                Cipher runs inside an isolated Trusted Execution Environment (AMD SEV-SNP Confidential VM) on NEAR AI Cloud. Secrets never touch smart contract storage.
               </p>
 
-              <div style={{ background: '#111611', border: '1px solid #233022', borderRadius: '8px', padding: '12px', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ color: '#8d968d' }}>Enclave Status:</span>
-                  <strong style={{ color: '#4ade80' }}>● ONLINE & ATTESTED</strong>
+              <div className="enclave-specs">
+                <div className="spec-row">
+                  <span className="spec-label">Enclave Status:</span>
+                  <strong className="spec-value live">● ONLINE & ATTESTED</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ color: '#8d968d' }}>Enclave Hardware:</span>
-                  <span style={{ color: '#e5e7eb', fontFamily: 'var(--mono)', fontSize: '10px' }}>AMD SEV-SNP Confidential VM</span>
+                <div className="spec-row">
+                  <span className="spec-label">Enclave Hardware:</span>
+                  <span className="spec-value">AMD SEV-SNP Confidential VM</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-                  <span style={{ color: '#8d968d' }}>Commitment Scheme:</span>
-                  <span style={{ color: '#e5e7eb', fontFamily: 'var(--mono)', fontSize: '10px' }}>SHA-256(secret:salt)</span>
+                <div className="spec-row">
+                  <span className="spec-label">Commitment Scheme:</span>
+                  <span className="spec-value">SHA-256(secret:salt)</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                  <span style={{ color: '#8d968d' }}>Verdict Signature:</span>
-                  <span style={{ color: '#e5e7eb', fontFamily: 'var(--mono)', fontSize: '10px' }}>Ed25519 (128-char hex)</span>
+                <div className="spec-row">
+                  <span className="spec-label">Verdict Signature:</span>
+                  <span className="spec-value">Ed25519 (128-char hex)</span>
                 </div>
               </div>
 
               <div style={{ marginBottom: '14px' }}>
-                <span style={{ font: '9px var(--mono)', color: '#8d968d', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  TEE Enclave Public Key (Ed25519)
-                </span>
+                <span className="inspector-label">TEE Enclave Public Key (Ed25519)</span>
                 <div className="code-box">
                   {teeAttestation?.tee_public_key || '33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14'}
                 </div>
               </div>
 
               <div style={{ marginBottom: '14px' }}>
-                <span style={{ font: '9px var(--mono)', color: '#8d968d', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Active Round #{round ? round.round_id : 2} On-Chain Commitment Hash
-                </span>
+                <span className="inspector-label">Active Round #{round ? round.round_id : 3} On-Chain Commitment Hash</span>
                 <div className="code-box">
                   {round ? round.commitment : '98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9'}
                 </div>
               </div>
 
-              <div style={{ borderTop: '1px solid #283327', paddingTop: '12px', marginBottom: '16px' }}>
+              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', marginBottom: '16px' }}>
                 <div className="checklist-item"><Check size={14} /> Zero secret leakage into contract state (immune to RPC reads)</div>
                 <div className="checklist-item"><Check size={14} /> 96% payout claim requires TEE signature over (round:id:player:salt)</div>
                 <div className="checklist-item"><Check size={14} /> Anti-prompt-injection & jailbreak filters active</div>
                 <div className="checklist-item"><Check size={14} /> 100% of expired round secrets revealed on rollover for public audit</div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div className="modal-actions">
                 <a
-                  className="button"
-                  style={{ background: '#222922', color: '#c5d0bf' }}
+                  className="button button-secondary"
                   href={`https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`}
                   target="_blank"
                   rel="noreferrer"
@@ -1226,85 +1373,82 @@ function App() {
         {showReplayModal && (
           <div className="cipher-modal-overlay" onClick={() => setShowReplayModal(false)}>
             <div className="cipher-modal-body" onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div className="modal-header-row">
                 <span className="info-gain-badge">
-                  <Sparkles size={12} style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
-                  DEDUCTION PATH REPLAY
+                  <Sparkles size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
+                  ARCHIVED SOLVE WALKTHROUGH · ROUND #1
                 </span>
-                <button
-                  onClick={() => setShowReplayModal(false)}
-                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px' }}
-                >
+                <button className="modal-close-btn" onClick={() => setShowReplayModal(false)} aria-label="Close">
                   <X size={18} />
                 </button>
               </div>
 
-              <h2 style={{ fontSize: '20px', color: '#fff', margin: '0 0 8px 0', fontFamily: 'var(--head)' }}>
-                How Round #{round?.round_id || 1} Was Solved
+              <h2 style={{ fontSize: '21px', color: '#fff', margin: '0 0 8px 0', fontFamily: 'var(--font-head)' }}>
+                How Round #1 Was Solved
               </h2>
-              <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-                Verifiable step-by-step elimination tree solved in 3 deduction questions.
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                Verifiable step-by-step elimination tree: 64 candidates narrowed to 1 secret in 3 deduction questions.
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
-                <div style={{ background: '#181e18', border: '1px solid #2d382d', borderRadius: '6px', padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#86efac' }}>
+              <div>
+                <div className="replay-step">
+                  <div className="replay-step-header">
                     <span>STEP 1: ERA FILTER</span>
                     <strong>YES (64 ➔ 16 TILES)</strong>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#e5e7eb', marginTop: '3px' }}>
+                  <div className="replay-step-question">
                     "Is it from the Ancient era?"
                   </div>
-                  <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                  <div className="replay-step-meta">
                     Eliminated 48 candidates (Modern, Medieval, Digital).
                   </div>
                 </div>
 
-                <div style={{ background: '#181e18', border: '1px solid #2d382d', borderRadius: '6px', padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#86efac' }}>
+                <div className="replay-step">
+                  <div className="replay-step-header">
                     <span>STEP 2: TYPE FILTER</span>
                     <strong>YES (16 ➔ 4 TILES)</strong>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#e5e7eb', marginTop: '3px' }}>
+                  <div className="replay-step-question">
                     "Is it a Substitution cipher?"
                   </div>
-                  <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                  <div className="replay-step-meta">
                     Eliminated 12 candidates (Artifacts, Transpositions, Stelae).
                   </div>
                 </div>
 
-                <div style={{ background: '#181e18', border: '1px solid #2d382d', borderRadius: '6px', padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#86efac' }}>
+                <div className="replay-step">
+                  <div className="replay-step-header">
                     <span>STEP 3: ORIGIN FILTER</span>
                     <strong>YES (4 ➔ 1 TILE)</strong>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#e5e7eb', marginTop: '3px' }}>
+                  <div className="replay-step-question">
                     "Did it originate in Rome?"
                   </div>
-                  <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>
+                  <div className="replay-step-meta">
                     Eliminated Scytale (Sparta), Phaistos (Crete), Atbash (Hebrew).
                   </div>
                 </div>
 
-                <div style={{ background: '#1d2719', border: '1px solid #4ade8050', borderRadius: '6px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--lime)' }}>
+                <div className="replay-step-final">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-success)', fontFamily: 'var(--font-mono)' }}>
                     <span>FINAL CANDIDATE GUESS</span>
                     <strong>SOLVED & CLAIMED</strong>
                   </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#fff', marginTop: '4px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 600, color: '#fff', marginTop: '4px', fontFamily: 'var(--font-head)' }}>
                     #01 — Caesar Cipher
                   </div>
-                  <div style={{ fontSize: '11px', color: '#a3e635', marginTop: '4px' }}>
-                    Winner claimed 1.056 NEAR (96% of accumulated pot) with Ed25519 TEE verdict!
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    Winner claimed 1.056 NEAR (96% of accumulated pot) with verified Ed25519 TEE verdict!
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div className="modal-actions">
                 <button
                   className="button button-primary"
                   onClick={() => {
-                    const text = `🧩 Solved Cipher Round #${round?.round_id || 1} in 3 questions!\n` +
+                    const text = `🧩 Solved Cipher Round #1 in 3 questions!\n` +
                       `1. Ancient Era? YES (-48)\n` +
                       `2. Substitution? YES (-12)\n` +
                       `3. Rome Origin? YES (-3)\n` +
@@ -1315,11 +1459,10 @@ function App() {
                     setTimeout(() => setCopiedShare(false), 2500);
                   }}
                 >
-                  <Copy size={13} /> {copiedShare ? 'Copied to Clipboard!' : 'Copy Share Card'}
+                  <Copy size={14} /> {copiedShare ? 'Copied to Clipboard!' : 'Copy Share Card'}
                 </button>
                 <button
-                  className="button"
-                  style={{ background: '#222922', color: '#c5d0bf' }}
+                  className="button button-secondary"
                   onClick={() => setShowReplayModal(false)}
                 >
                   Close
@@ -1330,25 +1473,46 @@ function App() {
         )}
 
         <section className="how-section" id="how">
-          <div>
-            <div className="eyebrow">THE RULES ARE SIMPLE</div>
-            <h2>Curiosity is your<br /><em>best strategy.</em></h2>
+          <div className="how-header">
+            <h2>How deduction works</h2>
+            <p>Eliminate candidates through structured mathematical partitioning, not random guessing.</p>
           </div>
-          <div className="steps">
-            <div>
-              <span>01</span>
-              <h3>Join the round</h3>
-              <p>Entry fee is 0.1 NEAR, unlocking 3 guesses and access to asking questions.</p>
+          <div className="deduction-funnel">
+            <div className="funnel-step">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 1</span>
+                <span className="funnel-count">64 Tiles</span>
+              </div>
+              <h4>Domain Partition</h4>
+              <p>Ask broad classification questions to bisect the board by historical epoch or category.</p>
+              <div className="funnel-example">e.g. "Is it from the Ancient era?" (-48)</div>
             </div>
-            <div>
-              <span>02</span>
-              <h3>Ask & narrow</h3>
-              <p>Ask smart yes/no questions to rule out candidates across era, category, and origin.</p>
+            <div className="funnel-step">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 2</span>
+                <span className="funnel-count">16 Tiles</span>
+              </div>
+              <h4>Structural Type</h4>
+              <p>Isolate the functional mechanism or medium to cut the remaining search space by 75%.</p>
+              <div className="funnel-example">e.g. "Is it a Substitution cipher?" (-12)</div>
             </div>
-            <div>
-              <span>03</span>
-              <h3>Make your guess</h3>
-              <p>Submit a candidate guess. TEE issues a cryptographic verdict to claim 96% of the pot.</p>
+            <div className="funnel-step">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 3</span>
+                <span className="funnel-count">4 Tiles</span>
+              </div>
+              <h4>Geographic Origin</h4>
+              <p>Pinpoint the historical origin or inventor to isolate the exact remaining secret.</p>
+              <div className="funnel-example">e.g. "Did it originate in Rome?" (-3)</div>
+            </div>
+            <div className="funnel-step target">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 4</span>
+                <span className="funnel-count">1 Tile</span>
+              </div>
+              <h4>Cryptographic Claim</h4>
+              <p>Submit candidate guess. The TEE Enclave signs a cryptographic verdict to unlock 96% pot.</p>
+              <div className="funnel-example" style={{ color: 'var(--lime)', fontWeight: 600 }}>🎯 Caesar Cipher Solved!</div>
             </div>
           </div>
         </section>
@@ -1365,28 +1529,12 @@ function App() {
               setTeeAttestation(att);
               setShowAttestationModal(true);
             }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#bbc895',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              font: 'inherit',
-              padding: 0,
-            }}
             title="Inspect Enclave TEE Attestation & Public Key"
           >
             Verify TEE fairness <ArrowUpRight size={13} />
           </button>
         </footer>
       </main>
-
-      <div className="dev-corner" title="NEAR Testnet Connected">
-        <span className="dev-pip" style={{ background: '#22c55e' }} />
-        NEAR Testnet · {contractConfig.CONTRACT_ID}
-      </div>
     </div>
   );
 }
