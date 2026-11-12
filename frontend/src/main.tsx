@@ -76,6 +76,10 @@ function App() {
   const [inspectingCandidate, setInspectingCandidate] = useState<Candidate | null>(null);
   const [activeTheme, setActiveTheme] = useState<'crypto' | 'science'>('crypto');
 
+  // Skill Mode Architecture: Assisted (Training) vs Pure Skill (Ranked)
+  const [assistanceMode, setAssistanceMode] = useState<'assisted' | 'pure'>('assisted');
+  const [cluesUsed, setCluesUsed] = useState<number>(0);
+
   // Trust, Attestation & Deduction Intelligence Modals
   const [showAttestationModal, setShowAttestationModal] = useState(false);
   const [teeAttestation, setTeeAttestation] = useState<TeeAttestation | null>(null);
@@ -104,6 +108,13 @@ function App() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [submittingGuess, setSubmittingGuess] = useState(false);
   const [viewMode, setViewMode] = useState<'contenders' | 'all'>('contenders');
+
+  const handleUseClue = (clueText: string) => {
+    setQuestion(clueText);
+    setCluesUsed((prev) => prev + 1);
+    const el = document.getElementById('question');
+    if (el) el.focus();
+  };
 
   const handleSwitchTheme = async (theme: 'crypto' | 'science') => {
     setActiveTheme(theme);
@@ -671,8 +682,8 @@ function App() {
         <div className="content-grid">
           <section className="board-section panel" id="board">
             <div className="theme-bar">
-              <span className="inspector-label">ARENA THEME:</span>
               <div className="theme-pill-group">
+                <span className="inspector-label">ARENA THEME:</span>
                 <button
                   type="button"
                   className={`theme-pill ${activeTheme === 'crypto' ? 'active' : ''}`}
@@ -687,6 +698,31 @@ function App() {
                 >
                   🔬 Scientific Breakthroughs <small>(Preview)</small>
                 </button>
+              </div>
+
+              {/* Skill Mode: Assisted vs Pure Skill */}
+              <div className="assistance-mode-toggle">
+                <span className="mode-toggle-label">SKILL MODE:</span>
+                <div className="mode-toggle-group">
+                  <button
+                    type="button"
+                    className={`mode-btn ${assistanceMode === 'assisted' ? 'active' : ''}`}
+                    onClick={() => setAssistanceMode('assisted')}
+                    title="AI Shannon entropy clues enabled for guided learning"
+                  >
+                    <span>💡 Assisted</span>
+                    <small>Training</small>
+                  </button>
+                  <button
+                    type="button"
+                    className={`mode-btn ${assistanceMode === 'pure' ? 'active pure' : ''}`}
+                    onClick={() => setAssistanceMode('pure')}
+                    title="Pure deduction without AI assistance. Eligible for Pure Skill badge & pot bonus."
+                  >
+                    <span>🏆 Pure Skill</span>
+                    <small>Ranked</small>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -754,33 +790,48 @@ function App() {
               </div>
             </div>
 
-            {/* Priority 2: Prominent Shannon Information Gain Suggestion */}
-            {optimalDeduction && (
-              <div className="info-gain-prominent">
-                <div className="info-gain-header">
-                  <span className="info-gain-tag">
-                    <Sparkles size={13} /> MATHEMATICAL SHORTCUT · SHANNON INFORMATION GAIN
-                  </span>
-                  <span className="info-gain-metric">
-                    Eliminates ~50% of active board ({optimalDeduction.yesCount} YES / {optimalDeduction.noCount} NO)
-                  </span>
-                </div>
-                <div className="info-gain-question-row">
-                  <div className="info-gain-question">
-                    "{optimalDeduction.question}"
+            {/* Priority 2: Prominent Shannon Information Gain Suggestion or Pure Skill Banner */}
+            {assistanceMode === 'assisted' ? (
+              optimalDeduction && (
+                <div className="info-gain-prominent">
+                  <div className="info-gain-header">
+                    <span className="info-gain-tag">
+                      <Sparkles size={13} /> MATHEMATICAL SHORTCUT · SHANNON INFORMATION GAIN
+                    </span>
+                    <span className="info-gain-metric">
+                      Eliminates ~50% of active board ({optimalDeduction.yesCount} YES / {optimalDeduction.noCount} NO)
+                    </span>
                   </div>
-                  <button
-                    className="info-gain-action-btn"
-                    onClick={() => {
-                      setQuestion(optimalDeduction.question);
-                      const el = document.getElementById('question');
-                      if (el) el.focus();
-                    }}
-                    disabled={!isJoined || isSettled}
-                  >
-                    ⚡ Use Clue Now
-                  </button>
+                  <div className="info-gain-question-row">
+                    <div className="info-gain-question">
+                      "{optimalDeduction.question}"
+                    </div>
+                    <button
+                      className="info-gain-action-btn"
+                      onClick={() => handleUseClue(optimalDeduction.question)}
+                      disabled={!isJoined || isSettled}
+                    >
+                      ⚡ Use Clue Now
+                    </button>
+                  </div>
                 </div>
+              )
+            ) : (
+              <div className="pure-skill-banner">
+                <div className="pure-skill-left">
+                  <span className="pure-skill-badge">🏆 PURE SKILL MODE ACTIVE</span>
+                  <span className="pure-skill-desc">
+                    AI Shannon clues disabled. Every elimination is 100% your own deductive logic. Eligible for <b>Pure Deduction On-Chain Attestation</b>!
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={() => setAssistanceMode('assisted')}
+                  style={{ fontSize: '11px', whiteSpace: 'nowrap', color: '#fef08a' }}
+                >
+                  Need a hint? Switch to Assisted &rarr;
+                </button>
               </div>
             )}
 
@@ -948,38 +999,43 @@ function App() {
                 {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
               </button>
 
-              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips */}
-              <div className="prominent-clues-section">
-                <div className="prominent-clues-title">
-                  <span>⚡ ONE-TAP QUICK CLUES</span>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Tap to populate</span>
+              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips or Pure Mode Note */}
+              {assistanceMode === 'assisted' ? (
+                <div className="prominent-clues-section">
+                  <div className="prominent-clues-title">
+                    <span>⚡ ONE-TAP QUICK CLUES</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Tap to populate</span>
+                  </div>
+                  <div className="prominent-clue-grid">
+                    {[
+                      { label: '🏛️ Ancient Era?', query: 'Is it from the ancient era?' },
+                      { label: '⚙️ Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
+                      { label: '💻 Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
+                      { label: '🌍 Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
+                      { label: '🔑 Public Key?', query: 'Is it an asymmetric or public-key system?' },
+                      { label: '🔄 Substitution?', query: 'Is it a substitution cipher?' },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        className="prominent-chip"
+                        disabled={!isJoined || isSettled || submittingQuestion}
+                        onClick={() => handleUseClue(item.query)}
+                      >
+                        <span>{item.label}</span>
+                        <span style={{ color: 'var(--lime)', fontSize: '10px' }}>&rarr;</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="prominent-clue-grid">
-                  {[
-                    { label: '🏛️ Ancient Era?', query: 'Is it from the ancient era?' },
-                    { label: '⚙️ Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
-                    { label: '💻 Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
-                    { label: '🌍 Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
-                    { label: '🔑 Public Key?', query: 'Is it an asymmetric or public-key system?' },
-                    { label: '🔄 Substitution?', query: 'Is it a substitution cipher?' },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      className="prominent-chip"
-                      disabled={!isJoined || isSettled || submittingQuestion}
-                      onClick={() => {
-                        setQuestion(item.query);
-                        const el = document.getElementById('question');
-                        if (el) el.focus();
-                      }}
-                    >
-                      <span>{item.label}</span>
-                      <span style={{ color: 'var(--lime)', fontSize: '10px' }}>&rarr;</span>
-                    </button>
-                  ))}
+              ) : (
+                <div className="pure-skill-banner" style={{ marginTop: '14px', padding: '12px' }}>
+                  <span className="pure-skill-badge">🏆 PURE SKILL</span>
+                  <span className="pure-skill-desc" style={{ fontSize: '11px' }}>
+                    Clues hidden in Pure Skill mode. Every deduction is your own move.
+                  </span>
                 </div>
-              </div>
+              )}
 
               <div className="locked-note">
                 <LockKeyhole size={12} />
@@ -1442,18 +1498,36 @@ function App() {
                     Winner claimed 1.056 NEAR (96% of accumulated pot) with verified Ed25519 TEE verdict!
                   </div>
                 </div>
+
+                {/* Skill Architecture Achievement Badge */}
+                {cluesUsed === 0 ? (
+                  <div className="pure-mastery-card">
+                    <div className="pure-mastery-title">
+                      <Sparkles size={14} /> 🏆 PURE DEDUCTION MASTERY · 100% UNASSISTED SOLVE
+                    </div>
+                    <div className="pure-mastery-desc">
+                      Solved without clicking any AI Shannon entropy hints. True mathematical deduction mastery achieved!
+                    </div>
+                  </div>
+                ) : (
+                  <div className="assisted-mastery-card">
+                    <span>💡 Assisted Solve: {cluesUsed} AI Shannon clue(s) used</span>
+                  </div>
+                )}
               </div>
 
               <div className="modal-actions">
                 <button
                   className="button button-primary"
                   onClick={() => {
-                    const text = `🧩 Solved Cipher Round #1 in 3 questions!\n` +
-                      `1. Ancient Era? YES (-48)\n` +
-                      `2. Substitution? YES (-12)\n` +
-                      `3. Rome Origin? YES (-3)\n` +
-                      `🎯 Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
-                      `Play the live deduction arena: https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`;
+                    const text = cluesUsed === 0
+                      ? `🏆 PURE DEDUCTION VICTORY!\n` +
+                        `Solved Cipher Round #${round?.round_id || 1} in 3 questions with ZERO AI HINTS (100% Pure Skill)!\n` +
+                        `🎯 Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
+                        `Play the live arena: https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`
+                      : `🧩 Solved Cipher Round #${round?.round_id || 1} in 3 questions (${cluesUsed} AI hint${cluesUsed > 1 ? 's' : ''} used)!\n` +
+                        `🎯 Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
+                        `Play the live arena: https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`;
                     navigator.clipboard.writeText(text);
                     setCopiedShare(true);
                     setTimeout(() => setCopiedShare(false), 2500);
