@@ -2,26 +2,38 @@ import { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   Activity,
+  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  Bot,
   Check,
   ChevronDown,
   CircleHelp,
   Clock3,
   Coins,
+  Compass,
+  Copy,
   Cpu,
   Eye,
   Flame,
+  LayoutGrid,
+  Lock,
   LockKeyhole,
   MessageSquareText,
-  ShieldCheck,
-  Sparkles,
-  Wallet,
-  X,
+  Scale,
+  Scroll,
   Send,
   Share2,
-  Copy,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Target,
   Trophy,
+  User,
+  Wallet,
+  X,
+  Zap,
 } from 'lucide-react';
 import {
   contractConfig,
@@ -57,6 +69,36 @@ import {
 import './style.css';
 
 function App() {
+  // Navigation Tab State
+  type TabType = 'round' | 'board' | 'leaderboard' | 'how';
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    try {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'board' || hash === 'leaderboard' || hash === 'how') {
+        return hash as TabType;
+      }
+    } catch {}
+    return 'round';
+  });
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'round' || hash === 'board' || hash === 'leaderboard' || hash === 'how') {
+        setActiveTab(hash as TabType);
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    try {
+      window.location.hash = tab;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {}
+  };
   // Real Account & Wallet State
   const [accountId, setAccountId] = useState<string | null>(null);
   const isSpectator = !accountId;
@@ -471,7 +513,7 @@ function App() {
           certificate: verifyRes.verdict_certificate || (isPure ? 'TEE_ENCLAVE_VERIFIED_PURE_SKILL' : 'TEE_ENCLAVE_VERIFIED_ASSISTED'),
         });
         const winNotice = isPure
-          ? '🏆 TEE ENCLAVE CERTIFIED: PURE DEDUCTION VICTORY! Solved 100% unassisted. Claiming pot on NEAR Testnet...'
+          ? 'TEE ENCLAVE CERTIFIED: PURE DEDUCTION VICTORY! Solved 100% unassisted. Claiming pot on NEAR Testnet...'
           : `GUESS IS CORRECT (${verifyRes.clues_used || cluesUsed} AI hints used)! Claiming pot with TEE signature...`;
         setNotice(winNotice);
         await claimPotOnChain(
@@ -538,10 +580,10 @@ function App() {
           <span>Round #1 Settled: <strong>Caesar Cipher</strong> solved by <code>cipherpot861267.testnet</code> (1.056 NEAR)</span>
         </div>
         <div className="ticker-item">
-          <span>⚡ Round #2: <strong>2.50 NEAR Rollover</strong> &rarr; Active Round #3 Jackpot: <strong>{potDisplay} NEAR</strong></span>
+          <span><Zap size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Round #2: <strong>2.50 NEAR Rollover</strong> &rarr; Active Round #3 Jackpot: <strong>{potDisplay} NEAR</strong></span>
         </div>
         <div className="ticker-item">
-          <span>🛡️ Hardware Enclave: <strong>AMD SEV-SNP Isolated Memory Active</strong></span>
+          <span><Shield size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Hardware Enclave: <strong>AMD SEV-SNP Isolated Memory Active</strong></span>
         </div>
       </div>
 
@@ -562,19 +604,51 @@ function App() {
             <span className="brand-mark"><span /></span>
             <span>CIPHER</span>
           </a>
-          <nav className="main-nav">
-            <a className="active" href="#round">The Round</a>
-            <a href="#board">The Board</a>
-            <a href="#leaderboard">Leaderboard</a>
-            <a href="#how">How Deduction Works</a>
+          <nav className="main-nav" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'round'}
+              className={activeTab === 'round' ? 'active' : ''}
+              onClick={() => handleTabChange('round')}
+            >
+              The Round
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'board'}
+              className={activeTab === 'board' ? 'active' : ''}
+              onClick={() => handleTabChange('board')}
+            >
+              The Board
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'leaderboard'}
+              className={activeTab === 'leaderboard' ? 'active' : ''}
+              onClick={() => handleTabChange('leaderboard')}
+            >
+              Leaderboard
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'how'}
+              className={activeTab === 'how' ? 'active' : ''}
+              onClick={() => handleTabChange('how')}
+            >
+              How Deduction Works
+            </button>
           </nav>
         </div>
 
         <div className="header-right">
           {accountId && (
             <div className="player-progression-pill" title="Player Level & Win Streak Tracker">
-              <span>⭐ LVL 2 · ADEPT</span>
-              <span style={{ color: '#fbbf24' }}>🔥 1W STREAK</span>
+              <span><Star size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: 'var(--lime)' }} /> LVL 2 · ADEPT</span>
+              <span style={{ color: '#fbbf24' }}><Flame size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> 1W STREAK</span>
             </div>
           )}
 
@@ -605,7 +679,10 @@ function App() {
       </header>
 
       <main id="top">
-        <section className="hero" id="round">
+
+        {activeTab === 'round' && (
+          <>
+            <section className="hero" id="round">
           <div className="hero-copy">
             <div className="arena-badge">
               <span className="live-dot" /> Round #{round ? round.round_id : 3} · Live Deduction Arena
@@ -629,13 +706,23 @@ function App() {
               {/* Prominent Quickstart Modal Trigger */}
               <button
                 className="button button-secondary"
+                onClick={() => handleTabChange('board')}
+              >
+                <LayoutGrid size={15} /> View The Board
+              </button>
+              <button
+                className="button button-secondary"
                 onClick={() => setShowHowToPlayModal(true)}
               >
                 <CircleHelp size={15} /> How to Play in 30s
               </button>
-              <a className="text-link" href="#how">
+              <button
+                type="button"
+                className="text-link"
+                onClick={() => handleTabChange('how')}
+              >
                 Deduction Funnel <ArrowDownRight size={15} />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -778,8 +865,284 @@ function App() {
           </section>
         )}
 
-        <div className="content-grid">
-          <section className="board-section panel" id="board">
+            {/* Jump to The Board Banner */}
+            <div className="round-board-cta panel">
+              <div className="round-board-cta-content">
+                <div className="arena-badge" style={{ marginBottom: '6px' }}>
+                  <Sparkles size={12} style={{ color: 'var(--lime)', marginRight: '4px' }} />
+                  64 CANONICAL ENTITIES · {remainingCandidates.length} CONTENDERS REMAINING
+                </div>
+                <h3>The 64-Tile Deduction Grid</h3>
+                <p>
+                  The secret is one of 64 canonical cryptosystems committed to NEAR Protocol with confidential TEE hardware validation. Inspect traits, review Shannon binary entropy clues, and eliminate candidates.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => handleTabChange('board')}
+              >
+                <LayoutGrid size={15} /> Open The Board Grid (64 Cards) &rarr;
+              </button>
+            </div>
+
+            {/* The Round Command & Control Grid */}
+            <div className="round-action-grid">
+              <div className="round-column-left">
+                {isJoined && (
+              <section className="youre-in panel">
+                <div className="panel-header-inline">
+                  <h3>Participation status</h3>
+                  <span className="status-tag"><Check size={12} /> Unlocked</span>
+                </div>
+                <p>Entry fee paid (0.1 NEAR). You have full deduction questions and guess allowances.</p>
+                <div className="youre-in-stats">
+                  <span>Questions Left <b>{round ? round.questions_remaining : 20}</b></span>
+                  <span>Guesses Left <b>{playerInfo ? playerInfo.guesses_remaining : 3} / 3</b></span>
+                </div>
+              </section>
+            )}
+
+            <section className="panel ask-panel">
+              <div className="panel-header-inline">
+                <h2>Ask a question</h2>
+                <span className="status-tag">
+                  <LockKeyhole size={12} /> {isJoined ? 'Ready' : 'Join to Play'}
+                </span>
+              </div>
+              <p className="section-intro">
+                Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
+              </p>
+              <label className="input-label" htmlFor="question">Your Question</label>
+              <textarea
+                id="question"
+                placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                disabled={!isJoined || isSettled || submittingQuestion}
+              />
+              <button
+                className="button-submit-question"
+                disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
+                onClick={handleAskQuestion}
+              >
+                <MessageSquareText size={15} />
+                {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
+              </button>
+
+              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips or Pure Mode Note */}
+              {assistanceMode === 'assisted' ? (
+                <div className="prominent-clues-section">
+                  <div className="prominent-clues-title">
+                    <span><Zap size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> ONE-TAP QUICK CLUES</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tap to populate</span>
+                  </div>
+                  <div className="prominent-clue-grid">
+                    {[
+                      { label: 'Ancient Era?', query: 'Is it from the ancient era?' },
+                      { label: 'Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
+                      { label: 'Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
+                      { label: 'Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
+                      { label: 'Public Key?', query: 'Is it an asymmetric or public-key system?' },
+                      { label: 'Substitution?', query: 'Is it a substitution cipher?' },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        className="prominent-chip"
+                        disabled={!isJoined || isSettled || submittingQuestion}
+                        onClick={() => handleUseClue(item.query)}
+                      >
+                        <span>{item.label}</span>
+                        <span style={{ color: 'var(--lime)', fontSize: '11px' }}>&rarr;</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="pure-skill-banner" style={{ marginTop: '14px', padding: '12px' }}>
+                  <span className="pure-skill-badge"><Trophy size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> PURE SKILL</span>
+                  <span className="pure-skill-desc" style={{ fontSize: '11px' }}>
+                    Clues hidden in Pure Skill mode. Every deduction is your own move.
+                  </span>
+                </div>
+              )}
+
+              <div className="locked-note">
+                <LockKeyhole size={12} />
+                {isSpectator ? 'Connect a wallet and join to unlock' : 'Protected by Anti-Prompt-Injection Enclave'}
+              </div>
+            </section>
+                {/* Agent vs Human Fairness & Transparency Audit Panel */}
+            <section className="fairness-panel">
+              <div className="fairness-header">
+                <span className="fairness-title">
+                  <ShieldCheck size={16} style={{ color: 'var(--lime)' }} />
+                  HUMAN VS AGENT FAIRNESS AUDIT
+                </span>
+                <span className="badge" style={{ color: 'var(--lime)', borderColor: 'var(--lime)' }}>
+                  100% AUDITABLE
+                </span>
+              </div>
+              <div className="fairness-grid">
+                <div className="fairness-card">
+                  <div className="fairness-card-title"><Scale size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> IDENTICAL QUOTAS</div>
+                  <div className="fairness-card-desc">
+                    Agents are strictly capped at 3 guesses per entry and share the same 20 question pool with humans.
+                  </div>
+                </div>
+                <div className="fairness-card">
+                  <div className="fairness-card-title"><Lock size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ZERO SECRET LEAKAGE</div>
+                  <div className="fairness-card-desc">
+                    The secret is isolated in AMD SEV-SNP hardware memory. Agents have zero access to the secret hash preimage.
+                  </div>
+                </div>
+                <div className="fairness-card">
+                  <div className="fairness-card-title"><Shield size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ON-CHAIN COLLATERAL</div>
+                  <div className="fairness-card-desc">
+                    Agents must lock real testnet NEAR deposits via <code>deposit_agent_funds()</code> to participate.
+                  </div>
+                </div>
+                <div className="fairness-card">
+                  <div className="fairness-card-title"><Activity size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ON-CHAIN AUDIT TRAIL</div>
+                  <div className="fairness-card-desc">
+                    Round 1 Payout: 1.056 NEAR | Round 2 Rollover: 2.50 NEAR | Round 3 Active Pot: {potDisplay} NEAR
+                  </div>
+                </div>
+              </div>
+            </section>
+              </div>
+              <div className="round-column-right">
+                <section className="panel feed-panel">
+              <div className="panel-header-inline">
+                <h2>Live question feed</h2>
+                <span className="feed-live"><i /> Live</span>
+              </div>
+              <p className="section-intro">Public answers from the TEE deduction referee:</p>
+              {feed.length === 0 ? (
+                <div className="feed-empty">
+                  <div className="feed-empty-icon"><MessageSquareText size={18} /></div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>No verified entries yet</div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Be the first to submit a deduction question</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="feed-list">
+                  {feed.map((entry) => (
+                    <div
+                      key={entry.question_id}
+                      className={`feed-item ${entry.answer === 'Yes' ? 'yes' : entry.answer === 'No' ? 'no' : 'unclear'}`}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)' }}>
+                          {(agents.some((a) => a.account_id === entry.asker) || entry.asker.includes('agent') || entry.asker === contractConfig.CONTRACT_ID) ? (
+                            <span style={{ color: '#38bdf8', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Bot size={13} /> AGENT: {entry.asker}</span>
+                          ) : (
+                            <span style={{ color: '#4ade80', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={13} /> HUMAN: {entry.asker}</span>
+                          )}
+                        </span>
+                        <strong style={{
+                          fontFamily: 'var(--font-mono)',
+                          color: entry.answer === 'Yes' ? 'var(--color-success)' : entry.answer === 'No' ? 'var(--color-danger)' : 'var(--color-warning)'
+                        }}>
+                          {entry.answer.toUpperCase()}
+                        </strong>
+                      </div>
+                      <div style={{ fontSize: '13px', marginTop: '4px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {entry.question}
+                      </div>
+                      {entry.rule_out_candidate_ids?.length > 0 && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                          Ruled out {entry.rule_out_candidate_ids.length} candidates
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+                <section className="panel agents-panel">
+              <div className="panel-header-inline">
+                <h2>Autonomous agents</h2>
+                <span className="agent-count">{agents.length}</span>
+              </div>
+              <div className="agent-metrics-row">
+                <div className="agent-metric-box">
+                  <small>Agent Pool Balance</small>
+                  <strong>{formatNear(agents.reduce((acc, a) => acc + BigInt(a.balance || 0), BigInt(0)).toString())} NEAR</strong>
+                  <span>On-chain allowance</span>
+                </div>
+                <div className="agent-metric-box">
+                  <small>Agent Questions (R#{round ? round.round_id : 3})</small>
+                  <strong>{agents.reduce((acc, a) => acc + (a.questions_asked || 0), 0)} Qs</strong>
+                  <span>Verified on contract</span>
+                </div>
+              </div>
+              <p className="section-intro" style={{ margin: '0 0 10px 0' }}>
+                Agents compete autonomously via Model Context Protocol (MCP) tool calls on NEAR testnet:
+              </p>
+              {agents.length === 0 ? (
+                <div className="feed-empty">
+                  <div className="feed-empty-icon"><Cpu size={16} /></div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>No external agents in this round yet</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agents deposit spend allowance via <code>deposit_agent_funds()</code></div>
+                  </div>
+                </div>
+              ) : (
+                agents.map((ag) => (
+                  <div className="agent-row" key={ag.account_id}>
+                    <span className="agent-avatar"><Flame size={14} /></span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', display: 'block', fontFamily: 'var(--font-mono)' }}>
+                        {ag.account_id}
+                      </strong>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>
+                        MCP Agent · {ag.questions_asked} Qs asked · {ag.guesses_made} guesses
+                      </span>
+                    </div>
+                    <span style={{ color: 'var(--color-success)', font: '600 11.5px var(--font-mono)' }}>
+                      {formatNear(ag.balance)} NEAR
+                    </span>
+                  </div>
+                ))
+              )}
+              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--lime)', display: 'block', marginBottom: '2px' }}>
+                  MCP TOOL CALL ENDPOINT:
+                </span>
+                <code>POST /mcp/call &rarr; &#123;"name":"ask_question"&#125;</code>
+              </div>
+            </section>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'board' && (
+
+          <div className="board-view-container">
+            <div className="board-view-header">
+              <div className="board-view-title-group">
+                <div className="arena-badge">
+                  <span className="live-dot" /> Round #{round ? round.round_id : 3} Deduction Board
+                </div>
+                <h2>The 64 Canonical Mysteries</h2>
+                <p>Click any card to inspect candidate traits or submit a cryptographic guess. Struck-out tiles are ruled out globally.</p>
+              </div>
+              <div className="board-view-actions">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => handleTabChange('round')}
+                >
+                  <MessageSquareText size={14} /> Back to Live Feed & Ask Questions
+                </button>
+              </div>
+            </div>
+
+            <section className="board-section panel" id="board">
             <div className="theme-bar">
               <div className="theme-pill-group">
                 <span className="inspector-label">ARENA THEME:</span>
@@ -788,14 +1151,14 @@ function App() {
                   className={`theme-pill ${activeTheme === 'crypto' ? 'active' : ''}`}
                   onClick={() => handleSwitchTheme('crypto')}
                 >
-                  🏛️ Cryptography History <small>(Live Testnet)</small>
+                  <Scroll size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Cryptography History <small>(Live Testnet)</small>
                 </button>
                 <button
                   type="button"
                   className={`theme-pill ${activeTheme === 'science' ? 'active' : ''}`}
                   onClick={() => handleSwitchTheme('science')}
                 >
-                  🔬 Scientific Breakthroughs <small>(Preview)</small>
+                  <Compass size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Scientific Breakthroughs <small>(Preview)</small>
                 </button>
               </div>
 
@@ -809,7 +1172,7 @@ function App() {
                     onClick={() => setAssistanceMode('assisted')}
                     title="AI Shannon entropy clues enabled for guided learning. 96% pot share."
                   >
-                    <span>💡 Assisted</span>
+                    <span><Sparkles size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Assisted</span>
                     <small>Training · 96% Pot</small>
                   </button>
                   <button
@@ -818,7 +1181,7 @@ function App() {
                     onClick={() => setAssistanceMode('pure')}
                     title="Pure deduction without AI assistance. 98% pot share (50% rake rebate) + 2x Leaderboard points!"
                   >
-                    <span>🏆 Pure Skill</span>
+                    <span><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Pure Skill</span>
                     <small>Ranked · 98% Pot (+2% Rebate)</small>
                   </button>
                 </div>
@@ -829,7 +1192,7 @@ function App() {
             {!isJoined && !isSettled && (
               <div className="spectator-urgent-banner">
                 <div className="spectator-urgent-text">
-                  <span className="spectator-urgent-badge">🔥 HIGH URGENCY</span>
+                  <span className="spectator-urgent-badge"><Flame size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> HIGH URGENCY</span>
                   <span>
                     Only <b>{remainingCandidates.length} of 64 tiles remain</b> in Round #{round ? round.round_id : 3}! Current pot is <b>{potDisplay} NEAR</b>. Step in before an autonomous agent sweeps the pot!
                   </span>
@@ -930,7 +1293,7 @@ function App() {
                       onClick={() => handleUseClue(optimalDeduction.question)}
                       disabled={!isJoined || isSettled}
                     >
-                      ⚡ Use Clue Now
+                      <Zap size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Use Clue Now
                     </button>
                   </div>
                 </div>
@@ -938,7 +1301,7 @@ function App() {
             ) : (
               <div className="pure-skill-banner">
                 <div className="pure-skill-left">
-                  <span className="pure-skill-badge">🏆 PURE SKILL RANKED MODE · 98% POT SHARE</span>
+                  <span className="pure-skill-badge"><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> PURE SKILL RANKED MODE · 98% POT SHARE</span>
                   <span className="pure-skill-desc">
                     AI clue chips disabled. Solving without AI suggestions earns the <b>50% Protocol Rake Rebate (98% payout)</b>, <b>Pure Deduction Grandmaster Certificate</b>, and a <b>2x Leaderboard Multiplier</b>!
                   </span>
@@ -979,9 +1342,9 @@ function App() {
                         </div>
                         <h4 className="contender-name">{cand.name}</h4>
                         <div className="contender-meta">
-                          <div>🏛️ Origin: <b>{cand.origin}</b></div>
-                          <div>📜 Category: <b>{cand.category}</b></div>
-                          <div>🔑 Type: <b>{cand.type}</b></div>
+                          <div>Origin: <b>{cand.origin}</b></div>
+                          <div>Category: <b>{cand.category}</b></div>
+                          <div>Type: <b>{cand.type}</b></div>
                         </div>
                       </div>
                       <button
@@ -991,7 +1354,7 @@ function App() {
                           handleSelectCandidateForGuess(cand);
                         }}
                       >
-                        🎯 Guess This Candidate
+                        <Target size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Guess This Candidate
                       </button>
                     </div>
                   ))}
@@ -1075,237 +1438,192 @@ function App() {
               </>
             )}
           </section>
+          </div>
+        )}
 
-          <aside className="side-column">
-            {isJoined && (
-              <section className="youre-in panel">
-                <div className="panel-header-inline">
-                  <h3>Participation status</h3>
-                  <span className="status-tag"><Check size={12} /> Unlocked</span>
-                </div>
-                <p>Entry fee paid (0.1 NEAR). You have full deduction questions and guess allowances.</p>
-                <div className="youre-in-stats">
-                  <span>Questions Left <b>{round ? round.questions_remaining : 20}</b></span>
-                  <span>Guesses Left <b>{playerInfo ? playerInfo.guesses_remaining : 3} / 3</b></span>
-                </div>
-              </section>
-            )}
+        {/* Section: Arena Leaderboard & Reputation Rankings */}
+        {activeTab === 'leaderboard' && (
+          <section className="leaderboard-section" id="leaderboard">
+          <div className="leaderboard-header">
+            <div className="arena-badge" style={{ marginBottom: '8px' }}>
+              <Trophy size={13} style={{ color: 'var(--lime)', display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
+              ARENA LEADERBOARD & REPUTATION
+            </div>
+            <h2>Competitive Sleuth Standings</h2>
+            <p>
+              Compete in <b>Pure Skill Ranked Mode</b> to earn a <b>2x points multiplier</b>, a <b>50% protocol rake rebate (98% pot share)</b>, and claim the coveted <b>Grandmaster Cypherpunk</b> title.
+            </p>
+          </div>
 
-            <section className="panel ask-panel">
-              <div className="panel-header-inline">
-                <h2>Ask a question</h2>
-                <span className="status-tag">
-                  <LockKeyhole size={12} /> {isJoined ? 'Ready' : 'Join to Play'}
-                </span>
-              </div>
-              <p className="section-intro">
-                Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
-              </p>
-              <label className="input-label" htmlFor="question">Your Question</label>
-              <textarea
-                id="question"
-                placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                disabled={!isJoined || isSettled || submittingQuestion}
-              />
+          <div className="leaderboard-toolbar">
+            <div className="leaderboard-tabs">
               <button
-                className="button-submit-question"
-                disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
-                onClick={handleAskQuestion}
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('all')}
               >
-                <MessageSquareText size={15} />
-                {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
+                <span><Trophy size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> All Solvers ({leaderboardEntries.length})</span>
               </button>
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'human' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('human')}
+              >
+                <span><User size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Humans Only</span>
+              </button>
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'agent' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('agent')}
+              >
+                <span><Bot size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Autonomous Agents</span>
+              </button>
+              <button
+                type="button"
+                className={`leaderboard-tab-btn ${leaderboardFilter === 'pure' ? 'active' : ''}`}
+                onClick={() => setLeaderboardFilter('pure')}
+              >
+                <span><Star size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Pure Deduction Masters</span>
+              </button>
+            </div>
 
-              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips or Pure Mode Note */}
-              {assistanceMode === 'assisted' ? (
-                <div className="prominent-clues-section">
-                  <div className="prominent-clues-title">
-                    <span>⚡ ONE-TAP QUICK CLUES</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tap to populate</span>
-                  </div>
-                  <div className="prominent-clue-grid">
-                    {[
-                      { label: '🏛️ Ancient Era?', query: 'Is it from the ancient era?' },
-                      { label: '⚙️ Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
-                      { label: '💻 Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
-                      { label: '🌍 Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
-                      { label: '🔑 Public Key?', query: 'Is it an asymmetric or public-key system?' },
-                      { label: '🔄 Substitution?', query: 'Is it a substitution cipher?' },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        className="prominent-chip"
-                        disabled={!isJoined || isSettled || submittingQuestion}
-                        onClick={() => handleUseClue(item.query)}
-                      >
-                        <span>{item.label}</span>
-                        <span style={{ color: 'var(--lime)', fontSize: '11px' }}>&rarr;</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="pure-skill-banner" style={{ marginTop: '14px', padding: '12px' }}>
-                  <span className="pure-skill-badge">🏆 PURE SKILL</span>
-                  <span className="pure-skill-desc" style={{ fontSize: '11px' }}>
-                    Clues hidden in Pure Skill mode. Every deduction is your own move.
-                  </span>
-                </div>
-              )}
+            <div className="leaderboard-stats-summary">
+              <span>Settled Payouts: <strong>1.056 NEAR</strong></span>
+              <span>·</span>
+              <span>Active Jackpot: <strong>{potDisplay} NEAR</strong></span>
+              <span>·</span>
+              <span>Contract: <strong>cipherpot861267.testnet</strong></span>
+            </div>
+          </div>
 
-              <div className="locked-note">
-                <LockKeyhole size={12} />
-                {isSpectator ? 'Connect a wallet and join to unlock' : 'Protected by Anti-Prompt-Injection Enclave'}
-              </div>
-            </section>
-
-            <section className="panel feed-panel">
-              <div className="panel-header-inline">
-                <h2>Live question feed</h2>
-                <span className="feed-live"><i /> Live</span>
-              </div>
-              <p className="section-intro">Public answers from the TEE deduction referee:</p>
-              {feed.length === 0 ? (
-                <div className="feed-empty">
-                  <div className="feed-empty-icon"><MessageSquareText size={18} /></div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>No verified entries yet</div>
-                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Be the first to submit a deduction question</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="feed-list">
-                  {feed.map((entry) => (
-                    <div
-                      key={entry.question_id}
-                      className={`feed-item ${entry.answer === 'Yes' ? 'yes' : entry.answer === 'No' ? 'no' : 'unclear'}`}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
-                        <span style={{ fontFamily: 'var(--font-mono)' }}>
-                          {(agents.some((a) => a.account_id === entry.asker) || entry.asker.includes('agent') || entry.asker === contractConfig.CONTRACT_ID) ? (
-                            <span style={{ color: '#38bdf8', fontWeight: 600 }}>🤖 AGENT: {entry.asker}</span>
-                          ) : (
-                            <span style={{ color: '#4ade80', fontWeight: 600 }}>👤 HUMAN: {entry.asker}</span>
-                          )}
+          <div className="leaderboard-table-wrap">
+            <table className="leaderboard-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '60px' }}>RANK</th>
+                  <th>SLEUTH / COMPETITOR</th>
+                  <th>REPUTATION TIER</th>
+                  <th>SOLVES</th>
+                  <th>PURE SKILL</th>
+                  <th>STREAK</th>
+                  <th>TOTAL WON</th>
+                  <th style={{ textAlign: 'right' }}>POINTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLeaderboard.map((entry) => {
+                  const isYou = accountId && entry.account_id === accountId;
+                  const rankClass = entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
+                  return (
+                    <tr key={entry.account_id} style={isYou ? { background: 'rgba(217, 255, 85, 0.06)' } : undefined}>
+                      <td>
+                        <span className={`rank-badge ${rankClass}`}>
+                          {entry.rank}
                         </span>
-                        <strong style={{
-                          fontFamily: 'var(--font-mono)',
-                          color: entry.answer === 'Yes' ? 'var(--color-success)' : entry.answer === 'No' ? 'var(--color-danger)' : 'var(--color-warning)'
-                        }}>
-                          {entry.answer.toUpperCase()}
-                        </strong>
-                      </div>
-                      <div style={{ fontSize: '13px', marginTop: '4px', color: 'var(--text-primary)', fontWeight: 500 }}>
-                        {entry.question}
-                      </div>
-                      {entry.rule_out_candidate_ids?.length > 0 && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-                          Ruled out {entry.rule_out_candidate_ids.length} candidates
+                      </td>
+                      <td>
+                        <div className="solver-name-cell">
+                          <strong style={{ fontFamily: 'var(--font-mono)', color: isYou ? 'var(--lime)' : '#fff' }}>
+                            {entry.account_id}
+                          </strong>
+                          {entry.is_agent ? (
+                            <span className="solver-tag-agent"><Bot size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> AGENT</span>
+                          ) : (
+                            <span className="solver-tag-human"><User size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> HUMAN</span>
+                          )}
+                          {isYou && <span className="solver-tag-you">YOU</span>}
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)' }}>
+                        {entry.tier}
+                      </td>
+                      <td>
+                        <strong>{entry.solves}</strong> <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>rounds</span>
+                      </td>
+                      <td>
+                        {entry.is_pure_master ? (
+                          <span className="pure-badge-tag">
+                            <Star size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: 'var(--lime)' }} /> {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>
+                            {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {entry.streak > 0 ? (
+                          <span style={{ color: '#fbbf24', font: '600 11.5px var(--font-mono)' }}>
+                            <Flame size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: '#fbbf24' }} /> {entry.streak}W
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ font: '600 12px var(--font-mono)', color: 'var(--color-success)' }}>
+                        {entry.total_won_near}
+                      </td>
+                      <td style={{ textAlign: 'right', font: '700 12px var(--font-mono)', color: 'var(--lime)' }}>
+                        {entry.points} PTS
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <Shield size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Verified On-Chain: Sourced directly from NEAR Testnet contract <code>cipherpot861267.testnet</code>. Active Round #3 jackpot ({potDisplay} NEAR) unclaimed. First correct solver joins Rank #1.
+          </div>
+        </section>
+        )}
 
-            <section className="panel agents-panel">
-              <div className="panel-header-inline">
-                <h2>Autonomous agents</h2>
-                <span className="agent-count">{agents.length}</span>
+        {activeTab === 'how' && (
+          <section className="how-section" id="how">
+          <div className="how-header">
+            <h2>How deduction works</h2>
+            <p>Eliminate candidates through structured mathematical partitioning, not random guessing.</p>
+          </div>
+          <div className="deduction-funnel">
+            <div className="funnel-step">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 1</span>
+                <span className="funnel-count">64 Tiles</span>
               </div>
-              <div className="agent-metrics-row">
-                <div className="agent-metric-box">
-                  <small>Agent Pool Balance</small>
-                  <strong>{formatNear(agents.reduce((acc, a) => acc + BigInt(a.balance || 0), BigInt(0)).toString())} NEAR</strong>
-                  <span>On-chain allowance</span>
-                </div>
-                <div className="agent-metric-box">
-                  <small>Agent Questions (R#{round ? round.round_id : 3})</small>
-                  <strong>{agents.reduce((acc, a) => acc + (a.questions_asked || 0), 0)} Qs</strong>
-                  <span>Verified on contract</span>
-                </div>
+              <h4>Domain Partition</h4>
+              <p>Ask broad classification questions to bisect the board by historical epoch or category.</p>
+              <div className="funnel-example">e.g. "Is it from the Ancient era?" (-48)</div>
+            </div>
+            <div className="funnel-step">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 2</span>
+                <span className="funnel-count">16 Tiles</span>
               </div>
-              <p className="section-intro" style={{ margin: '0 0 10px 0' }}>
-                Agents compete autonomously via Model Context Protocol (MCP) tool calls on NEAR testnet:
-              </p>
-              {agents.length === 0 ? (
-                <div className="feed-empty">
-                  <div className="feed-empty-icon"><Cpu size={16} /></div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>No external agents in this round yet</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agents deposit spend allowance via <code>deposit_agent_funds()</code></div>
-                  </div>
-                </div>
-              ) : (
-                agents.map((ag) => (
-                  <div className="agent-row" key={ag.account_id}>
-                    <span className="agent-avatar"><Flame size={14} /></span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <strong style={{ fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', display: 'block', fontFamily: 'var(--font-mono)' }}>
-                        {ag.account_id}
-                      </strong>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>
-                        MCP Agent · {ag.questions_asked} Qs asked · {ag.guesses_made} guesses
-                      </span>
-                    </div>
-                    <span style={{ color: 'var(--color-success)', font: '600 11.5px var(--font-mono)' }}>
-                      {formatNear(ag.balance)} NEAR
-                    </span>
-                  </div>
-                ))
-              )}
-              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-muted)' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--lime)', display: 'block', marginBottom: '2px' }}>
-                  MCP TOOL CALL ENDPOINT:
-                </span>
-                <code>POST /mcp/call &rarr; &#123;"name":"ask_question"&#125;</code>
+              <h4>Structural Type</h4>
+              <p>Isolate the functional mechanism or medium to cut the remaining search space by 75%.</p>
+              <div className="funnel-example">e.g. "Is it a Substitution cipher?" (-12)</div>
+            </div>
+            <div className="funnel-step">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 3</span>
+                <span className="funnel-count">4 Tiles</span>
               </div>
-            </section>
-
-            {/* Agent vs Human Fairness & Transparency Audit Panel */}
-            <section className="fairness-panel">
-              <div className="fairness-header">
-                <span className="fairness-title">
-                  <ShieldCheck size={16} style={{ color: 'var(--lime)' }} />
-                  HUMAN VS AGENT FAIRNESS AUDIT
-                </span>
-                <span className="badge" style={{ color: 'var(--lime)', borderColor: 'var(--lime)' }}>
-                  100% AUDITABLE
-                </span>
+              <h4>Geographic Origin</h4>
+              <p>Pinpoint the historical origin or inventor to isolate the exact remaining secret.</p>
+              <div className="funnel-example">e.g. "Did it originate in Rome?" (-3)</div>
+            </div>
+            <div className="funnel-step target">
+              <div className="funnel-top">
+                <span className="funnel-stage">Stage 4</span>
+                <span className="funnel-count">1 Tile</span>
               </div>
-              <div className="fairness-grid">
-                <div className="fairness-card">
-                  <div className="fairness-card-title">⚖️ IDENTICAL QUOTAS</div>
-                  <div className="fairness-card-desc">
-                    Agents are strictly capped at 3 guesses per entry and share the same 20 question pool with humans.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title">🔒 ZERO SECRET LEAKAGE</div>
-                  <div className="fairness-card-desc">
-                    The secret is isolated in AMD SEV-SNP hardware memory. Agents have zero access to the secret hash preimage.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title">⛓️ ON-CHAIN COLLATERAL</div>
-                  <div className="fairness-card-desc">
-                    Agents must lock real testnet NEAR deposits via <code>deposit_agent_funds()</code> to participate.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title">📊 ON-CHAIN AUDIT TRAIL</div>
-                  <div className="fairness-card-desc">
-                    Round 1 Payout: 1.056 NEAR | Round 2 Rollover: 2.50 NEAR | Round 3 Active Pot: {potDisplay} NEAR
-                  </div>
-                </div>
-              </div>
-            </section>
-          </aside>
-        </div>
+              <h4>Cryptographic Claim</h4>
+              <p>Submit candidate guess. The TEE Enclave signs a cryptographic verdict to unlock 96% pot.</p>
+              <div className="funnel-example" style={{ color: 'var(--lime)', fontWeight: 600 }}><Target size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Caesar Cipher Solved!</div>
+            </div>
+          </div>
+        </section>
+        )}
 
         {/* Priority 1: "How to Play" Onboarding Modal */}
         {showHowToPlayModal && (
@@ -1326,7 +1644,7 @@ function App() {
               </h2>
 
               <div className="not-trivia-banner">
-                <span className="banner-icon">🛑</span>
+                <span className="banner-icon"><AlertTriangle size={16} /></span>
                 <div>
                   <div className="not-trivia-title">NOT A TRIVIA QUIZ!</div>
                   <p className="not-trivia-desc">
@@ -1466,7 +1784,7 @@ function App() {
 
               {globallyRuledOut.includes(inspectingCandidate.id) && (
                 <div className="modal-alert">
-                  ⚠️ This candidate was ruled out globally by the TEE referee in the public question feed.
+                  <AlertTriangle size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> This candidate was ruled out globally by the TEE referee in the public question feed.
                 </div>
               )}
 
@@ -1478,7 +1796,7 @@ function App() {
                     setInspectingCandidate(null);
                   }}
                 >
-                  {locallyCrossed.includes(inspectingCandidate.id) ? '✓ Remove Private Note' : '📝 Mark as Private Note'}
+                  {locallyCrossed.includes(inspectingCandidate.id) ? 'Remove Private Note' : 'Mark as Private Note'}
                 </button>
 
                 <button
@@ -1490,7 +1808,7 @@ function App() {
                     handleSelectCandidateForGuess(c);
                   }}
                 >
-                  🎯 Make This Guess
+                  <Target size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Make This Guess
                 </button>
               </div>
             </div>
@@ -1531,7 +1849,7 @@ function App() {
                 )}
               </div>
               <div className="modal-alert-warning">
-                ⚠️ This consumes 1 of your 3 guess quotas. If correct, 96% pot payout will be claimed.
+                <AlertTriangle size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> This consumes 1 of your 3 guess quotas. If correct, 96% pot payout will be claimed.
               </div>
               <div className="modal-actions">
                 <button
@@ -1660,7 +1978,7 @@ function App() {
                 <div className="replay-step">
                   <div className="replay-step-header">
                     <span>STEP 1: ERA FILTER</span>
-                    <strong>YES (64 ➔ 16 TILES)</strong>
+                    <strong>YES (64 &rarr; 16 TILES)</strong>
                   </div>
                   <div className="replay-step-question">
                     "Is it from the Ancient era?"
@@ -1673,7 +1991,7 @@ function App() {
                 <div className="replay-step">
                   <div className="replay-step-header">
                     <span>STEP 2: TYPE FILTER</span>
-                    <strong>YES (16 ➔ 4 TILES)</strong>
+                    <strong>YES (16 &rarr; 4 TILES)</strong>
                   </div>
                   <div className="replay-step-question">
                     "Is it a Substitution cipher?"
@@ -1686,7 +2004,7 @@ function App() {
                 <div className="replay-step">
                   <div className="replay-step-header">
                     <span>STEP 3: ORIGIN FILTER</span>
-                    <strong>YES (4 ➔ 1 TILE)</strong>
+                    <strong>YES (4 &rarr; 1 TILE)</strong>
                   </div>
                   <div className="replay-step-question">
                     "Did it originate in Rome?"
@@ -1713,7 +2031,7 @@ function App() {
                 {(lastSolveMastery?.pure ?? cluesUsed === 0) ? (
                   <div className="pure-mastery-card">
                     <div className="pure-mastery-title">
-                      <Sparkles size={14} /> 🏆 TEE-CERTIFIED PURE DEDUCTION MASTERY
+                      <Sparkles size={14} /> <Trophy size={14} /> TEE-CERTIFIED PURE DEDUCTION MASTERY
                     </div>
                     <div className="pure-mastery-desc">
                       Hardware TEE Enclave verified 100% unassisted solve ({lastSolveMastery?.certificate || 'TEE_ENCLAVE_VERIFIED_PURE_SKILL'}). True mathematical deduction mastery achieved!
@@ -1721,7 +2039,7 @@ function App() {
                   </div>
                 ) : (
                   <div className="assisted-mastery-card">
-                    <span>💡 TEE-Verified Assisted Solve: {cluesUsed} AI Shannon clue(s) used</span>
+                    <span>TEE-Verified Assisted Solve: {cluesUsed} AI Shannon clue(s) used</span>
                   </div>
                 )}
               </div>
@@ -1731,12 +2049,12 @@ function App() {
                   className="button button-primary"
                   onClick={() => {
                     const text = cluesUsed === 0
-                      ? `🏆 PURE DEDUCTION VICTORY!\n` +
+                      ? `[PURE DEDUCTION VICTORY]\n` +
                         `Solved Cipher Round #${round?.round_id || 1} in 3 questions with ZERO AI HINTS (100% Pure Skill)!\n` +
-                        `🎯 Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
+                        `Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
                         `Play the live arena: https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`
-                      : `🧩 Solved Cipher Round #${round?.round_id || 1} in 3 questions (${cluesUsed} AI hint${cluesUsed > 1 ? 's' : ''} used)!\n` +
-                        `🎯 Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
+                      : `Solved Cipher Round #${round?.round_id || 1} in 3 questions (${cluesUsed} AI hint${cluesUsed > 1 ? 's' : ''} used)!\n` +
+                        `Secret: Caesar Cipher! Claimed 1.056 NEAR on @NEARProtocol.\n` +
                         `Play the live arena: https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`;
                     navigator.clipboard.writeText(text);
                     setCopiedShare(true);
@@ -1755,186 +2073,6 @@ function App() {
             </div>
           </div>
         )}
-
-        {/* Section: Arena Leaderboard & Reputation Rankings */}
-        <section className="leaderboard-section" id="leaderboard">
-          <div className="leaderboard-header">
-            <div className="arena-badge" style={{ marginBottom: '8px' }}>
-              <Trophy size={13} style={{ color: 'var(--lime)', display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
-              ARENA LEADERBOARD & REPUTATION
-            </div>
-            <h2>Competitive Sleuth Standings</h2>
-            <p>
-              Compete in <b>Pure Skill Ranked Mode</b> to earn a <b>2x points multiplier</b>, a <b>50% protocol rake rebate (98% pot share)</b>, and claim the coveted <b>Grandmaster Cypherpunk</b> title.
-            </p>
-          </div>
-
-          <div className="leaderboard-toolbar">
-            <div className="leaderboard-tabs">
-              <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('all')}
-              >
-                <span>🏆 All Solvers ({leaderboardEntries.length})</span>
-              </button>
-              <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'human' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('human')}
-              >
-                <span>👤 Humans Only</span>
-              </button>
-              <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'agent' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('agent')}
-              >
-                <span>🤖 Autonomous Agents</span>
-              </button>
-              <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'pure' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('pure')}
-              >
-                <span>⭐ Pure Deduction Masters</span>
-              </button>
-            </div>
-
-            <div className="leaderboard-stats-summary">
-              <span>Settled Payouts: <strong>1.056 NEAR</strong></span>
-              <span>·</span>
-              <span>Active Jackpot: <strong>{potDisplay} NEAR</strong></span>
-              <span>·</span>
-              <span>Contract: <strong>cipherpot861267.testnet</strong></span>
-            </div>
-          </div>
-
-          <div className="leaderboard-table-wrap">
-            <table className="leaderboard-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '60px' }}>RANK</th>
-                  <th>SLEUTH / COMPETITOR</th>
-                  <th>REPUTATION TIER</th>
-                  <th>SOLVES</th>
-                  <th>PURE SKILL</th>
-                  <th>STREAK</th>
-                  <th>TOTAL WON</th>
-                  <th style={{ textAlign: 'right' }}>POINTS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLeaderboard.map((entry) => {
-                  const isYou = accountId && entry.account_id === accountId;
-                  const rankClass = entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
-                  return (
-                    <tr key={entry.account_id} style={isYou ? { background: 'rgba(217, 255, 85, 0.06)' } : undefined}>
-                      <td>
-                        <span className={`rank-badge ${rankClass}`}>
-                          {entry.rank}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="solver-name-cell">
-                          <strong style={{ fontFamily: 'var(--font-mono)', color: isYou ? 'var(--lime)' : '#fff' }}>
-                            {entry.account_id}
-                          </strong>
-                          {entry.is_agent ? (
-                            <span className="solver-tag-agent">🤖 AGENT</span>
-                          ) : (
-                            <span className="solver-tag-human">👤 HUMAN</span>
-                          )}
-                          {isYou && <span className="solver-tag-you">YOU</span>}
-                        </div>
-                      </td>
-                      <td style={{ color: 'var(--text-secondary)' }}>
-                        {entry.tier}
-                      </td>
-                      <td>
-                        <strong>{entry.solves}</strong> <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>rounds</span>
-                      </td>
-                      <td>
-                        {entry.is_pure_master ? (
-                          <span className="pure-badge-tag">
-                            ⭐ {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>
-                            {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {entry.streak > 0 ? (
-                          <span style={{ color: '#fbbf24', font: '600 11.5px var(--font-mono)' }}>
-                            🔥 {entry.streak}W
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ font: '600 12px var(--font-mono)', color: 'var(--color-success)' }}>
-                        {entry.total_won_near}
-                      </td>
-                      <td style={{ textAlign: 'right', font: '700 12px var(--font-mono)', color: 'var(--lime)' }}>
-                        {entry.points} PTS
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            ⛓️ Verified On-Chain: Sourced directly from NEAR Testnet contract <code>cipherpot861267.testnet</code>. Active Round #3 jackpot ({potDisplay} NEAR) unclaimed. First correct solver joins Rank #1.
-          </div>
-        </section>
-
-        <section className="how-section" id="how">
-          <div className="how-header">
-            <h2>How deduction works</h2>
-            <p>Eliminate candidates through structured mathematical partitioning, not random guessing.</p>
-          </div>
-          <div className="deduction-funnel">
-            <div className="funnel-step">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 1</span>
-                <span className="funnel-count">64 Tiles</span>
-              </div>
-              <h4>Domain Partition</h4>
-              <p>Ask broad classification questions to bisect the board by historical epoch or category.</p>
-              <div className="funnel-example">e.g. "Is it from the Ancient era?" (-48)</div>
-            </div>
-            <div className="funnel-step">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 2</span>
-                <span className="funnel-count">16 Tiles</span>
-              </div>
-              <h4>Structural Type</h4>
-              <p>Isolate the functional mechanism or medium to cut the remaining search space by 75%.</p>
-              <div className="funnel-example">e.g. "Is it a Substitution cipher?" (-12)</div>
-            </div>
-            <div className="funnel-step">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 3</span>
-                <span className="funnel-count">4 Tiles</span>
-              </div>
-              <h4>Geographic Origin</h4>
-              <p>Pinpoint the historical origin or inventor to isolate the exact remaining secret.</p>
-              <div className="funnel-example">e.g. "Did it originate in Rome?" (-3)</div>
-            </div>
-            <div className="funnel-step target">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 4</span>
-                <span className="funnel-count">1 Tile</span>
-              </div>
-              <h4>Cryptographic Claim</h4>
-              <p>Submit candidate guess. The TEE Enclave signs a cryptographic verdict to unlock 96% pot.</p>
-              <div className="funnel-example" style={{ color: 'var(--lime)', fontWeight: 600 }}>🎯 Caesar Cipher Solved!</div>
-            </div>
-          </div>
-        </section>
 
         <footer id="fairness">
           <div className="brand footer-brand">
