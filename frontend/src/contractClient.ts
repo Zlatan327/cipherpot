@@ -232,8 +232,17 @@ export async function fetchBoard(theme: string = 'crypto'): Promise<Candidate[]>
 export async function askQuestionApi(
   roundId: number,
   accountId: string,
-  question: string
-): Promise<{ answer: string; rule_out_candidate_ids: number[]; status: string }> {
+  question: string,
+  isAssisted: boolean = false,
+  mode: string = 'pure'
+): Promise<{
+  answer: string;
+  rule_out_candidate_ids: number[];
+  status: string;
+  is_assisted?: boolean;
+  session_clues_used?: number;
+  pure_skill?: boolean;
+}> {
   const res = await fetch(`${contractConfig.API_URL}/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -241,6 +250,8 @@ export async function askQuestionApi(
       round_id: roundId,
       account_id: accountId,
       question,
+      is_assisted: isAssisted,
+      mode: mode,
     }),
   });
 
@@ -250,6 +261,43 @@ export async function askQuestionApi(
   }
 
   return res.json();
+}
+
+export interface ShannonSuggestion {
+  attribute: string;
+  value: string;
+  question: string;
+  split_count: number;
+  total_active: number;
+  split_ratio: number;
+  entropy_bits: number;
+  expected_eliminations: number;
+  bisection_quality: number;
+}
+
+export async function fetchShannonCluesApi(
+  remainingIds?: number[],
+  theme: string = 'cryptography',
+  limit: number = 5
+): Promise<ShannonSuggestion[]> {
+  try {
+    const res = await fetch(`${contractConfig.API_URL}/clues/suggest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        remaining_candidate_ids: remainingIds,
+        theme,
+        limit,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.suggestions || [];
+    }
+  } catch (err) {
+    console.warn('API Shannon clues fallback to client heuristic:', err);
+  }
+  return [];
 }
 
 export async function fetchTeeAttestation(): Promise<TeeAttestation> {

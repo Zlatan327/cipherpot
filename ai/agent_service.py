@@ -77,4 +77,22 @@ def get_mcp_tools_manifest() -> List[Dict[str, Any]]:
                 "required": ["round_id", "agent_id", "candidate_id", "candidate_name"],
             },
         },
+        {
+            "name": "cipherpot_suggest_shannon_clues",
+            "description": "Compute Shannon Information Gain bisection questions across remaining candidates to optimize deduction search space.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "remaining_candidate_ids": {
+                        "type": "array",
+                        "items": {"type": "integer"},
+                        "description": "Optional list of remaining candidate IDs (1-64)",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of suggestions to return (default 5)",
+                    },
+                },
+            },
+        },
     ]

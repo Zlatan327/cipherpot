@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 from ai.tee_signer import get_tee_signer, TEESigner
 from ai.guardrails import sanitize_and_validate_question
 from ai.answerer import AIAnswerer
+from ai.shannon import ShannonEngine
 from ai.agent_service import (
     AgentAskRequest,
     AgentGuessRequest,
@@ -45,9 +46,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Enclave Signer & Answerer
+# Initialize Enclave Signer, Answerer & Shannon Engine
 signer = get_tee_signer()
 answerer = AIAnswerer()
+shannon_crypto = ShannonEngine(answerer.candidates)
+
+# In-memory TEE player session telemetry (confidential inside TEE enclave)
+# Key: f"{round_id}:{account_id.lower()}" -> {"round_id": int, "account_id": str, "questions_count": int, "clues_used": int, "mode": str}
+ENCLAVE_PLAYER_SESSIONS: Dict[str, Dict[str, Any]] = {}
+
+def get_session_key(round_id: int, account_id: str) -> str:
+    return f"{round_id}:{account_id.strip().lower()}"
 
 # In-memory enclave round secrets storage (confidential inside TEE)
 # round_id -> {"candidate_id": int, "candidate_name": str, "salt": str, "commitment": str}
@@ -84,6 +93,14 @@ class QuestionRequest(BaseModel):
     round_id: int = Field(..., description="Target round ID")
     account_id: str = Field(..., description="NEAR Account ID asking the question")
     question: str = Field(..., description="The deduction question text")
+    is_assisted: bool = Field(False, description="Whether this question used an AI Shannon recommendation")
+    mode: Optional[str] = Field("pure", description="Player skill mode: 'pure' or 'assisted'")
+
+
+class ClueSuggestionRequest(BaseModel):
+    remaining_candidate_ids: Optional[List[int]] = Field(None, description="Candidate IDs still in contention")
+    theme: Optional[str] = Field("cryptography", description="Board theme ('cryptography' or 'science')")
+    limit: int = Field(5, ge=1, le=20, description="Max suggestions to return")
 
 
 class GuessVerificationRequest(BaseModel):
@@ -241,6 +258,22 @@ def ask_question(req: QuestionRequest):
     # 3. Evaluate structured deduction response
     eval_result = answerer.evaluate_question(secret_cand, guard.sanitized)
 
+    # 4. Record session telemetry inside Enclave
+    s_key = get_session_key(req.round_id, req.account_id)
+    if s_key not in ENCLAVE_PLAYER_SESSIONS:
+        ENCLAVE_PLAYER_SESSIONS[s_key] = {
+            "round_id": req.round_id,
+            "account_id": req.account_id,
+            "questions_count": 0,
+            "clues_used": 0,
+            "mode": req.mode or "pure",
+        }
+    session = ENCLAVE_PLAYER_SESSIONS[s_key]
+    session["questions_count"] += 1
+    if req.is_assisted:
+        session["clues_used"] += 1
+        session["mode"] = "assisted"
+
     return {
         "round_id": req.round_id,
         "asker": req.account_id,
@@ -249,6 +282,9 @@ def ask_question(req: QuestionRequest):
         "rule_out_candidate_ids": eval_result.get("rule_out_candidate_ids", []),
         "confidence": eval_result.get("confidence", 1.0),
         "status": "success",
+        "is_assisted": req.is_assisted,
+        "session_clues_used": session["clues_used"],
+        "pure_skill": (session["clues_used"] == 0),
     }
 
 
@@ -295,6 +331,18 @@ def verify_guess(req: GuessVerificationRequest):
     guessed_name = req.candidate_name.strip().lower()
     is_correct = (guessed_name == target_name and req.candidate_id == round_secret["candidate_id"])
 
+    s_key = get_session_key(req.round_id, req.account_id)
+    session = ENCLAVE_PLAYER_SESSIONS.get(s_key, {
+        "round_id": req.round_id,
+        "account_id": req.account_id,
+        "questions_count": 0,
+        "clues_used": 0,
+        "mode": "pure",
+    })
+    clues_used = session["clues_used"]
+    pure_deduction = (clues_used == 0)
+    mastery_tier = "PURE_DEDUCTION_GRANDMASTER" if pure_deduction else "ASSISTED_SOLVER"
+
     if not is_correct:
         return {
             "round_id": req.round_id,
@@ -302,6 +350,8 @@ def verify_guess(req: GuessVerificationRequest):
             "candidate_id": req.candidate_id,
             "candidate_name": req.candidate_name,
             "is_correct": False,
+            "pure_deduction": pure_deduction,
+            "clues_used": clues_used,
             "signature_hex": None,
             "salt": None,
             "message": "Incorrect guess. No claim signature issued.",
@@ -322,10 +372,62 @@ def verify_guess(req: GuessVerificationRequest):
         "candidate_id": req.candidate_id,
         "candidate_name": round_secret["candidate_name"],
         "is_correct": True,
+        "pure_deduction": pure_deduction,
+        "clues_used": clues_used,
+        "mastery_tier": mastery_tier,
+        "verdict_certificate": "TEE_ENCLAVE_VERIFIED_PURE_SKILL" if pure_deduction else "TEE_ENCLAVE_VERIFIED_ASSISTED",
         "signature_hex": sig_hex,
         "salt": salt,
         "commitment": round_secret["commitment"],
-        "message": "Guess verified correct! Use signature_hex and salt to claim on-chain.",
+        "message": (
+            "🏆 TEE Enclave Certified PURE DEDUCTION Solve! 0 AI suggestions used."
+            if pure_deduction else
+            f"Guess verified correct! ({clues_used} AI suggestions used). Use signature_hex and salt to claim on-chain."
+        ),
+    }
+
+
+# =============================================================================
+# Shannon Information Gain & Clue Intelligence Endpoints
+# =============================================================================
+
+@app.get("/clues/suggest")
+def get_shannon_clues(
+    limit: int = 5,
+    theme: Optional[str] = "cryptography"
+):
+    """
+    Return top Shannon Information Gain clue recommendations.
+    Provides mathematical bisection questions ranked by bits of entropy.
+    """
+    engine = shannon_crypto
+    if theme == "science":
+        from ai.themes import generate_science_board
+        engine = ShannonEngine(generate_science_board().get("candidates", []))
+
+    suggestions = engine.compute_suggestions(limit=limit)
+    return {
+        "theme": theme,
+        "total_suggestions": len(suggestions),
+        "suggestions": suggestions,
+    }
+
+
+@app.post("/clues/suggest")
+def post_shannon_clues(req: ClueSuggestionRequest):
+    """
+    Calculate dynamic Shannon Information Gain for a specific set of remaining candidate IDs.
+    """
+    engine = shannon_crypto
+    if req.theme == "science":
+        from ai.themes import generate_science_board
+        engine = ShannonEngine(generate_science_board().get("candidates", []))
+
+    suggestions = engine.compute_suggestions(remaining_ids=req.remaining_candidate_ids, limit=req.limit)
+    return {
+        "theme": req.theme,
+        "remaining_candidates_count": len(req.remaining_candidate_ids) if req.remaining_candidate_ids else len(engine.candidates),
+        "suggestions": suggestions,
     }
 
 
@@ -430,6 +532,12 @@ def mcp_call(req: MCPCallRequest):
             agent_id=args.get("agent_id", "agent.testnet"),
             candidate_id=args.get("candidate_id", 1),
             candidate_name=args.get("candidate_name", "")
+        ))
+    elif name == "cipherpot_suggest_shannon_clues":
+        return post_shannon_clues(ClueSuggestionRequest(
+            remaining_candidate_ids=args.get("remaining_candidate_ids"),
+            theme=args.get("theme", "cryptography"),
+            limit=args.get("limit", 5),
         ))
     else:
         raise HTTPException(status_code=404, detail=f"Unknown tool: {name}")

@@ -79,6 +79,8 @@ function App() {
   // Skill Mode Architecture: Assisted (Training) vs Pure Skill (Ranked)
   const [assistanceMode, setAssistanceMode] = useState<'assisted' | 'pure'>('assisted');
   const [cluesUsed, setCluesUsed] = useState<number>(0);
+  const [isCurrentQuestionAssisted, setIsCurrentQuestionAssisted] = useState<boolean>(false);
+  const [lastSolveMastery, setLastSolveMastery] = useState<{ pure: boolean; certificate: string } | null>(null);
 
   // Trust, Attestation & Deduction Intelligence Modals
   const [showAttestationModal, setShowAttestationModal] = useState(false);
@@ -111,6 +113,7 @@ function App() {
 
   const handleUseClue = (clueText: string) => {
     setQuestion(clueText);
+    setIsCurrentQuestionAssisted(true);
     setCluesUsed((prev) => prev + 1);
     const el = document.getElementById('question');
     if (el) el.focus();
@@ -328,7 +331,18 @@ function App() {
     try {
       // 1. Evaluate with TEE AI Enclave (anti-prompt-injection & structured referee)
       setNotice('Evaluating question with TEE AI Enclave...');
-      const evalResult = await askQuestionApi(round.round_id, accountId, question.trim());
+      const evalResult = await askQuestionApi(
+        round.round_id,
+        accountId,
+        question.trim(),
+        isCurrentQuestionAssisted,
+        assistanceMode
+      );
+
+      if (typeof evalResult.session_clues_used === 'number') {
+        setCluesUsed(evalResult.session_clues_used);
+      }
+      setIsCurrentQuestionAssisted(false);
 
       // 2. Submit structured answer & rule-outs to NEAR contract
       setNotice('Recording question & structured verdict on NEAR Testnet...');
@@ -399,7 +413,15 @@ function App() {
       }).then((r) => r.json());
 
       if (verifyRes.is_correct) {
-        setNotice('GUESS IS CORRECT! Claiming pot with TEE signature...');
+        const isPure = Boolean(verifyRes.pure_deduction);
+        setLastSolveMastery({
+          pure: isPure,
+          certificate: verifyRes.verdict_certificate || (isPure ? 'TEE_ENCLAVE_VERIFIED_PURE_SKILL' : 'TEE_ENCLAVE_VERIFIED_ASSISTED'),
+        });
+        const winNotice = isPure
+          ? '🏆 TEE ENCLAVE CERTIFIED: PURE DEDUCTION VICTORY! Solved 100% unassisted. Claiming pot on NEAR Testnet...'
+          : `GUESS IS CORRECT (${verifyRes.clues_used || cluesUsed} AI hints used)! Claiming pot with TEE signature...`;
+        setNotice(winNotice);
         await claimPotOnChain(
           round.round_id,
           selectedCandidate.id,
@@ -1500,18 +1522,18 @@ function App() {
                 </div>
 
                 {/* Skill Architecture Achievement Badge */}
-                {cluesUsed === 0 ? (
+                {(lastSolveMastery?.pure ?? cluesUsed === 0) ? (
                   <div className="pure-mastery-card">
                     <div className="pure-mastery-title">
-                      <Sparkles size={14} /> 🏆 PURE DEDUCTION MASTERY · 100% UNASSISTED SOLVE
+                      <Sparkles size={14} /> 🏆 TEE-CERTIFIED PURE DEDUCTION MASTERY
                     </div>
                     <div className="pure-mastery-desc">
-                      Solved without clicking any AI Shannon entropy hints. True mathematical deduction mastery achieved!
+                      Hardware TEE Enclave verified 100% unassisted solve ({lastSolveMastery?.certificate || 'TEE_ENCLAVE_VERIFIED_PURE_SKILL'}). True mathematical deduction mastery achieved!
                     </div>
                   </div>
                 ) : (
                   <div className="assisted-mastery-card">
-                    <span>💡 Assisted Solve: {cluesUsed} AI Shannon clue(s) used</span>
+                    <span>💡 TEE-Verified Assisted Solve: {cluesUsed} AI Shannon clue(s) used</span>
                   </div>
                 )}
               </div>
