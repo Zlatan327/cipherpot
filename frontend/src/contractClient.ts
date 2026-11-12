@@ -327,8 +327,61 @@ export async function fetchTeeAttestation(): Promise<TeeAttestation> {
   };
 }
 
+export interface ArenaStats {
+  human_solves: number;
+  agent_solves: number;
+  pure_skill_solves: number;
+  assisted_solves: number;
+  total_pot_distributed_near: string;
+  total_tiles_eliminated: number;
+  active_participants: number;
+  competitive_balance: {
+    human_win_rate: string;
+    agent_win_rate: string;
+    pure_skill_win_rate: string;
+  };
+  economic_incentives: {
+    pure_skill_pot_share: string;
+    assisted_pot_share: string;
+    pure_skill_rake_rebate: string;
+    pure_skill_leaderboard_mult: string;
+  };
+  fairness_audit: {
+    equal_guess_quota: boolean;
+    max_guesses_per_entry: number;
+    equal_question_pool: boolean;
+    max_questions_per_round: number;
+    zero_secret_leakage: boolean;
+    enclave_memory_isolated: boolean;
+    pre_funded_on_chain: boolean;
+    entry_fee_near: string;
+  };
+  recent_live_events: Array<{
+    round_id: number;
+    winner?: string | null;
+    asker?: string;
+    entity?: string;
+    question?: string;
+    verdict?: string;
+    tiles_ruled_out?: number;
+    mode?: string;
+    payout?: string;
+    note: string;
+  }>;
+}
+
+export async function fetchArenaStatsApi(): Promise<ArenaStats | null> {
+  try {
+    const res = await fetch(`${contractConfig.API_URL}/arena/stats`);
+    if (res.ok) return await res.json();
+  } catch (err) {
+    console.warn('API arena stats fallback:', err);
+  }
+  return null;
+}
+
 export const contractClient = {
   mode: 'live-testnet' as const,
-  callsImplemented: 8,
+  callsImplemented: 9,
   ready: true,
 };

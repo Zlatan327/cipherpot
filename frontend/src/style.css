@@ -2342,3 +2342,251 @@ footer button:hover {
   align-items: center;
   gap: 6px;
 }
+
+/* ==========================================================================
+   INTERACTIVE MINI-ELIMINATION SANDBOX (STRANGER-PROOF ONBOARDING)
+   ========================================================================== */
+.mini-sandbox-container {
+  background: #0d120c;
+  border: 1px solid #2a3d24;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 14px 0 18px 0;
+}
+
+.mini-sandbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.mini-sandbox-title {
+  font: 700 11.5px var(--font-mono);
+  color: var(--lime);
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-sandbox-badge {
+  font: 600 10.5px var(--font-mono);
+  background: rgba(217, 255, 85, 0.12);
+  color: var(--lime);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.mini-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+  .mini-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.mini-card {
+  background: #141a13;
+  border: 1px solid #243320;
+  border-radius: 6px;
+  padding: 8px 6px;
+  text-align: center;
+  transition: all 0.25s ease;
+}
+
+.mini-card.active-match {
+  border-color: var(--lime);
+  background: #192716;
+  box-shadow: 0 0 10px rgba(217, 255, 85, 0.2);
+}
+
+.mini-card.eliminated {
+  opacity: 0.28;
+  border-color: #3b2020;
+  background: #140d0d;
+  text-decoration: line-through;
+  transform: scale(0.96);
+}
+
+.mini-card-name {
+  font: 600 11px var(--font-mono);
+  color: #fff;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-card-era {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.mini-sandbox-action {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #151e14;
+  border: 1px dashed #344c2d;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.mini-sandbox-btn {
+  background: var(--lime);
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  font: 700 11px var(--font-mono);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+
+.mini-sandbox-btn:hover {
+  transform: translateY(-1px);
+}
+
+.mini-sandbox-result {
+  font-size: 11.5px;
+  color: #e5e7eb;
+}
+
+/* ==========================================================================
+   HIGH-URGENCY SPECTATOR CONVERSION BANNER
+   ========================================================================== */
+.spectator-urgent-banner {
+  background: linear-gradient(135deg, #1f1b0a 0%, #151408 100%);
+  border: 1.5px solid #d97706;
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 18px rgba(217, 119, 6, 0.16);
+}
+
+.spectator-urgent-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fef3c7;
+  font-size: 12.5px;
+}
+
+.spectator-urgent-badge {
+  background: #d97706;
+  color: #000;
+  font: 800 10.5px var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.spectator-urgent-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   PLAYER PROGRESSION PILL & ARENA TELEMETRY TICKER
+   ========================================================================== */
+.player-progression-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #141a13;
+  border: 1px solid #2a3d24;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font: 600 11px var(--font-mono);
+  color: var(--lime);
+}
+
+.arena-telemetry-ticker {
+  background: #0d120c;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 6px 16px;
+  font: 11px var(--font-mono);
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow-x: auto;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.ticker-item strong {
+  color: #fff;
+}
+
+/* ==========================================================================
+   AGENT VS HUMAN FAIRNESS MATRIX
+   ========================================================================== */
+.fairness-panel {
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-top: 24px;
+}
+
+.fairness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.fairness-title {
+  font: 700 13px var(--font-head);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fairness-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.fairness-card {
+  background: #121811;
+  border: 1px solid #1f2a1c;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.fairness-card-title {
+  font: 700 11px var(--font-mono);
+  color: var(--lime);
+  margin-bottom: 4px;
+}
+
+.fairness-card-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
