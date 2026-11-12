@@ -557,22 +557,26 @@ function App() {
       )}
 
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Cipher home">
-          <span className="brand-mark"><span /></span>
-          <span>CIPHER</span>
-        </a>
-        <nav className="main-nav">
-          <a className="active" href="#round">The Round</a>
-          <a href="#board">The Board</a>
-          <a href="#leaderboard">Leaderboard</a>
-          <a href="#how">How Deduction Works</a>
-        </nav>
+        <div className="header-left">
+          <a className="brand" href="#top" aria-label="Cipher home">
+            <span className="brand-mark"><span /></span>
+            <span>CIPHER</span>
+          </a>
+          <nav className="main-nav">
+            <a className="active" href="#round">The Round</a>
+            <a href="#board">The Board</a>
+            <a href="#leaderboard">Leaderboard</a>
+            <a href="#how">How Deduction Works</a>
+          </nav>
+        </div>
+
         <div className="header-right">
-          {/* Player Progression & Streak Pill */}
-          <div className="player-progression-pill" title="Player Level & Win Streak Tracker">
-            <span>⭐ LVL 2 · ADEPT</span>
-            <span style={{ color: '#fbbf24' }}>🔥 1W STREAK</span>
-          </div>
+          {accountId && (
+            <div className="player-progression-pill" title="Player Level & Win Streak Tracker">
+              <span>⭐ LVL 2 · ADEPT</span>
+              <span style={{ color: '#fbbf24' }}>🔥 1W STREAK</span>
+            </div>
+          )}
 
           {/* Priority 1: Persistent How to Play button */}
           <button
@@ -580,19 +584,19 @@ function App() {
             onClick={() => setShowHowToPlayModal(true)}
             title="How to Play Cipher in 30 seconds"
           >
-            <CircleHelp size={16} />
+            <CircleHelp size={15} />
             <span>How to Play</span>
           </button>
           <span className="network"><i /> NEAR TESTNET</span>
           {accountId ? (
             <button className="wallet-button" onClick={signOutWallet} title="Click to disconnect">
-              <Wallet size={16} />
+              <Wallet size={15} />
               {accountId}
               <ChevronDown size={14} />
             </button>
           ) : (
             <button className="wallet-button" onClick={openWalletModal}>
-              <Wallet size={16} />
+              <Wallet size={15} />
               Connect Wallet
               <ChevronDown size={14} />
             </button>
