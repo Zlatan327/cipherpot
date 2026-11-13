@@ -68,7 +68,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  min-width: 340px;
 }
 
 button, a, select, textarea, input {
@@ -2943,4 +2942,181 @@ footer button:hover {
 .pure-badge-tag {
   color: #fbbf24;
   font-weight: 600;
+}
+
+/* CipherPot game table */
+:root {
+  --bg-app: #101a29;
+  --bg-surface: #172437;
+  --bg-surface-raised: #203148;
+  --bg-surface-subtle: #131f30;
+  --bg-surface-active: #293c54;
+  --bg-surface-hover: #263950;
+  --border-subtle: #34455a;
+  --border-default: #465a71;
+  --border-strong: #60748c;
+  --border-accent: #e5b969;
+  --text-primary: #f7eedc;
+  --text-secondary: #dbdce0;
+  --text-muted: #abb9c9;
+  --text-dim: #a3afbf;
+  --lime: #e5b969;
+  --lime-dark: #cfa25b;
+  --lime-dim: #302b25;
+  --lime-glow: transparent;
+  --lime-ink: #241b11;
+  --font-head: Georgia, serif;
+}
+
+.hero {
+  padding: 18px 24px;
+  background: var(--bg-surface-subtle);
+}
+
+.hero h1 { font-size: clamp(1.85rem, 4vw, 3rem); }
+.pot-card { padding: 14px; }
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(265px, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+.game-layout .board-view-container { margin: 0; min-width: 0; }
+.game-sidebar { display: grid; gap: 16px; min-width: 0; }
+.game-sidebar .feed-item { overflow-wrap: anywhere; }
+.latest-answer, .game-mobile-nav { display: none; }
+.game-layout .board-section, .game-sidebar section { scroll-margin-top: 80px; }
+.board-grid, .contenders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.candidate, .contender-card {
+  min-width: 0;
+  color: #2b2117;
+  background: #f4e6c9;
+  border-color: #d2b98f;
+  overflow-wrap: anywhere;
+}
+.candidate:hover, .contender-card:hover { background: #fff2d8; }
+.candidate-name, .contender-name { color: #2b2117; font-family: var(--font-head); }
+.candidate-num, .contender-num, .contender-meta, .contender-meta b { color: #514332; }
+.candidate.globally-ruled { background: #c9bda7; }
+.candidate.clue-highlight { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .game-layout { grid-template-columns: minmax(0, 1fr); }
+  .latest-answer {
+    display: block;
+    padding: 12px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface-raised);
+  }
+  .latest-answer strong { color: var(--lime); margin-right: 6px; }
+}
+
+@media (max-width: 560px) {
+  .hero { padding: 14px; }
+  .game-layout .board-section { padding: 12px; }
+  .board-grid, .contenders-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .game-mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-default);
+  }
+  .game-mobile-nav a {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    flex: 1;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+}
+
+/* Board and quick guide */
+.board-instruction { color: var(--text-secondary); font-size: 15px; }
+.board-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.board-filter select {
+  padding: 8px 12px;
+  color: var(--text-primary);
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+}
+.game-card {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  min-height: 104px;
+  gap: 6px;
+  padding: 12px;
+  text-align: left;
+}
+.game-card .candidate-name { font-size: clamp(16px, 1.5vw, 20px); line-height: 1.2; }
+.card-era, .card-status { color: #514332; font-size: 13px; }
+.game-card.globally-ruled .candidate-name { text-decoration: line-through; }
+.play-guide {
+  width: min(100% - 24px, 460px);
+  max-height: 85dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 16px;
+  padding: 24px;
+}
+.play-guide h2 { margin: 0; font-size: 28px; }
+.play-guide p { margin: 6px 0 0; color: var(--text-secondary); }
+.play-guide ol { margin: 20px 0 0; padding-left: 24px; }
+.play-guide li { padding-left: 6px; }
+.play-guide li + li { margin-top: 16px; }
+
+@media (max-width: 640px) {
+  html { overflow-x: clip; }
+
+  .header-left, .header-right, .watch-banner, .round-strip,
+  .inspector-bar, .section-header, .view-tabs, .hero-buttons {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .header-left .main-nav {
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    gap: 8px;
+  }
+
+  .header-right { width: 100%; margin-left: 0; }
+  .wallet-button { min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+  .pot-network-note, .code-box, .notice, .settled-card { overflow-wrap: anywhere; }
+
+  .cipher-modal-overlay {
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  .cipher-modal-body {
+    width: 100%;
+    min-width: 0;
+    max-height: calc(100dvh - 24px);
+    padding: 18px;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
+  }
+
+  .play-guide .panel-header-inline { align-items: flex-start; gap: 12px; }
+  .play-guide .modal-close-btn { flex-shrink: 0; }
+  .play-guide ol { padding-left: 20px; }
 }
