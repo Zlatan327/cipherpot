@@ -68,7 +68,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  min-width: 340px;
 }
 
 button, a, select, textarea, input {
@@ -3079,3 +3078,45 @@ footer button:hover {
 .play-guide ol { margin: 20px 0 0; padding-left: 24px; }
 .play-guide li { padding-left: 6px; }
 .play-guide li + li { margin-top: 16px; }
+
+@media (max-width: 640px) {
+  html { overflow-x: clip; }
+
+  .header-left, .header-right, .watch-banner, .round-strip,
+  .inspector-bar, .section-header, .view-tabs, .hero-buttons {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .header-left .main-nav {
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    gap: 8px;
+  }
+
+  .header-right { width: 100%; margin-left: 0; }
+  .wallet-button { min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+  .pot-network-note, .code-box, .notice, .settled-card { overflow-wrap: anywhere; }
+
+  .cipher-modal-overlay {
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  .cipher-modal-body {
+    width: 100%;
+    min-width: 0;
+    max-height: calc(100dvh - 24px);
+    padding: 18px;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
+  }
+
+  .play-guide .panel-header-inline { align-items: flex-start; gap: 12px; }
+  .play-guide .modal-close-btn { flex-shrink: 0; }
+  .play-guide ol { padding-left: 20px; }
+}
