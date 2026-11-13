@@ -3037,3 +3037,45 @@ footer button:hover {
     text-decoration: none;
   }
 }
+
+/* Board and quick guide */
+.board-instruction { color: var(--text-secondary); font-size: 15px; }
+.board-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.board-filter select {
+  padding: 8px 12px;
+  color: var(--text-primary);
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+}
+.game-card {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  min-height: 104px;
+  gap: 6px;
+  padding: 12px;
+  text-align: left;
+}
+.game-card .candidate-name { font-size: clamp(16px, 1.5vw, 20px); line-height: 1.2; }
+.card-era, .card-status { color: #514332; font-size: 13px; }
+.game-card.globally-ruled .candidate-name { text-decoration: line-through; }
+.play-guide {
+  width: min(100% - 24px, 460px);
+  max-height: 85dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 16px;
+  padding: 24px;
+}
+.play-guide h2 { margin: 0; font-size: 28px; }
+.play-guide p { margin: 6px 0 0; color: var(--text-secondary); }
+.play-guide ol { margin: 20px 0 0; padding-left: 24px; }
+.play-guide li { padding-left: 6px; }
+.play-guide li + li { margin-top: 16px; }
