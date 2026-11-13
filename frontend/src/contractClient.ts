@@ -9,7 +9,7 @@ export const contractConfig = {
   CONTRACT_ID: (import.meta.env.CONTRACT_ID as string) || 'cipherpot861267.testnet',
   RPC_URL: (import.meta.env.RPC_URL as string) || (import.meta.env.DEV ? '/near-rpc' : 'https://test.rpc.fastnear.com'),
   BOARD_URL: (import.meta.env.BOARD_URL as string) || '/board.json',
-  API_URL: (import.meta.env.API_URL as string) || 'http://localhost:8000',
+  API_URL: import.meta.env.API_URL?.trim().replace(/\/+$/, '') || (import.meta.env.DEV ? 'http://localhost:8000' : ''),
 } as const;
 
 export type RoundView = {
@@ -243,6 +243,7 @@ export async function askQuestionApi(
   session_clues_used?: number;
   pure_skill?: boolean;
 }> {
+  if (!contractConfig.API_URL) throw new Error("The referee is unavailable.");
   const res = await fetch(`${contractConfig.API_URL}/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
