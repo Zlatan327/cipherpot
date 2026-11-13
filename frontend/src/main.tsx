@@ -16,10 +16,8 @@ import {
   Eye,
   Flame,
   LayoutGrid,
-  Lock,
   LockKeyhole,
   MessageSquareText,
-  Scale,
   Scroll,
   Send,
   Share2,
@@ -491,6 +489,10 @@ function App() {
 
   const handleConfirmGuess = async () => {
     if (!selectedCandidate || !round || !accountId || submittingGuess) return;
+    if (!contractConfig.API_URL) {
+      setNotice('The referee is unavailable. Your guess was not submitted.');
+      return;
+    }
     setSubmittingGuess(true);
     setNotice('');
 
@@ -965,45 +967,7 @@ function App() {
 
               <div className="locked-note">
                 <LockKeyhole size={12} />
-                {isSpectator ? 'Connect a wallet and join to unlock' : 'Protected by Anti-Prompt-Injection Enclave'}
-              </div>
-            </section>
-                {/* Agent vs Human Fairness & Transparency Audit Panel */}
-            <section className="fairness-panel">
-              <div className="fairness-header">
-                <span className="fairness-title">
-                  <ShieldCheck size={16} style={{ color: 'var(--lime)' }} />
-                  HUMAN VS AGENT FAIRNESS AUDIT
-                </span>
-                <span className="badge" style={{ color: 'var(--lime)', borderColor: 'var(--lime)' }}>
-                  100% AUDITABLE
-                </span>
-              </div>
-              <div className="fairness-grid">
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Scale size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> IDENTICAL QUOTAS</div>
-                  <div className="fairness-card-desc">
-                    Agents are strictly capped at 3 guesses per entry and share the same 20 question pool with humans.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Lock size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ZERO SECRET LEAKAGE</div>
-                  <div className="fairness-card-desc">
-                    The secret is isolated in AMD SEV-SNP hardware memory. Agents have zero access to the secret hash preimage.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Shield size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ON-CHAIN COLLATERAL</div>
-                  <div className="fairness-card-desc">
-                    Agents must lock real testnet NEAR deposits via <code>deposit_agent_funds()</code> to participate.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Activity size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ON-CHAIN AUDIT TRAIL</div>
-                  <div className="fairness-card-desc">
-                    Round 1 Payout: 1.056 NEAR | Round 2 Rollover: 2.50 NEAR | Round 3 Active Pot: {potDisplay} NEAR
-                  </div>
-                </div>
+                {isSpectator ? 'Connect a wallet and join to unlock' : 'Answers are shared with everyone in the round'}
               </div>
             </section>
               </div>
