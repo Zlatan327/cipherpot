@@ -10,19 +10,14 @@ import {
   CircleHelp,
   Clock3,
   Coins,
-  Compass,
   Copy,
   Eye,
-  Flame,
-  LayoutGrid,
   LockKeyhole,
   MessageSquareText,
-  Scroll,
   Send,
   Share2,
   ShieldCheck,
   Sparkles,
-  Star,
   Target,
   Trophy,
   User,
@@ -65,11 +60,11 @@ import './style.css';
 
 function App() {
   // Navigation Tab State
-  type TabType = 'round' | 'board' | 'how';
+  type TabType = 'round' | 'board';
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     try {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'board' || hash === 'how') {
+      if (hash === 'board') {
         return hash as TabType;
       }
     } catch {}
@@ -79,7 +74,7 @@ function App() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'round' || hash === 'board' || hash === 'how') {
+      if (hash === 'round' || hash === 'board') {
         setActiveTab(hash as TabType);
       }
     };
@@ -112,10 +107,8 @@ function App() {
   const [submittingQuestion, setSubmittingQuestion] = useState(false);
   const [eraFilter, setEraFilter] = useState<string>('All');
   const [inspectingCandidate, setInspectingCandidate] = useState<Candidate | null>(null);
-  const [activeTheme, setActiveTheme] = useState<'crypto' | 'science'>('crypto');
 
   // Skill Mode Architecture: Assisted (Training) vs Pure Skill (Ranked)
-  const [assistanceMode, setAssistanceMode] = useState<'assisted' | 'pure'>('assisted');
   const [cluesUsed, setCluesUsed] = useState<number>(0);
   const [isCurrentQuestionAssisted, setIsCurrentQuestionAssisted] = useState<boolean>(false);
   const [lastSolveMastery, setLastSolveMastery] = useState<{ pure: boolean; certificate: string } | null>(null);
@@ -127,20 +120,6 @@ function App() {
   const [copiedShare, setCopiedShare] = useState(false);
 
   const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
-  const [sandboxTested, setSandboxTested] = useState<boolean>(false);
-
-  const handleCloseHowToPlay = () => {
-    try {
-      localStorage.setItem('cipher_seen_how_to_play_v1', 'true');
-    } catch (e) {
-      console.warn(e);
-    }
-    setShowHowToPlayModal(false);
-  };
-
-  // Leaderboard Filter State
-
-  // Guess Dialog State
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [submittingGuess, setSubmittingGuess] = useState(false);
   const [viewMode, setViewMode] = useState<'contenders' | 'all'>('contenders');
@@ -157,18 +136,6 @@ function App() {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 120);
-  };
-
-  const handleSwitchTheme = async (theme: 'crypto' | 'science') => {
-    setActiveTheme(theme);
-    setLocallyCrossed([]);
-    setEraFilter('All');
-    try {
-      const b = await fetchBoard(theme);
-      if (b?.length) setCandidates(b);
-    } catch (e) {
-      console.warn('Theme switch error:', e);
-    }
   };
 
   const handleLoadRound = async (id: number) => {
@@ -253,6 +220,7 @@ function App() {
   }, [accountId]);
 
   const isJoined = Boolean(playerInfo?.is_joined);
+  const canPlayRound = round?.status === 'Active' && BigInt(round.time_remaining || '0') > 0n;
   const isSettled = round?.status === 'Settled';
   const isRolledOver = round?.status === 'RolledOver';
 
@@ -287,7 +255,7 @@ function App() {
       openWalletModal();
       return;
     }
-    if (!round) return;
+    if (!round || !canPlayRound) return;
 
     try {
       setNotice('Initiating Join Round transaction on NEAR Testnet (0.1 NEAR)...');
@@ -316,7 +284,7 @@ function App() {
         accountId,
         question.trim(),
         isCurrentQuestionAssisted,
-        assistanceMode
+        isCurrentQuestionAssisted ? 'assisted' : 'pure'
       );
 
       if (typeof evalResult.session_clues_used === 'number') {
@@ -361,6 +329,7 @@ function App() {
 
   // Handle Guess Submission & Claim Flow
   const handleSelectCandidateForGuess = (cand: Candidate) => {
+    if (!canPlayRound) return;
     if (!isJoined) {
       if (!accountId) openWalletModal();
       else setNotice('You must join the round with 0.1 NEAR entry fee before making a guess.');
@@ -465,208 +434,71 @@ function App() {
   }, [isJoined, playerInfo]);
 
   const [highlightedCards, setHighlightedCards] = useState<number[]>([]);
-  useEffect(() => setHighlightedCards([]), [round?.round_id, activeTheme]);
+  useEffect(() => setHighlightedCards([]), [round?.round_id]);
 
   const boardView = (
     <div className="board-view-container">
             <section className="board-section panel" id="board">
-            <div className="theme-bar">
-              <div className="theme-pill-group">
-                <span className="inspector-label">ARENA THEME:</span>
-                <button
-                  type="button"
-                  className={`theme-pill ${activeTheme === 'crypto' ? 'active' : ''}`}
-                  onClick={() => handleSwitchTheme('crypto')}
-                >
-                  <Scroll size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Cryptography History <small>(Live Testnet)</small>
-                </button>
-                <button
-                  type="button"
-                  className={`theme-pill ${activeTheme === 'science' ? 'active' : ''}`}
-                  onClick={() => handleSwitchTheme('science')}
-                >
-                  <Compass size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Scientific Breakthroughs <small>(Preview)</small>
-                </button>
-              </div>
-
-              {/* Skill Mode: Assisted vs Pure Skill */}
-              <div className="assistance-mode-toggle">
-                <span className="mode-toggle-label">SKILL MODE:</span>
-                <div className="mode-toggle-group">
-                  <button
-                    type="button"
-                    className={`mode-btn ${assistanceMode === 'assisted' ? 'active' : ''}`}
-                    onClick={() => setAssistanceMode('assisted')}
-                    title="AI Shannon entropy clues enabled for guided learning. 96% pot share."
-                  >
-                    <span><Sparkles size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Assisted</span>
-                    <small>Training · 96% Pot</small>
-                  </button>
-                  <button
-                    type="button"
-                    className={`mode-btn ${assistanceMode === 'pure' ? 'active pure' : ''}`}
-                    onClick={() => setAssistanceMode('pure')}
-                    title="Play with question suggestions hidden."
-                  >
-                    <span><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Pure Skill</span>
-                    <small>Suggestions hidden</small>
-                  </button>
-                </div>
-              </div>
-            </div>
-
             <div className="section-header">
               <div>
                 <h2 className="section-title">
-                  {activeTheme === 'crypto' ? 'Game board' : 'The Scientific Breakthroughs'}
+                  Game board
                 </h2>
               </div>
               <div className="view-tabs">
                 <button
                   type="button"
                   className={`view-tab ${viewMode === 'contenders' ? 'active' : ''}`}
-                  onClick={() => setViewMode('contenders')}
+                  aria-pressed={viewMode === 'contenders'}
+                  onClick={() => { setViewMode('contenders'); setHighlightedCards([]); }}
                 >
                   <Sparkles size={13} /> Remaining <span className="badge">{remainingCandidates.length}</span>
                 </button>
                 <button
                   type="button"
                   className={`view-tab ${viewMode === 'all' ? 'active' : ''}`}
-                  onClick={() => setViewMode('all')}
+                  aria-pressed={viewMode === 'all'}
+                  onClick={() => { setEraFilter('All'); setViewMode('all'); }}
                 >
-                  <Eye size={13} /> All cards <span className="badge">64</span>
+                  <Eye size={13} /> All cards <span className="badge">{candidates.length || "—"}</span>
                 </button>
               </div>
             </div>
-            <p className="section-intro">
-              {activeTheme === 'crypto'
-                ? 'The confidential secret is committed to NEAR testnet. Ask questions to rule out tiles or make a candidate guess to claim the pot.'
-                : 'Previewing rotating general knowledge theme: 64 milestone discoveries from the Wheel to Quantum Qubits.'}
-            </p>
-
-            {viewMode === 'contenders' ? (
-              <div className="contenders-spotlight">
-                <div className="contenders-banner-top">
-                  <span className="contenders-badge">
-                    <Sparkles size={13} /> {remainingCandidates.length} CONTENDERS REMAINING
-                  </span>
-                  <p className="contenders-headline">
-                    The TEE referee ruled out <b>{globallyRuledOut.length}</b> candidates. One of these <b>{remainingCandidates.length}</b> holds the <b>{potDisplay} NEAR</b> prize pool!
-                  </p>
-                </div>
-
-                <div className="contenders-grid">
-                  {remainingCandidates.map((cand) => (
-                    <div
-                      key={cand.id}
-                      className="contender-card"
-                      onClick={() => setInspectingCandidate(cand)}
-                    >
-                      <div>
-                        <div className="contender-top">
-                          <span className="contender-num">#{String(cand.id).padStart(2, '0')}</span>
-                          <span className="contender-tag">{cand.era}</span>
-                        </div>
-                        <h4 className="contender-name">{cand.name}</h4>
-                        <div className="contender-meta">
-                          <div>Origin: <b>{cand.origin}</b></div>
-                          <div>Category: <b>{cand.category}</b></div>
-                          <div>Type: <b>{cand.type}</b></div>
-                        </div>
-                      </div>
-                      <button
-                        className="contender-guess-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectCandidateForGuess(cand);
-                        }}
-                      >
-                        <Target size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Guess This Candidate
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="board-filters">
-                  <div className="filter-pills">
-                    {['All', 'Ancient', 'Medieval', 'Modern', 'Digital'].map((era) => {
-                      const count = era === 'All'
-                        ? (candidates.length || 64)
-                        : candidates.filter((c) => c.era.toLowerCase() === era.toLowerCase()).length;
-                      return (
-                        <button
-                          key={era}
-                          className={`filter-pill ${eraFilter === era ? 'active' : ''}`}
-                          onClick={() => setEraFilter(era)}
-                        >
-                          {era} <small>({count})</small>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="uneliminated-count">
-                    Active Candidates: <b>{remainingCandidates.length}</b> / {candidates.length || 64}
-                    {globallyRuledOut.length > 0 && (
-                      <span style={{ color: 'var(--color-danger)', marginLeft: '8px' }}>
-                        ({globallyRuledOut.length} ruled out)
-                      </span>
-                    )}
-                    {locallyCrossed.length > 0 && (
-                      <span style={{ color: 'var(--color-warning)', marginLeft: '8px' }}>
-                        ({locallyCrossed.length} my notes)
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="board-grid">
-                  {Array.from({ length: 64 }, (_, i) => {
-                    const candId = i + 1;
-                    const cand = candidates.find((c) => c.id === candId);
-                    const isGlobal = globallyRuledOut.includes(candId);
-                    const isLocal = locallyCrossed.includes(candId);
-                    const isEliminated = isGlobal || isLocal;
-                    const isMatchingFilter = eraFilter === 'All' || cand?.era.toLowerCase() === eraFilter.toLowerCase();
-
-                    let cardClass = 'candidate';
-                    if (isGlobal) cardClass += ' globally-ruled';
-                    else if (isLocal) cardClass += ' locally-crossed';
-                    if (highlightedCards.includes(candId)) cardClass += ' clue-highlight';
-
-                    return (
-                      <button
-                        key={candId}
-                        onClick={() => setInspectingCandidate(cand || { id: candId, name: `Candidate ${candId}`, category: '', era: '', origin: '', type: '' })}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          toggleLocalCross(candId);
-                        }}
-                        className={cardClass}
-                        style={{ opacity: highlightedCards.includes(candId) ? 1 : isMatchingFilter ? (isEliminated ? 0.65 : 1) : 0.25 }}
-                        title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Left-click to inspect, right-click to note.` : `Candidate ${candId}`}
-                        aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
-                      >
-                        <div className="candidate-top">
-                          <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
-                          {cand?.era && <span className="candidate-tag">{cand.era}</span>}
-                          {isGlobal && <span className="status-pill-global">Ruled out</span>}
-                          {!isGlobal && isLocal && <span className="status-pill-local">NOTE</span>}
-                        </div>
-                        <span className="candidate-name">{cand ? cand.name : `Candidate ${candId}`}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="board-footer">
-                  <span>Open a card to inspect it or add a private note.</span>
-                  <button onClick={() => setLocallyCrossed([])}>Clear my notes</button>
-                </div>
-              </>
-            )}
-          </section>
-          </div>
+      <p className="board-instruction">Select a card to see its details or make a guess.</p>
+      {viewMode === 'all' && (
+        <label className="board-filter">
+          Era
+          <select value={eraFilter} onChange={(event) => setEraFilter(event.target.value)}>
+            <option value="All">All eras</option>
+            {[...new Set(candidates.map((card) => card.era))].filter(Boolean).map((era) => (
+              <option key={era}>{era}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      {candidates.length === 0 ? <p>Board data is unavailable.</p> : (
+        <div className="board-grid">
+          {(viewMode === 'contenders' ? remainingCandidates : candidates.filter(
+            (card) => eraFilter === 'All' || card.era === eraFilter
+          )).map((card) => {
+            const ruledOut = globallyRuledOut.includes(card.id);
+            const noted = locallyCrossed.includes(card.id);
+            const highlighted = highlightedCards.includes(card.id);
+            return (
+              <button key={card.id} type="button" onClick={() => setInspectingCandidate(card)}
+                className={`candidate game-card${ruledOut ? ' globally-ruled' : ''}${highlighted ? ' clue-highlight' : ''}`}>
+                <span className="card-era">{card.era}</span>
+                <strong className="candidate-name">{card.name}</strong>
+                <span className="card-status">{ruledOut ? 'Ruled out' : noted ? 'Private note' : card.category}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {viewMode === 'contenders' && candidates.length > 0 && remainingCandidates.length === 0 && <p>No cards remain. Open All cards to review the board.</p>}
+      {locallyCrossed.length > 0 && <button className="text-link" onClick={() => setLocallyCrossed([])}>Clear my notes</button>}
+      </section>
+    </div>
   );
 
   return (
@@ -691,10 +523,10 @@ function App() {
               e.preventDefault();
               handleTabChange('round');
             }}
-            aria-label="Cipher home"
+            aria-label="CipherPot home"
           >
             <span className="brand-mark"><span /></span>
-            <span>CIPHER</span>
+            <span>CipherPot</span>
           </a>
           <nav className="main-nav" role="tablist">
             <button
@@ -715,34 +547,18 @@ function App() {
             >
               Board
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'how'}
-              className={activeTab === 'how' ? 'active' : ''}
-              onClick={() => handleTabChange('how')}
-            >
-              How to play
-            </button>
           </nav>
         </div>
 
         <div className="header-right">
-          {accountId && (
-            <div className="player-progression-pill" title="Player Level & Win Streak Tracker">
-              <span><Star size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: 'var(--lime)' }} /> LVL 2 · ADEPT</span>
-              <span style={{ color: '#fbbf24' }}><Flame size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> 1W STREAK</span>
-            </div>
-          )}
-
           {/* Priority 1: Persistent How to Play button */}
           <button
             className="how-to-play-btn"
             onClick={() => setShowHowToPlayModal(true)}
-            title="How to Play Cipher in 30 seconds"
+
           >
             <CircleHelp size={15} />
-            <span>How to Play</span>
+            <span>How to play</span>
           </button>
           <span className="network"><i /> NEAR TESTNET</span>
           {accountId ? (
@@ -772,32 +588,19 @@ function App() {
             </div>
             <h1>Find the <span className="highlight">hidden item.</span></h1>
             <p className="hero-sub">
-              One of 64 items is hidden. Use the shared yes-or-no answers to cross off items, then take your best guess.
+              Read the shared answers, cross off cards, and guess the hidden item.
             </p>
             <div className="hero-buttons">
               {isJoined ? (
                 <button className="button button-primary" disabled>
-                  <Sparkles size={16} /> You’re in (Active)
+                  <Sparkles size={16} /> Joined
                 </button>
               ) : (
-                <button className="button button-primary" onClick={handleJoinRound}>
+                <button className="button button-primary" onClick={handleJoinRound} disabled={!canPlayRound}>
                   <Sparkles size={16} /> Join the round
-                  <span className="button-cost">0.1 NEAR</span>
+                  {round?.entry_fee && <span className="button-cost">{formatNear(round.entry_fee)} test NEAR</span>}
                 </button>
               )}
-              {/* Prominent Quickstart Modal Trigger */}
-              <button
-                className="button button-secondary"
-                onClick={() => handleTabChange('board')}
-              >
-                <LayoutGrid size={15} /> View board
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={() => setShowHowToPlayModal(true)}
-              >
-                <CircleHelp size={15} /> How to play
-              </button>
             </div>
           </div>
 
@@ -1031,11 +834,11 @@ function App() {
                 placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                disabled={!isJoined || isSettled || submittingQuestion}
+                disabled={!isJoined || !canPlayRound || submittingQuestion}
               />
               <button
                 className="button-submit-question"
-                disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
+                disabled={!isJoined || !canPlayRound || !question.trim() || submittingQuestion}
                 onClick={handleAskQuestion}
               >
                 <MessageSquareText size={15} />
@@ -1043,11 +846,10 @@ function App() {
               </button>
 
               {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips or Pure Mode Note */}
-              {assistanceMode === 'assisted' ? (
                 <div className="prominent-clues-section">
                   <div className="prominent-clues-title">
-                    <span><Zap size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> ONE-TAP QUICK CLUES</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tap to populate</span>
+                    <span><Zap size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Suggested questions</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}></span>
                   </div>
                   <div className="prominent-clue-grid">
                     {[
@@ -1062,7 +864,7 @@ function App() {
                         key={item.label}
                         type="button"
                         className="prominent-chip"
-                        disabled={!isJoined || isSettled || submittingQuestion}
+                        disabled={!isJoined || !canPlayRound || submittingQuestion}
                         onClick={() => handleUseClue(item.query)}
                       >
                         <span>{item.label}</span>
@@ -1071,15 +873,6 @@ function App() {
                     ))}
                   </div>
                 </div>
-              ) : (
-                <div className="pure-skill-banner" style={{ marginTop: '14px', padding: '12px' }}>
-                  <span className="pure-skill-badge"><Trophy size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> PURE SKILL</span>
-                  <span className="pure-skill-desc" style={{ fontSize: '11px' }}>
-                    Clues hidden in Pure Skill mode. Every deduction is your own move.
-                  </span>
-                </div>
-              )}
-
               <div className="locked-note">
                 <LockKeyhole size={12} />
                 {isSpectator ? 'Connect a wallet and join to unlock' : 'Answers are shared with everyone in the round'}
@@ -1100,170 +893,21 @@ function App() {
         )}
         {activeTab === 'board' && boardView}
 
-        {activeTab === 'how' && (
-          <section className="how-section" id="how">
-          <div className="how-header">
-            <h2>How deduction works</h2>
-            <p>Eliminate candidates through structured mathematical partitioning, not random guessing.</p>
-          </div>
-          <div className="deduction-funnel">
-            <div className="funnel-step">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 1</span>
-                <span className="funnel-count">64 Tiles</span>
-              </div>
-              <h4>Domain Partition</h4>
-              <p>Ask broad classification questions to bisect the board by historical epoch or category.</p>
-              <div className="funnel-example">e.g. "Is it from the Ancient era?" (-48)</div>
-            </div>
-            <div className="funnel-step">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 2</span>
-                <span className="funnel-count">16 Tiles</span>
-              </div>
-              <h4>Structural Type</h4>
-              <p>Isolate the functional mechanism or medium to cut the remaining search space by 75%.</p>
-              <div className="funnel-example">e.g. "Is it a Substitution cipher?" (-12)</div>
-            </div>
-            <div className="funnel-step">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 3</span>
-                <span className="funnel-count">4 Tiles</span>
-              </div>
-              <h4>Geographic Origin</h4>
-              <p>Pinpoint the historical origin or inventor to isolate the exact remaining secret.</p>
-              <div className="funnel-example">e.g. "Did it originate in Rome?" (-3)</div>
-            </div>
-            <div className="funnel-step target">
-              <div className="funnel-top">
-                <span className="funnel-stage">Stage 4</span>
-                <span className="funnel-count">1 Tile</span>
-              </div>
-              <h4>Cryptographic Claim</h4>
-              <p>Submit candidate guess. The TEE Enclave signs a cryptographic verdict to unlock 96% pot.</p>
-              <div className="funnel-example" style={{ color: 'var(--lime)', fontWeight: 600 }}><Target size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Caesar Cipher Solved!</div>
-            </div>
-          </div>
-        </section>
-        )}
-
-        {/* Priority 1: "How to Play" Onboarding Modal */}
         {showHowToPlayModal && (
-          <div className="cipher-modal-overlay" onClick={handleCloseHowToPlay}>
-            <div className="cipher-modal-body" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header-row">
-                <span className="info-gain-badge">
-                  <CircleHelp size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
-                  QUICKSTART GUIDE
-                </span>
-                <button className="modal-close-btn" onClick={handleCloseHowToPlay} aria-label="Close">
-                  <X size={18} />
-                </button>
+          <div className="cipher-modal-overlay" onClick={() => setShowHowToPlayModal(false)}>
+            <div className="cipher-modal-body play-guide" role="dialog" aria-modal="true" aria-labelledby="play-guide-title"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => { if (event.key === 'Escape') setShowHowToPlayModal(false); }}>
+              <div className="panel-header-inline">
+                <h2 id="play-guide-title">How to play</h2>
+                <button autoFocus className="modal-close-btn" onClick={() => setShowHowToPlayModal(false)} aria-label="Close guide"><X size={18} /></button>
               </div>
-
-              <h2 style={{ fontSize: '24px', color: '#fff', margin: '0 0 10px 0', fontFamily: 'var(--font-head)' }}>
-                How Cipher Works (In 30 Seconds)
-              </h2>
-
-              <div className="not-trivia-banner">
-                <span className="banner-icon"><AlertTriangle size={16} /></span>
-                <div>
-                  <div className="not-trivia-title">NOT A TRIVIA QUIZ!</div>
-                  <p className="not-trivia-desc">
-                    The app does <b>NOT</b> test your history knowledge. <b>YOU</b> interrogate the AI referee with yes/no questions to eliminate cards—just like playing <i>Guess Who?</i> or <i>20 Questions</i> with money on the line.
-                  </p>
-                </div>
-              </div>
-
-              <div className="onboarding-steps" style={{ marginBottom: '14px' }}>
-                <div className="onboarding-step-card">
-                  <span className="onboarding-num">1</span>
-                  <div className="onboarding-step-body">
-                    <h4>64 Cards · 1 Secret Committed On-Chain</h4>
-                    <p>Every candidate is face-up on the board. The TEE Enclave secretly locks in 1 secret tile with a cryptographic SHA-256 commitment.</p>
-                  </div>
-                </div>
-
-                <div className="onboarding-step-card">
-                  <span className="onboarding-num">2</span>
-                  <div className="onboarding-step-body">
-                    <h4>Interrogate to Eliminate (Bisection Deduction)</h4>
-                    <p>Ask sharp yes/no questions (or tap 1-click Shannon clues). The AI referee answers, and disqualified cards black out for everyone.</p>
-                  </div>
-                </div>
-
-                <div className="onboarding-step-card">
-                  <span className="onboarding-num">3</span>
-                  <div className="onboarding-step-body">
-                    <h4>First Correct Guess Sweeps the Pot</h4>
-                    <p>You have three guesses per entry. A successful claim pays <b>96% of the pot</b>.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interactive Visual Elimination Demo Sandbox */}
-              <div className="mini-sandbox-container">
-                <div className="mini-sandbox-header">
-                  <span className="mini-sandbox-title">
-                    <Sparkles size={14} /> INTERACTIVE DEMO (TEST ONE ELIMINATION)
-                  </span>
-                  <span className="mini-sandbox-badge">
-                    {sandboxTested ? '2 TILES RULED OUT (-33%)' : '6 CANDIDATES LOADED'}
-                  </span>
-                </div>
-
-                <div className="mini-cards-grid">
-                  <div className={`mini-card ${sandboxTested ? 'eliminated' : ''}`}>
-                    <span className="mini-card-name">Caesar Cipher</span>
-                    <span className="mini-card-era">Ancient</span>
-                  </div>
-                  <div className={`mini-card ${sandboxTested ? 'eliminated' : ''}`}>
-                    <span className="mini-card-name">Scytale</span>
-                    <span className="mini-card-era">Ancient</span>
-                  </div>
-                  <div className={`mini-card ${sandboxTested ? 'active-match' : ''}`}>
-                    <span className="mini-card-name">Enigma Machine</span>
-                    <span className="mini-card-era">Modern</span>
-                  </div>
-                  <div className={`mini-card ${sandboxTested ? 'active-match' : ''}`}>
-                    <span className="mini-card-name">Lorenz Cipher</span>
-                    <span className="mini-card-era">Modern</span>
-                  </div>
-                  <div className={`mini-card ${sandboxTested ? 'active-match' : ''}`}>
-                    <span className="mini-card-name">SHA-256</span>
-                    <span className="mini-card-era">Digital</span>
-                  </div>
-                  <div className={`mini-card ${sandboxTested ? 'active-match' : ''}`}>
-                    <span className="mini-card-name">RSA-2048</span>
-                    <span className="mini-card-era">Digital</span>
-                  </div>
-                </div>
-
-                <div className="mini-sandbox-action">
-                  <button
-                    type="button"
-                    className="mini-sandbox-btn"
-                    onClick={() => setSandboxTested((prev) => !prev)}
-                  >
-                    {sandboxTested ? '↺ Reset Demo' : '▶ Test Question: "Is it Modern or Digital?"'}
-                  </button>
-                  <span className="mini-sandbox-result">
-                    {sandboxTested
-                      ? 'AI Referee: "YES!" -> Caesar & Scytale are ruled out instantly. 4 contenders remain.'
-                      : 'Click above to see how a single yes/no question eliminates candidate tiles in real time!'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="modal-actions" style={{ marginTop: 0 }}>
-                <button
-                  className="button button-primary"
-                  style={{ width: '100%', height: '42px', fontSize: '13px' }}
-                  onClick={handleCloseHowToPlay}
-                >
-                  Got It — Let’s Play!
-                </button>
-              </div>
+              <p>One of the 64 cards is hidden. Work out which one it is.</p>
+              <ol>
+                <li><strong>Join the round</strong><p>Connect a NEAR Testnet wallet and pay the entry fee shown on screen. You can browse for free.</p></li>
+                <li><strong>Ask a yes-or-no question</strong><p>Everyone shares up to 20 questions. Use the answers to rule out cards.</p></li>
+                <li><strong>Pick a card and guess</strong><p>You have three guesses. If you’re right, confirm the claim in your wallet. A successful claim pays 96% of the pot.</p></li>
+              </ol>
             </div>
           </div>
         )}
@@ -1323,7 +967,7 @@ function App() {
 
                 <button
                   className="button button-primary"
-                  disabled={globallyRuledOut.includes(inspectingCandidate.id)}
+                  disabled={!canPlayRound || globallyRuledOut.includes(inspectingCandidate.id)}
                   onClick={() => {
                     const c = inspectingCandidate;
                     setInspectingCandidate(null);
@@ -1584,7 +1228,7 @@ function App() {
         <footer id="fairness">
           <div className="brand footer-brand">
             <span className="brand-mark"><span /></span>
-            <span>CIPHER</span>
+            <span>CipherPot</span>
           </div>
           <p>Deduction, not luck. <span>Built on NEAR Protocol & TEE Enclaves.</span></p>
           <button
