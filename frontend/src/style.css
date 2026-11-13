@@ -2944,3 +2944,96 @@ footer button:hover {
   color: #fbbf24;
   font-weight: 600;
 }
+
+/* CipherPot game table */
+:root {
+  --bg-app: #101a29;
+  --bg-surface: #172437;
+  --bg-surface-raised: #203148;
+  --bg-surface-subtle: #131f30;
+  --bg-surface-active: #293c54;
+  --bg-surface-hover: #263950;
+  --border-subtle: #34455a;
+  --border-default: #465a71;
+  --border-strong: #60748c;
+  --border-accent: #e5b969;
+  --text-primary: #f7eedc;
+  --text-secondary: #dbdce0;
+  --text-muted: #abb9c9;
+  --text-dim: #a3afbf;
+  --lime: #e5b969;
+  --lime-dark: #cfa25b;
+  --lime-dim: #302b25;
+  --lime-glow: transparent;
+  --lime-ink: #241b11;
+  --font-head: Georgia, serif;
+}
+
+.hero {
+  padding: 18px 24px;
+  background: var(--bg-surface-subtle);
+}
+
+.hero h1 { font-size: clamp(1.85rem, 4vw, 3rem); }
+.pot-card { padding: 14px; }
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(265px, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+.game-layout .board-view-container { margin: 0; min-width: 0; }
+.game-sidebar { display: grid; gap: 16px; min-width: 0; }
+.game-sidebar .feed-item { overflow-wrap: anywhere; }
+.latest-answer, .game-mobile-nav { display: none; }
+.game-layout .board-section, .game-sidebar section { scroll-margin-top: 80px; }
+.board-grid, .contenders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.candidate, .contender-card {
+  min-width: 0;
+  color: #2b2117;
+  background: #f4e6c9;
+  border-color: #d2b98f;
+  overflow-wrap: anywhere;
+}
+.candidate:hover, .contender-card:hover { background: #fff2d8; }
+.candidate-name, .contender-name { color: #2b2117; font-family: var(--font-head); }
+.candidate-num, .contender-num, .contender-meta, .contender-meta b { color: #514332; }
+.candidate.globally-ruled { background: #c9bda7; }
+.candidate.clue-highlight { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .game-layout { grid-template-columns: minmax(0, 1fr); }
+  .latest-answer {
+    display: block;
+    padding: 12px;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface-raised);
+  }
+  .latest-answer strong { color: var(--lime); margin-right: 6px; }
+}
+
+@media (max-width: 560px) {
+  .hero { padding: 14px; }
+  .game-layout .board-section { padding: 12px; }
+  .board-grid, .contenders-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .game-mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-default);
+  }
+  .game-mobile-nav a {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    flex: 1;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+}
