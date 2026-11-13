@@ -100,16 +100,12 @@ class TEESigner:
             return False
 
 
-# Deterministic Enclave Default Seed (32 bytes)
-# Ensures TEE key identity remains consistent across daemon restarts unless overridden by env
-DEFAULT_ENCLAVE_SEED_HEX = "3b67466182bfb0ccfd0914550fcb402104a66cdd674df6058cf752a63e6d624a"
-
 # Singleton default enclave signer instance
 _default_signer: Optional[TEESigner] = None
 
 def get_tee_signer() -> TEESigner:
     global _default_signer
     if _default_signer is None:
-        priv_hex = os.getenv("TEE_PRIVATE_KEY_HEX", DEFAULT_ENCLAVE_SEED_HEX)
+        priv_hex = os.getenv("TEE_PRIVATE_KEY_HEX")
         _default_signer = TEESigner(priv_hex)
     return _default_signer
