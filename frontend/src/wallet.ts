@@ -4,6 +4,7 @@ import { setupModal } from '@near-wallet-selector/modal-ui';
 import type { WalletSelectorModal } from '@near-wallet-selector/modal-ui';
 import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
 import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+import { setupHotWallet } from '@near-wallet-selector/hot-wallet';
 import { contractConfig } from './contractClient';
 import '@near-wallet-selector/modal-ui/styles.css';
 
@@ -33,12 +34,16 @@ export async function initWalletSelector(
       explorerUrl: 'https://testnet.nearblocks.io',
       indexerUrl: 'https://testnet-api.kitwallet.app',
     },
-    modules: [setupMyNearWallet(), setupMeteorWallet()],
+    modules: [
+      setupMyNearWallet(),
+      setupMeteorWallet(),
+      setupHotWallet(),
+    ],
   });
 
   modal = setupModal(selector, {
     contractId: contractConfig.CONTRACT_ID,
-    description: 'Connect your NEAR wallet to participate in CipherPot deduction rounds.',
+    description: 'Connect your NEAR wallet to participate in Cipher deduction rounds on Testnet.',
   });
 
   // Track account state
@@ -68,7 +73,7 @@ export async function signOutWallet() {
 }
 
 export async function joinRound(roundId: number, depositYocto: string = '100000000000000000000000') {
-  if (!selector) throw new Error('Wallet not initialized');
+  if (!selector) throw new Error('Wallet not initialized. Please connect your NEAR wallet.');
   const wallet = await selector.wallet();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (wallet as any).signAndSendTransaction({
@@ -171,4 +176,39 @@ export async function claimPotOnChain(
       },
     ],
   });
+}
+
+export interface WalletRedirectOutcome {
+  transactionHashes?: string;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+/**
+ * Parses URL query parameters when returning from web wallets (e.g., MyNearWallet redirect).
+ * Cleans the URL query using history.replaceState to avoid replay on refresh.
+ */
+export function parseWalletRedirectOutcome(): WalletRedirectOutcome | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const transactionHashes = params.get('transactionHashes');
+    const errorCode = params.get('errorCode');
+    const errorMessage = params.get('errorMessage');
+
+    if (!transactionHashes && !errorCode && !errorMessage) {
+      return null;
+    }
+
+    // Clean URL query parameters smoothly
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, document.title, cleanUrl);
+
+    return {
+      transactionHashes: transactionHashes || undefined,
+      errorCode: errorCode || undefined,
+      errorMessage: errorMessage || undefined,
+    };
+  } catch {
+    return null;
+  }
 }

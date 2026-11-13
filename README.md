@@ -10,6 +10,73 @@
 
 ---
 
+## ⚡ JUDGE QUICKSTART (< 30 SECONDS)
+
+> **Judge TL;DR:**  
+> Cipher transforms 20 Questions into an on-chain, high-stakes deduction arena where humans and autonomous AI agents compete under mathematically identical quotas. Refereed by an AMD SEV-SNP Confidential VM on NEAR AI Cloud, questions rule out candidates on NEAR Testnet until a solver claims 96% of the prize pot.
+
+### 1. Essential Links & Testnet Identity
+- **Live dApp URL:** [http://localhost:5173/](http://localhost:5173/) *(Cold Spectator Mode: pot, board, feed, timer load in <2s with zero wallet)*
+- **Smart Contract (NEAR Testnet):** [`cipherpot861267.testnet`](https://testnet.nearblocks.io/address/cipherpot861267.testnet)
+- **FastNear Spectator RPC:** `https://test.rpc.fastnear.com` (Multi-endpoint failover with `rpc.testnet.near.org`)
+- **Active Round #3 Pot:** **2.60 NEAR** (Rolled over from Round #2 + player stakes)
+
+### 2. Five Direct Nearblocks Explorer Proof Transactions
+Verify actual on-chain gameplay directly on NEAR Testnet:
+1. 🌟 **Round 3 Pot Initialized & Secret Committed (2.60 NEAR):**  
+   [`7dGwWmgJ...`](https://testnet.nearblocks.io/txns/7dGwWmgJUGpGdJsBoQAjesymnEdWU1F3Sm5Dd6pz6CjR) — Commit hash `df83542772583eaf45a554c2f91db19368f52b6a39b896f41d70baa78936c18f` locked on-chain.
+2. 🌟 **Player / Agent Staking Join (0.1 NEAR Entry Fee):**  
+   [`9bUtgAFj...`](https://testnet.nearblocks.io/txns/9bUtgAFja9WRtA9b8GMSgmsDxYZ1QRKD7xu8qznCkueP) — Staked 0.1 NEAR, unlocked 3 guess quotas and question submission privileges.
+3. 🌟 **Question #1 Asked & 61 Candidates Ruled Out On-Chain:**  
+   [`96L8Yv9x...`](https://testnet.nearblocks.io/txns/96L8Yv9x3QZnsztLsMEMHui53wubtBBaYeiFhL3smxQD) — Query *"Is it an ancient artifact or manuscript?"* evaluated to **YES** by TEE, eliminating 61 tiles on testnet.
+4. 🌟 **Round 2 Unsolved Timeout Rollover (2.50 NEAR Rolled Forward):**  
+   [`FyJfoDTR...`](https://testnet.nearblocks.io/txns/FyJfoDTRZik2c6LWEnEsdUsakpNP2UH1FxmenycU1CMv) — 24h expired; secret `Enigma Machine` & salt revealed, 100% of pot rolled into Round #3.
+5. 🌟 **Round 1 Champion Claim (1.056 NEAR Paid Out):**  
+   [`34x7kkZF...`](https://testnet.nearblocks.io/txns/34x7kkZFGXNsdmj61hMeDZ4vmtUn42uQtBQAMTsnU684) — Correct guess `Caesar Cipher` verified via Ed25519 signature; 96% pot paid out.
+
+### 3. Verify TEE Fairness (< 10 Seconds)
+- **In-App:** Click the **`🛡 TEE Enclave`** dock icon in the frontend to inspect the hardware attestation (AMD SEV-SNP Active), public key, SHA-256 commitment scheme, and zero-leakage checklist.
+- **Terminal CLI:**
+  ```bash
+  curl -s http://localhost:8000/tee/attestation
+  ```
+  *Returns `enclave_status: ONLINE`, hardware measurement, and Ed25519 public key `33a8e59a...` registered in the contract.*
+
+### 4. Autonomous Agent MCP One-Liner
+Any autonomous LLM agent can deduce and ask questions via the Model Context Protocol (MCP):
+```bash
+curl -s -X POST http://localhost:8000/mcp/call \
+  -H "Content-Type: application/json" \
+  -d '{"name": "cipherpot_ask_question", "arguments": {"round_id": 3, "agent_id": "judge_agent.testnet", "question": "Is it an ancient artifact?"}}'
+```
+
+### 5. 60-Second In-App Play Path
+1. Open [http://localhost:5173/](http://localhost:5173/) — spectator mode loads immediately with live pot, countdown timer, candidate board, and latest verified clue.
+2. Click **Connect Wallet** (supports MyNearWallet, Meteor, and HOT Wallet).
+3. Click **Stake 0.1 NEAR to Join Round** — grants 3 guess attempts.
+4. In **The Deduction Station**, type a Yes/No question (e.g., *"Did it originate in Egypt?"*) or pick a Shannon recommended bisection question.
+5. Click **Submit Clue to TEE Referee** &rarr; watch the referee evaluate inside the enclave and record the verdict on NEAR Testnet!
+
+---
+
+### 📢 Launch / Demo Post for X (Twitter)
+```text
+🕵️‍♂️ Introducing Cipher — The Daily Deduction Arena on @NEARProtocol!
+
+🔹 1 secret. 64 contenders. 20 shared deduction questions.
+🔹 Refereed by an AMD SEV-SNP Confidential VM on NEAR AI Cloud (zero secret leakage).
+🔹 First to solve claims 96% of accumulated pot; progressive roll-overs if unsolved!
+🔹 Round 3 pot is live at 2.60 NEAR with 3 contenders remaining after Q#1 ruled out 61 candidates.
+🔹 Pure Skill (98% pot + 50% rake rebate) vs Assisted (Shannon entropy engine).
+🔹 Autonomous agents play via MCP with identical quotas to human sleuths.
+
+🎮 Spectate or play now on NEAR Testnet: http://localhost:5173/
+📜 Smart Contract: testnet.nearblocks.io/address/cipherpot861267.testnet
+#NEAR #AutonomousAgents #TEE #Web3Gaming #Privacy
+```
+
+---
+
 ## 1. What is Cipher?
 
 **Cipher** transforms the classic game of *20 Questions* into an on-chain, high-stakes deduction arena. Each round, a confidential secret entity is selected from a canonical board of 64 cryptography items (spanning ancient ciphers, historic artifacts, modern algorithms, and cypherpunk pioneers) and committed to the NEAR blockchain using a cryptographic hash.
@@ -227,9 +294,16 @@ If the 24-hour countdown timer reaches `00:00:00` without a winner:
 * **Model Context Protocol (MCP) & Agent Skills (`ai/agent_service.py`):**
   * Native MCP tool server (`/mcp/tools`, `/mcp/call`) allowing autonomous AI agents (Claude, Gemini, Near AI Agents) to inspect board data, ask questions, eliminate candidates, and claim prizes.
 * **Frontend Web App (`frontend/`):**
-  * Built with React 18, Vite, TypeScript, and `@near-wallet-selector`.
-  * Node polyfills via `vite-plugin-node-polyfills`.
-  * Real-time RPC synchronization with exponential backoff and 15s spectator poll.
+  * Built with React 18, Vite, TypeScript, TanStack Query, and `@near-wallet-selector` (MyNearWallet, Meteor Wallet, and HOT Wallet).
+  * High-performance FastNear Testnet RPC (`https://test.rpc.fastnear.com`) with automated multi-endpoint failover and AbortController request timeouts.
+  * Sequential, orderly product UX inspired by modern Framer editorial patterns and classic nostalgic computing icon docks.
+  * Modular dedicated views:
+    * **The Arena:** Sequential 4-stage deduction workflow (`01 Spectate` → `02 Stake 0.1 NEAR` → `03 Deduce` → `04 Solve & Claim`).
+    * **The Board:** Full 64-candidate directory with era tabs (`All`, `Ancient`, `Medieval`, `Modern`, `Digital`), contender vs ruled-out filters, and intelligence dossiers.
+    * **Live Feed:** Chronological public clue stream with TEE referee verdict tags (`YES`, `NO`, `UNCLEAR`) and candidate rule-out tags.
+    * **Archives:** Verifiable historical round ledgers (Round 1 Settled, Round 2 Rolled Over, Round 3 Active) with revealed salts and Nearblocks transaction links.
+    * **TEE Enclave:** Hardware AMD SEV-SNP attestation proofs, Ed25519 public key, SHA-256 commitment formulas, and zero-leakage audit checklists.
+    * **Standings:** Season 1 Hall of Fame with Pure Skill (98% pot payout, 50% rake rebate) vs Assisted (96% pot) economic matrix.
 
 ---
 
