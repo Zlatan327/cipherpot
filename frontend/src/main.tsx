@@ -228,10 +228,11 @@ function App() {
     if (!round) return 'Round data unavailable';
     if (isSettled) return 'Round settled';
     if (isRolledOver) return 'ROUND ROLLED OVER';
-    if (isJoined) return 'YOU’RE IN (PLAYING)';
+    if (!canPlayRound) return 'Round closed';
+    if (isJoined) return 'Joined';
     if (accountId) return 'WALLET CONNECTED';
     return 'SPECTATOR MODE (LIVE)';
-  }, [round, isSettled, isRolledOver, isJoined, accountId]);
+  }, [round, isSettled, isRolledOver, canPlayRound, isJoined, accountId]);
 
 
   const globallyRuledOut = useMemo(() => {
@@ -272,7 +273,7 @@ function App() {
 
   // Handle Question Submission via AI Referee & Smart Contract
   const handleAskQuestion = async () => {
-    if (!question.trim() || submittingQuestion || !round || !accountId) return;
+    if (!question.trim() || submittingQuestion || !round || !accountId || !isJoined || !canPlayRound || round.questions_remaining <= 0) return;
     setSubmittingQuestion(true);
     setNotice('');
 
@@ -822,11 +823,11 @@ function App() {
               <div className="panel-header-inline">
                 <h2>Ask a question</h2>
                 <span className="status-tag">
-                  <LockKeyhole size={12} /> {isJoined ? 'Ready' : 'Join to Play'}
+                  <LockKeyhole size={12} /> {!canPlayRound ? 'Round closed' : !round?.questions_remaining ? 'No questions left' : isJoined ? 'Ready' : 'Join to play'}
                 </span>
               </div>
               <p className="section-intro">
-                Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
+                Ask a yes-or-no question to help rule out cards.
               </p>
               <label className="input-label" htmlFor="question">Your Question</label>
               <textarea
@@ -834,11 +835,11 @@ function App() {
                 placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value)}
-                disabled={!isJoined || !canPlayRound || submittingQuestion}
+                disabled={!isJoined || !canPlayRound || !round?.questions_remaining || submittingQuestion}
               />
               <button
                 className="button-submit-question"
-                disabled={!isJoined || !canPlayRound || !question.trim() || submittingQuestion}
+                disabled={!isJoined || !canPlayRound || !round?.questions_remaining || !question.trim() || submittingQuestion}
                 onClick={handleAskQuestion}
               >
                 <MessageSquareText size={15} />
@@ -864,7 +865,7 @@ function App() {
                         key={item.label}
                         type="button"
                         className="prominent-chip"
-                        disabled={!isJoined || !canPlayRound || submittingQuestion}
+                        disabled={!isJoined || !canPlayRound || !round?.questions_remaining || submittingQuestion}
                         onClick={() => handleUseClue(item.query)}
                       >
                         <span>{item.label}</span>
@@ -875,7 +876,7 @@ function App() {
                 </div>
               <div className="locked-note">
                 <LockKeyhole size={12} />
-                {isSpectator ? 'Connect a wallet and join to unlock' : 'Answers are shared with everyone in the round'}
+                {!round ? 'Round data is unavailable.' : !canPlayRound ? 'Questions open when a new round starts.' : !round.questions_remaining ? 'The shared question limit has been reached.' : !isJoined ? 'Connect a wallet and join the round to submit.' : 'Everyone in the round can see the answer.'}
               </div>
             </section>
               </div>
