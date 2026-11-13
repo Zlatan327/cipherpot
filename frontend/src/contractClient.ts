@@ -300,31 +300,14 @@ export async function fetchShannonCluesApi(
   return [];
 }
 
-export async function fetchTeeAttestation(): Promise<TeeAttestation> {
+export async function fetchTeeAttestation(): Promise<TeeAttestation | null> {
   try {
     const res = await fetch(`${contractConfig.API_URL}/tee/attestation`);
     if (res.ok) return await res.json();
   } catch (err) {
     console.warn('API attestation fallback', err);
   }
-  return {
-    enclave_status: 'ONLINE',
-    enclave_type: 'Confidential VM (AMD SEV-SNP)',
-    attestation_provider: 'NEAR AI Cloud Enclave',
-    tee_public_key: '33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14',
-    signature_scheme: 'Ed25519 (EdDSA)',
-    commitment_scheme: 'SHA-256(candidate_name:salt)',
-    contract_id: contractConfig.CONTRACT_ID,
-    explorer_verification_url: `https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`,
-    code_measurement: '4db13078506d0a0b446fd3493acba7e090e56553d6c28f4a1abbf38855184ed3',
-    audit_checklist: {
-      no_secret_in_contract_storage: true,
-      on_chain_hash_verified: true,
-      ed25519_verdict_signed: true,
-      anti_prompt_injection_active: true,
-      deterministic_attribute_cache: true,
-    },
-  };
+  return null;
 }
 
 export interface ArenaStats {
