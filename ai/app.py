@@ -12,10 +12,11 @@ Features:
 import json
 import os
 import hashlib
+import secrets
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, Field
@@ -60,30 +61,7 @@ def get_session_key(round_id: int, account_id: str) -> str:
 
 # In-memory enclave round secrets storage (confidential inside TEE)
 # round_id -> {"candidate_id": int, "candidate_name": str, "salt": str, "commitment": str}
-ENCLAVE_ROUNDS: Dict[int, Dict[str, Any]] = {
-    # Round 1 (Settled on testnet)
-    1: {
-        "candidate_id": 1,
-        "candidate_name": "Caesar Cipher",
-        "salt": "cipherpot_salt_round_1_seed_9831",
-        "commitment": "3cc07f7cee9c4b29e9154010b48cddb9b5d688badf0e231a9db7f21d5ea09df3",
-    },
-    # Round 2 (Rolled over on testnet)
-    2: {
-        "candidate_id": 2,
-        "candidate_name": "Enigma Machine",
-        "salt": "cipherpot_salt_round_2_active_4821",
-        "commitment": "98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9",
-    },
-    # Round 3 (Active now on testnet)
-    3: {
-        "candidate_id": 3,
-        "candidate_name": "Rosetta Stone",
-        "salt": "cipherpot_salt_round_3_active_7129",
-        "commitment": "df83542772583eaf45a554c2f91db19368f52b6a39b896f41d70baa78936c18f",
-    },
-}
-
+ENCLAVE_ROUNDS: Dict[int, Dict[str, Any]] = {}
 
 # =============================================================================
 # Request & Response Models
@@ -111,10 +89,8 @@ class GuessVerificationRequest(BaseModel):
 
 
 class CreateCommitmentRequest(BaseModel):
-    round_id: int = Field(..., description="New round ID")
+    round_id: int = Field(..., ge=1, description="New round ID")
     candidate_id: int = Field(..., ge=1, le=64, description="Candidate ID (1-64)")
-    candidate_name: str = Field(..., description="Canonical candidate secret name")
-    salt: Optional[str] = Field(None, description="Optional custom salt (generated if omitted)")
 
 
 class MCPCallRequest(BaseModel):
@@ -352,23 +328,29 @@ def ask_question(req: QuestionRequest):
 # =============================================================================
 
 @app.post("/tee/commit")
-def create_commitment(req: CreateCommitmentRequest):
+def create_commitment(req: CreateCommitmentRequest, authorization: Optional[str] = Header(None)):
     """
     Generate secret commitment for a new round inside the TEE enclave.
     Stores secret securely in enclave memory and returns on-chain commitment hash.
     """
-    commitment_hex, salt = TEESigner.generate_commitment(req.candidate_name, req.salt)
-
-    ENCLAVE_ROUNDS[req.round_id] = {
+    token = os.getenv("ROUND_ADMIN_TOKEN")
+    if not token or not os.getenv("TEE_PRIVATE_KEY_HEX"):
+        raise HTTPException(status_code=503, detail="Round creation is disabled")
+    if not secrets.compare_digest((authorization or "").encode(), f"Bearer {token}".encode()):
+        raise HTTPException(status_code=401, detail="Operator authorization required")
+    candidate = answerer.get_candidate_by_id(req.candidate_id)
+    commitment_hex, salt = TEESigner.generate_commitment(candidate["name"])
+    record = {
         "candidate_id": req.candidate_id,
-        "candidate_name": req.candidate_name,
+        "candidate_name": candidate["name"],
         "salt": salt,
         "commitment": commitment_hex,
     }
+    if ENCLAVE_ROUNDS.setdefault(req.round_id, record) is not record:
+        raise HTTPException(status_code=409, detail="Round already registered")
 
     return {
         "round_id": req.round_id,
-        "candidate_id": req.candidate_id,
         "commitment": commitment_hex,
         "tee_public_key": signer.public_key_hex,
         "status": "committed_in_enclave",
@@ -494,24 +476,6 @@ def post_shannon_clues(req: ClueSuggestionRequest):
         "theme": req.theme,
         "remaining_candidates_count": len(req.remaining_candidate_ids) if req.remaining_candidate_ids else len(engine.candidates),
         "suggestions": suggestions,
-    }
-
-
-@app.post("/tee/reveal/{round_id}")
-def reveal_round_secret(round_id: int):
-    """
-    Reveal secret for a settled or rolled over round for on-chain auditability.
-    """
-    round_secret = ENCLAVE_ROUNDS.get(round_id)
-    if not round_secret:
-        raise HTTPException(status_code=404, detail="Round secret not found")
-
-    return {
-        "round_id": round_id,
-        "candidate_id": round_secret["candidate_id"],
-        "candidate_name": round_secret["candidate_name"],
-        "salt": round_secret["salt"],
-        "commitment": round_secret["commitment"],
     }
 
 

@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import {
   Activity,
   AlertTriangle,
-  ArrowDownRight,
   ArrowUpRight,
   Bot,
   Check,
@@ -13,18 +12,14 @@ import {
   Coins,
   Compass,
   Copy,
-  Cpu,
   Eye,
   Flame,
   LayoutGrid,
-  Lock,
   LockKeyhole,
   MessageSquareText,
-  Scale,
   Scroll,
   Send,
   Share2,
-  Shield,
   ShieldCheck,
   Sparkles,
   Star,
@@ -70,11 +65,11 @@ import './style.css';
 
 function App() {
   // Navigation Tab State
-  type TabType = 'round' | 'board' | 'leaderboard' | 'how';
+  type TabType = 'round' | 'board' | 'how';
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     try {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'board' || hash === 'leaderboard' || hash === 'how') {
+      if (hash === 'board' || hash === 'how') {
         return hash as TabType;
       }
     } catch {}
@@ -84,7 +79,7 @@ function App() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash === 'round' || hash === 'board' || hash === 'leaderboard' || hash === 'how') {
+      if (hash === 'round' || hash === 'board' || hash === 'how') {
         setActiveTab(hash as TabType);
       }
     };
@@ -131,14 +126,7 @@ function App() {
   const [showReplayModal, setShowReplayModal] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
 
-  // Priority 1: How to Play Onboarding Modal (Auto-open on first visit)
-  const [showHowToPlayModal, setShowHowToPlayModal] = useState(() => {
-    try {
-      return !localStorage.getItem('cipher_seen_how_to_play_v1');
-    } catch {
-      return false;
-    }
-  });
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
   const [sandboxTested, setSandboxTested] = useState<boolean>(false);
 
   const handleCloseHowToPlay = () => {
@@ -151,7 +139,6 @@ function App() {
   };
 
   // Leaderboard Filter State
-  const [leaderboardFilter, setLeaderboardFilter] = useState<'all' | 'human' | 'agent' | 'pure'>('all');
 
   // Guess Dialog State
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -270,61 +257,15 @@ function App() {
   const isRolledOver = round?.status === 'RolledOver';
 
   const statusText = useMemo(() => {
-    if (isSettled) return 'ROUND SETTLED';
+    if (!round) return 'Round data unavailable';
+    if (isSettled) return 'Round settled';
     if (isRolledOver) return 'ROUND ROLLED OVER';
     if (isJoined) return 'YOU’RE IN (PLAYING)';
     if (accountId) return 'WALLET CONNECTED';
     return 'SPECTATOR MODE (LIVE)';
-  }, [isSettled, isRolledOver, isJoined, accountId]);
+  }, [round, isSettled, isRolledOver, isJoined, accountId]);
 
-  // Leaderboard Standings (Sourced from Real NEAR Testnet Contract Records)
-  const leaderboardEntries = useMemo(() => {
-    const list = [
-      {
-        rank: 1,
-        account_id: 'cipherpot861267.testnet',
-        is_agent: true,
-        tier: 'Autonomous MCP Sleuth · Round #1 Settled Winner',
-        solves: 1,
-        pure_solves: 1,
-        streak: 1,
-        total_won_near: '1.056 NEAR',
-        points: 500,
-        is_pure_master: true,
-        tx_hash: '34x7kkZFGXNsdmj61hMeDZ4vmtUn42uQtBQAMTsnU684',
-      },
-    ];
 
-    // If connected account is distinct, surface their live session standing
-    if (accountId && accountId !== 'cipherpot861267.testnet') {
-      list.push({
-        rank: 2,
-        account_id: accountId,
-        is_agent: false,
-        tier: isJoined ? 'Active Contender (Round #3)' : 'Registered Sleuth',
-        solves: isSettled ? 1 : 0,
-        pure_solves: lastSolveMastery?.pure ? 1 : 0,
-        streak: isJoined ? 1 : 0,
-        total_won_near: '0.00 NEAR',
-        points: isJoined ? 100 : 0,
-        is_pure_master: Boolean(lastSolveMastery?.pure),
-        tx_hash: '',
-      });
-    }
-
-    return list;
-  }, [accountId, isJoined, isSettled, lastSolveMastery]);
-
-  const filteredLeaderboard = useMemo(() => {
-    return leaderboardEntries.filter((item) => {
-      if (leaderboardFilter === 'human') return !item.is_agent;
-      if (leaderboardFilter === 'agent') return item.is_agent;
-      if (leaderboardFilter === 'pure') return item.is_pure_master;
-      return true;
-    });
-  }, [leaderboardEntries, leaderboardFilter]);
-
-  // Distinct Global Referee Rule-Outs from Verified Feed
   const globallyRuledOut = useMemo(() => {
     const ids = new Set<number>();
     feed.forEach((item) => {
@@ -339,67 +280,6 @@ function App() {
       (c) => !globallyRuledOut.includes(c.id) && !locallyCrossed.includes(c.id)
     );
   }, [candidates, globallyRuledOut, locallyCrossed]);
-
-  // Information Gain & Optimal Deduction Question Recommender
-  const optimalDeduction = useMemo(() => {
-    const total = remainingCandidates.length;
-    if (total <= 1) return null;
-
-    const splits: { question: string; yesCount: number; diff: number; target: string }[] = [];
-
-    // 1. Era splits
-    const eras = ['Ancient', 'Medieval', 'Modern', 'Digital'];
-    for (const era of eras) {
-      const yes = remainingCandidates.filter((c) => c.era?.toLowerCase() === era.toLowerCase()).length;
-      if (yes > 0 && yes < total) {
-        splits.push({
-          question: `Is it from the ${era} era?`,
-          yesCount: yes,
-          diff: Math.abs(yes - total / 2),
-          target: `${era} Era`,
-        });
-      }
-    }
-
-    // 2. Type splits
-    const types = ['Substitution', 'Rotor Machine', 'Public Key', 'Stele', 'Transposition'];
-    for (const t of types) {
-      const yes = remainingCandidates.filter((c) => c.type?.toLowerCase().includes(t.toLowerCase())).length;
-      if (yes > 0 && yes < total) {
-        splits.push({
-          question: `Is it a ${t}?`,
-          yesCount: yes,
-          diff: Math.abs(yes - total / 2),
-          target: t,
-        });
-      }
-    }
-
-    // 3. Origin splits
-    const origins = ['Rome', 'Greece', 'Germany', 'Egypt', 'United States', 'Europe'];
-    for (const o of origins) {
-      const yes = remainingCandidates.filter((c) => c.origin?.toLowerCase().includes(o.toLowerCase())).length;
-      if (yes > 0 && yes < total) {
-        splits.push({
-          question: `Did it originate in ${o}?`,
-          yesCount: yes,
-          diff: Math.abs(yes - total / 2),
-          target: o,
-        });
-      }
-    }
-
-    if (splits.length === 0) return null;
-    splits.sort((a, b) => a.diff - b.diff);
-    const best = splits[0];
-    const noCount = total - best.yesCount;
-    return {
-      question: best.question,
-      yesCount: best.yesCount,
-      noCount,
-      target: best.target,
-    };
-  }, [remainingCandidates]);
 
   // Handle Joining Round on Testnet
   const handleJoinRound = async () => {
@@ -491,6 +371,10 @@ function App() {
 
   const handleConfirmGuess = async () => {
     if (!selectedCandidate || !round || !accountId || submittingGuess) return;
+    if (!contractConfig.API_URL) {
+      setNotice('The referee is unavailable. Your guess was not submitted.');
+      return;
+    }
     setSubmittingGuess(true);
     setNotice('');
 
@@ -510,7 +394,10 @@ function App() {
           candidate_name: selectedCandidate.name,
           account_id: accountId,
         }),
-      }).then((r) => r.json());
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(`Guess verification unavailable (HTTP ${r.status}).`);
+        return r.json();
+      });
 
       if (verifyRes.is_correct) {
         const isPure = Boolean(verifyRes.pure_deduction);
@@ -558,17 +445,17 @@ function App() {
 
   const potDisplay = useMemo(() => {
     if (round?.pot) return formatNear(round.pot);
-    return '2.5';
+    return '—';
   }, [round]);
 
   const timerDisplay = useMemo(() => {
     if (round?.time_remaining) return formatCountdown(round.time_remaining);
-    return '23:59:00';
+    return '—';
   }, [round]);
 
   const questionsLeftDisplay = useMemo(() => {
     if (round) return `${round.questions_remaining} / ${round.max_questions}`;
-    return '20 / 20';
+    return '—';
   }, [round]);
 
   const guessesRemainingDisplay = useMemo(() => {
@@ -577,592 +464,11 @@ function App() {
     return '3 / 3';
   }, [isJoined, playerInfo]);
 
-  return (
-    <div className="app-shell">
-      {/* Live Arena Telemetry & Social Proof Ticker */}
-      <div className="arena-telemetry-ticker">
-        <div className="ticker-item">
-          <Sparkles size={13} style={{ color: 'var(--lime)' }} />
-          <span>Round #1 Settled: <strong>Caesar Cipher</strong> solved by <code>cipherpot861267.testnet</code> (1.056 NEAR)</span>
-        </div>
-        <div className="ticker-item">
-          <span><Zap size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Round #2: <strong>2.50 NEAR Rollover</strong> &rarr; Active Round #3 Jackpot: <strong>{potDisplay} NEAR</strong></span>
-        </div>
-        <div className="ticker-item">
-          <span><Shield size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Hardware Enclave: <strong>AMD SEV-SNP Isolated Memory Active</strong></span>
-        </div>
-      </div>
+  const [highlightedCards, setHighlightedCards] = useState<number[]>([]);
+  useEffect(() => setHighlightedCards([]), [round?.round_id, activeTheme]);
 
-      {isSpectator && (
-        <div className="watch-banner">
-          <Eye size={15} />
-          <span>
-            You’re in Spectator Mode.{' '}
-            <button onClick={openWalletModal}>Connect a wallet to play.</button>
-          </span>
-          <span className="banner-note">Live Testnet Feed · No wallet required</span>
-        </div>
-      )}
-
-      <header className="topbar">
-        <div className="header-left">
-          <a
-            className="brand"
-            href="#round"
-            onClick={(e) => {
-              e.preventDefault();
-              handleTabChange('round');
-            }}
-            aria-label="Cipher home"
-          >
-            <span className="brand-mark"><span /></span>
-            <span>CIPHER</span>
-          </a>
-          <nav className="main-nav" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'round'}
-              className={activeTab === 'round' ? 'active' : ''}
-              onClick={() => handleTabChange('round')}
-            >
-              The Round
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'board'}
-              className={activeTab === 'board' ? 'active' : ''}
-              onClick={() => handleTabChange('board')}
-            >
-              The Board
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'leaderboard'}
-              className={activeTab === 'leaderboard' ? 'active' : ''}
-              onClick={() => handleTabChange('leaderboard')}
-            >
-              Leaderboard
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'how'}
-              className={activeTab === 'how' ? 'active' : ''}
-              onClick={() => handleTabChange('how')}
-            >
-              How Deduction Works
-            </button>
-          </nav>
-        </div>
-
-        <div className="header-right">
-          {accountId && (
-            <div className="player-progression-pill" title="Player Level & Win Streak Tracker">
-              <span><Star size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: 'var(--lime)' }} /> LVL 2 · ADEPT</span>
-              <span style={{ color: '#fbbf24' }}><Flame size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> 1W STREAK</span>
-            </div>
-          )}
-
-          {/* Priority 1: Persistent How to Play button */}
-          <button
-            className="how-to-play-btn"
-            onClick={() => setShowHowToPlayModal(true)}
-            title="How to Play Cipher in 30 seconds"
-          >
-            <CircleHelp size={15} />
-            <span>How to Play</span>
-          </button>
-          <span className="network"><i /> NEAR TESTNET</span>
-          {accountId ? (
-            <button className="wallet-button" onClick={signOutWallet} title="Click to disconnect">
-              <Wallet size={15} />
-              {accountId}
-              <ChevronDown size={14} />
-            </button>
-          ) : (
-            <button className="wallet-button" onClick={openWalletModal}>
-              <Wallet size={15} />
-              Connect Wallet
-              <ChevronDown size={14} />
-            </button>
-          )}
-        </div>
-      </header>
-
-      <main id="top">
-
-        {activeTab === 'round' && (
-          <>
-            <section className="hero" id="round">
-          <div className="hero-copy">
-            <div className="arena-badge">
-              <span className="live-dot" /> Round #{round ? round.round_id : 3} · Live Deduction Arena
-            </div>
-            <h1>One secret.<br /><span className="highlight">Sixty-four</span> possibilities.</h1>
-            <p className="hero-sub">
-              64 canonical entities committed to NEAR Protocol with confidential TEE hardware validation.
-              Ask sharp yes/no questions, eliminate tiles, and claim the <b>{potDisplay} NEAR</b> pot.
-            </p>
-            <div className="hero-buttons">
-              {isJoined ? (
-                <button className="button button-primary" disabled>
-                  <Sparkles size={16} /> You’re in (Active)
-                </button>
-              ) : (
-                <button className="button button-primary" onClick={handleJoinRound}>
-                  <Sparkles size={16} /> Join the round
-                  <span className="button-cost">0.1 NEAR</span>
-                </button>
-              )}
-              {/* Prominent Quickstart Modal Trigger */}
-              <button
-                className="button button-secondary"
-                onClick={() => handleTabChange('board')}
-              >
-                <LayoutGrid size={15} /> View The Board
-              </button>
-              <button
-                className="button button-secondary"
-                onClick={() => setShowHowToPlayModal(true)}
-              >
-                <CircleHelp size={15} /> How to Play in 30s
-              </button>
-              <button
-                type="button"
-                className="text-link"
-                onClick={() => handleTabChange('how')}
-              >
-                Deduction Funnel <ArrowDownRight size={15} />
-              </button>
-            </div>
-          </div>
-
-          <div className="pot-card">
-            <div className="pot-card-top">
-              <span className="pot-label">Current Pot</span>
-              <span className="pot-icon"><Coins size={18} /></span>
-            </div>
-            <div className="pot-amount">
-              <span className="pot-number">{potDisplay}</span>
-              <span className="pot-unit">NEAR</span>
-            </div>
-            <div className="pot-network-note">
-              NEAR Testnet Pot ({contractConfig.CONTRACT_ID})
-            </div>
-            <div className="pot-card-bottom">
-              <span><span className="live-dot" /> {isSettled ? 'SETTLED' : 'LIVE ROUND'}</span>
-              <span><Clock3 size={13} /> <b>{timerDisplay}</b></span>
-            </div>
-          </div>
-        </section>
-
-        <section className="round-strip" aria-label="Round status">
-          <div className="strip-status">
-            <span className="status-icon"><Activity size={16} /></span>
-            <div>
-              <small>Round Status</small>
-              <strong>{statusText}</strong>
-            </div>
-          </div>
-          <div className="strip-item">
-            <small>Questions Left</small>
-            <strong>{questionsLeftDisplay}</strong>
-            <span className="strip-foot">across all players</span>
-          </div>
-          <div className="strip-item">
-            <small>Your Guesses</small>
-            <strong>{guessesRemainingDisplay}</strong>
-            <span className="strip-foot">per entry fee</span>
-          </div>
-          <div className="strip-item">
-            <small>Players In</small>
-            <strong>{round ? round.total_players : 0}</strong>
-            <span className="strip-foot">joined this round</span>
-          </div>
-          <div className="strip-link">
-            <ShieldCheck size={17} />
-            <button
-              onClick={async () => {
-                const att = await fetchTeeAttestation();
-                setTeeAttestation(att);
-                setShowAttestationModal(true);
-              }}
-              title="Inspect Confidential TEE Hardware Attestation & Public Key"
-            >
-              Verify TEE fairness <ArrowUpRight size={13} />
-            </button>
-          </div>
-        </section>
-
-        <div className="inspector-bar">
-          <div className="inspector-group">
-            <span className="inspector-label">ARCHIVED ROUNDS:</span>
-            <button
-              type="button"
-              className={`inspector-pill ${round?.round_id === 3 ? 'active' : ''}`}
-              onClick={() => handleLoadRound(3)}
-            >
-              ● R#3 (Active · 2.60 NEAR)
-            </button>
-            <button
-              type="button"
-              className={`inspector-pill ${round?.round_id === 2 ? 'active' : ''}`}
-              onClick={() => handleLoadRound(2)}
-            >
-              R#2 (Rolled Over)
-            </button>
-            <button
-              type="button"
-              className={`inspector-pill ${round?.round_id === 1 ? 'active' : ''}`}
-              onClick={() => handleLoadRound(1)}
-            >
-              R#1 (Settled Won)
-            </button>
-          </div>
-          <div>
-            <a
-              href={`https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-link"
-            >
-              Verified on NearBlocks <ArrowUpRight size={12} />
-            </a>
-          </div>
-        </div>
-
-        {notice && (
-          <div className="notice" role="status">
-            <CircleHelp size={16} />
-            <span>{notice}</span>
-            <button aria-label="Dismiss" onClick={() => setNotice('')}><X size={16} /></button>
-          </div>
-        )}
-
-        {isSettled && round && (
-          <section className="settled-card settled-won">
-            <span className="settled-icon"><Check size={18} /></span>
-            <div style={{ flex: 1 }}>
-              <div className="inspector-label">ROUND #{round.round_id} SETTLED</div>
-              <h2 style={{ margin: '6px 0', fontSize: '18px' }}>Winner: {round.winner}</h2>
-              <p style={{ margin: '0 0 10px 0', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-                Secret entity revealed: <b>{round.secret_revealed}</b>.
-                Payout: {formatNear(round.payout || '0')} NEAR (96% of pot).
-                Protocol fee: {formatNear(round.rake_amount || '0')} NEAR (4% rake).
-              </p>
-              <div>
-                <button
-                  className="button button-primary"
-                  onClick={() => setShowReplayModal(true)}
-                >
-                  <Share2 size={14} /> Replay Deduction & Share Card
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {isRolledOver && round && (
-          <section className="settled-card settled-refunding">
-            <span className="settled-icon"><Clock3 size={18} /></span>
-            <div style={{ flex: 1 }}>
-              <div className="inspector-label">ROUND #{round.round_id} TIMED OUT & ROLLED OVER</div>
-              <h2 style={{ margin: '6px 0', fontSize: '18px' }}>Progressive Jackpot Rolled Over to Round #{round.round_id + 1}</h2>
-              <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-                Round reached 24h timeout without a winner. Secret revealed on-chain: <b>{round.secret_revealed}</b>.
-                100% of accumulated pot ({formatNear(round.pot)} NEAR) rolled over to expand Round #{round.round_id + 1}'s prize pool!
-              </p>
-            </div>
-          </section>
-        )}
-
-            {/* Jump to The Board Banner */}
-            <div className="round-board-cta panel">
-              <div className="round-board-cta-content">
-                <div className="arena-badge" style={{ marginBottom: '6px' }}>
-                  <Sparkles size={12} style={{ color: 'var(--lime)', marginRight: '4px' }} />
-                  64 CANONICAL ENTITIES · {remainingCandidates.length} CONTENDERS REMAINING
-                </div>
-                <h3>The 64-Tile Deduction Grid</h3>
-                <p>
-                  The secret is one of 64 canonical cryptosystems committed to NEAR Protocol with confidential TEE hardware validation. Inspect traits, review Shannon binary entropy clues, and eliminate candidates.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="button button-primary"
-                onClick={() => handleTabChange('board')}
-              >
-                <LayoutGrid size={15} /> Open The Board Grid (64 Cards) &rarr;
-              </button>
-            </div>
-
-            {/* The Round Command & Control Grid */}
-            <div className="round-action-grid">
-              <div className="round-column-left">
-                {isJoined && (
-              <section className="youre-in panel">
-                <div className="panel-header-inline">
-                  <h3>Participation status</h3>
-                  <span className="status-tag"><Check size={12} /> Unlocked</span>
-                </div>
-                <p>Entry fee paid (0.1 NEAR). You have full deduction questions and guess allowances.</p>
-                <div className="youre-in-stats">
-                  <span>Questions Left <b>{round ? round.questions_remaining : 20}</b></span>
-                  <span>Guesses Left <b>{playerInfo ? playerInfo.guesses_remaining : 3} / 3</b></span>
-                </div>
-              </section>
-            )}
-
-            <section className="panel ask-panel">
-              <div className="panel-header-inline">
-                <h2>Ask a question</h2>
-                <span className="status-tag">
-                  <LockKeyhole size={12} /> {isJoined ? 'Ready' : 'Join to Play'}
-                </span>
-              </div>
-              <p className="section-intro">
-                Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
-              </p>
-              <label className="input-label" htmlFor="question">Your Question</label>
-              <textarea
-                id="question"
-                placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                disabled={!isJoined || isSettled || submittingQuestion}
-              />
-              <button
-                className="button-submit-question"
-                disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
-                onClick={handleAskQuestion}
-              >
-                <MessageSquareText size={15} />
-                {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
-              </button>
-
-              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips or Pure Mode Note */}
-              {assistanceMode === 'assisted' ? (
-                <div className="prominent-clues-section">
-                  <div className="prominent-clues-title">
-                    <span><Zap size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> ONE-TAP QUICK CLUES</span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tap to populate</span>
-                  </div>
-                  <div className="prominent-clue-grid">
-                    {[
-                      { label: 'Ancient Era?', query: 'Is it from the ancient era?' },
-                      { label: 'Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
-                      { label: 'Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
-                      { label: 'Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
-                      { label: 'Public Key?', query: 'Is it an asymmetric or public-key system?' },
-                      { label: 'Substitution?', query: 'Is it a substitution cipher?' },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        className="prominent-chip"
-                        disabled={!isJoined || isSettled || submittingQuestion}
-                        onClick={() => handleUseClue(item.query)}
-                      >
-                        <span>{item.label}</span>
-                        <span style={{ color: 'var(--lime)', fontSize: '11px' }}>&rarr;</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="pure-skill-banner" style={{ marginTop: '14px', padding: '12px' }}>
-                  <span className="pure-skill-badge"><Trophy size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> PURE SKILL</span>
-                  <span className="pure-skill-desc" style={{ fontSize: '11px' }}>
-                    Clues hidden in Pure Skill mode. Every deduction is your own move.
-                  </span>
-                </div>
-              )}
-
-              <div className="locked-note">
-                <LockKeyhole size={12} />
-                {isSpectator ? 'Connect a wallet and join to unlock' : 'Protected by Anti-Prompt-Injection Enclave'}
-              </div>
-            </section>
-                {/* Agent vs Human Fairness & Transparency Audit Panel */}
-            <section className="fairness-panel">
-              <div className="fairness-header">
-                <span className="fairness-title">
-                  <ShieldCheck size={16} style={{ color: 'var(--lime)' }} />
-                  HUMAN VS AGENT FAIRNESS AUDIT
-                </span>
-                <span className="badge" style={{ color: 'var(--lime)', borderColor: 'var(--lime)' }}>
-                  100% AUDITABLE
-                </span>
-              </div>
-              <div className="fairness-grid">
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Scale size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> IDENTICAL QUOTAS</div>
-                  <div className="fairness-card-desc">
-                    Agents are strictly capped at 3 guesses per entry and share the same 20 question pool with humans.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Lock size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ZERO SECRET LEAKAGE</div>
-                  <div className="fairness-card-desc">
-                    The secret is isolated in AMD SEV-SNP hardware memory. Agents have zero access to the secret hash preimage.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Shield size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ON-CHAIN COLLATERAL</div>
-                  <div className="fairness-card-desc">
-                    Agents must lock real testnet NEAR deposits via <code>deposit_agent_funds()</code> to participate.
-                  </div>
-                </div>
-                <div className="fairness-card">
-                  <div className="fairness-card-title"><Activity size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> ON-CHAIN AUDIT TRAIL</div>
-                  <div className="fairness-card-desc">
-                    Round 1 Payout: 1.056 NEAR | Round 2 Rollover: 2.50 NEAR | Round 3 Active Pot: {potDisplay} NEAR
-                  </div>
-                </div>
-              </div>
-            </section>
-              </div>
-              <div className="round-column-right">
-                <section className="panel feed-panel">
-              <div className="panel-header-inline">
-                <h2>Live question feed</h2>
-                <span className="feed-live"><i /> Live</span>
-              </div>
-              <p className="section-intro">Public answers from the TEE deduction referee:</p>
-              {feed.length === 0 ? (
-                <div className="feed-empty">
-                  <div className="feed-empty-icon"><MessageSquareText size={18} /></div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>No verified entries yet</div>
-                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Be the first to submit a deduction question</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="feed-list">
-                  {feed.map((entry) => (
-                    <div
-                      key={entry.question_id}
-                      className={`feed-item ${entry.answer === 'Yes' ? 'yes' : entry.answer === 'No' ? 'no' : 'unclear'}`}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
-                        <span style={{ fontFamily: 'var(--font-mono)' }}>
-                          {(agents.some((a) => a.account_id === entry.asker) || entry.asker.includes('agent') || entry.asker === contractConfig.CONTRACT_ID) ? (
-                            <span style={{ color: '#38bdf8', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Bot size={13} /> AGENT: {entry.asker}</span>
-                          ) : (
-                            <span style={{ color: '#4ade80', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={13} /> HUMAN: {entry.asker}</span>
-                          )}
-                        </span>
-                        <strong style={{
-                          fontFamily: 'var(--font-mono)',
-                          color: entry.answer === 'Yes' ? 'var(--color-success)' : entry.answer === 'No' ? 'var(--color-danger)' : 'var(--color-warning)'
-                        }}>
-                          {entry.answer.toUpperCase()}
-                        </strong>
-                      </div>
-                      <div style={{ fontSize: '13px', marginTop: '4px', color: 'var(--text-primary)', fontWeight: 500 }}>
-                        {entry.question}
-                      </div>
-                      {entry.rule_out_candidate_ids?.length > 0 && (
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-                          Ruled out {entry.rule_out_candidate_ids.length} candidates
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-                <section className="panel agents-panel">
-              <div className="panel-header-inline">
-                <h2>Autonomous agents</h2>
-                <span className="agent-count">{agents.length}</span>
-              </div>
-              <div className="agent-metrics-row">
-                <div className="agent-metric-box">
-                  <small>Agent Pool Balance</small>
-                  <strong>{formatNear(agents.reduce((acc, a) => acc + BigInt(a.balance || 0), BigInt(0)).toString())} NEAR</strong>
-                  <span>On-chain allowance</span>
-                </div>
-                <div className="agent-metric-box">
-                  <small>Agent Questions (R#{round ? round.round_id : 3})</small>
-                  <strong>{agents.reduce((acc, a) => acc + (a.questions_asked || 0), 0)} Qs</strong>
-                  <span>Verified on contract</span>
-                </div>
-              </div>
-              <p className="section-intro" style={{ margin: '0 0 10px 0' }}>
-                Agents compete autonomously via Model Context Protocol (MCP) tool calls on NEAR testnet:
-              </p>
-              {agents.length === 0 ? (
-                <div className="feed-empty">
-                  <div className="feed-empty-icon"><Cpu size={16} /></div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: '12.5px', color: 'var(--text-primary)' }}>No external agents in this round yet</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Agents deposit spend allowance via <code>deposit_agent_funds()</code></div>
-                  </div>
-                </div>
-              ) : (
-                agents.map((ag) => (
-                  <div className="agent-row" key={ag.account_id}>
-                    <span className="agent-avatar"><Flame size={14} /></span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <strong style={{ fontSize: '12px', color: 'var(--text-primary)', wordBreak: 'break-all', display: 'block', fontFamily: 'var(--font-mono)' }}>
-                        {ag.account_id}
-                      </strong>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>
-                        MCP Agent · {ag.questions_asked} Qs asked · {ag.guesses_made} guesses
-                      </span>
-                    </div>
-                    <span style={{ color: 'var(--color-success)', font: '600 11.5px var(--font-mono)' }}>
-                      {formatNear(ag.balance)} NEAR
-                    </span>
-                  </div>
-                ))
-              )}
-              <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-muted)' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--lime)', display: 'block', marginBottom: '2px' }}>
-                  MCP TOOL CALL ENDPOINT:
-                </span>
-                <code>POST /mcp/call &rarr; &#123;"name":"ask_question"&#125;</code>
-              </div>
-            </section>
-              </div>
-            </div>
-          </>
-        )}
-
-        {activeTab === 'board' && (
-
-          <div className="board-view-container">
-            <div className="board-view-header">
-              <div className="board-view-title-group">
-                <div className="arena-badge">
-                  <span className="live-dot" /> Round #{round ? round.round_id : 3} Deduction Board
-                </div>
-                <h2>The 64 Canonical Mysteries</h2>
-                <p>Click any card to inspect candidate traits or submit a cryptographic guess. Struck-out tiles are ruled out globally.</p>
-              </div>
-              <div className="board-view-actions">
-                <div className="board-stats-pill">
-                  <span>Questions Left: <b>{questionsLeftDisplay}</b></span>
-                  <span>·</span>
-                  <span>Your Guesses: <b>{guessesRemainingDisplay}</b></span>
-                  <span>·</span>
-                  <span>Pot: <b style={{ color: 'var(--lime)' }}>{potDisplay} NEAR</b></span>
-                </div>
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => handleTabChange('round')}
-                >
-                  <MessageSquareText size={14} /> Live Feed & Ask Console &rarr;
-                </button>
-              </div>
-            </div>
-
+  const boardView = (
+    <div className="board-view-container">
             <section className="board-section panel" id="board">
             <div className="theme-bar">
               <div className="theme-pill-group">
@@ -1200,39 +506,19 @@ function App() {
                     type="button"
                     className={`mode-btn ${assistanceMode === 'pure' ? 'active pure' : ''}`}
                     onClick={() => setAssistanceMode('pure')}
-                    title="Pure deduction without AI assistance. 98% pot share (50% rake rebate) + 2x Leaderboard points!"
+                    title="Play with question suggestions hidden."
                   >
                     <span><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Pure Skill</span>
-                    <small>Ranked · 98% Pot (+2% Rebate)</small>
+                    <small>Suggestions hidden</small>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* High-Urgency Spectator Conversion Banner */}
-            {!isJoined && !isSettled && (
-              <div className="spectator-urgent-banner">
-                <div className="spectator-urgent-text">
-                  <span className="spectator-urgent-badge"><Flame size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> HIGH URGENCY</span>
-                  <span>
-                    Only <b>{remainingCandidates.length} of 64 tiles remain</b> in Round #{round ? round.round_id : 3}! Current pot is <b>{potDisplay} NEAR</b>. Step in before an autonomous agent sweeps the pot!
-                  </span>
-                </div>
-                <div className="spectator-urgent-actions">
-                  <button className="button button-primary" onClick={handleJoinRound} style={{ height: '34px', fontSize: '12px' }}>
-                    <Sparkles size={14} /> Join Now (0.1 NEAR)
-                  </button>
-                  <button className="button button-secondary" onClick={() => setShowHowToPlayModal(true)} style={{ height: '34px', fontSize: '12px' }}>
-                    Free Demo
-                  </button>
-                </div>
-              </div>
-            )}
-
             <div className="section-header">
               <div>
                 <h2 className="section-title">
-                  {activeTheme === 'crypto' ? 'The Cryptography Board' : 'The Scientific Breakthroughs'}
+                  {activeTheme === 'crypto' ? 'Game board' : 'The Scientific Breakthroughs'}
                 </h2>
               </div>
               <div className="view-tabs">
@@ -1241,14 +527,14 @@ function App() {
                   className={`view-tab ${viewMode === 'contenders' ? 'active' : ''}`}
                   onClick={() => setViewMode('contenders')}
                 >
-                  <Sparkles size={13} /> Active Contenders <span className="badge">{remainingCandidates.length}</span>
+                  <Sparkles size={13} /> Remaining <span className="badge">{remainingCandidates.length}</span>
                 </button>
                 <button
                   type="button"
                   className={`view-tab ${viewMode === 'all' ? 'active' : ''}`}
                   onClick={() => setViewMode('all')}
                 >
-                  <Eye size={13} /> Full 64 Board <span className="badge">64</span>
+                  <Eye size={13} /> All cards <span className="badge">64</span>
                 </button>
               </div>
             </div>
@@ -1257,86 +543,6 @@ function App() {
                 ? 'The confidential secret is committed to NEAR testnet. Ask questions to rule out tiles or make a candidate guess to claim the pot.'
                 : 'Previewing rotating general knowledge theme: 64 milestone discoveries from the Wheel to Quantum Qubits.'}
             </p>
-
-            {/* Priority 3: Large, Live "X Cards Remaining" Scoreboard */}
-            <div className="cards-remaining-scoreboard">
-              <div className="scoreboard-main">
-                <div className="scoreboard-left">
-                  <span className="count-big">{remainingCandidates.length}</span>
-                  <span className="count-total">/ {candidates.length || 64}</span>
-                </div>
-                <div className="scoreboard-title-group">
-                  <span className="scoreboard-title">Active Cards Remaining</span>
-                  <span className="scoreboard-sub">
-                    {64 - remainingCandidates.length} eliminated ({Math.round(((64 - remainingCandidates.length) / 64) * 100)}% of board ruled out)
-                  </span>
-                </div>
-              </div>
-              <div className="scoreboard-progress-bar">
-                <div
-                  className="scoreboard-progress-fill"
-                  style={{ width: `${Math.round(((64 - remainingCandidates.length) / 64) * 100)}%` }}
-                />
-              </div>
-              <div className="scoreboard-breakdown">
-                <span className="breakdown-tag">
-                  <span className="dot dot-green" /> <b>{remainingCandidates.length}</b> Active Contenders
-                </span>
-                <span className="breakdown-tag">
-                  <span className="dot dot-red" /> <b>{globallyRuledOut.length}</b> Ruled Out by AI Referee
-                </span>
-                {locallyCrossed.length > 0 && (
-                  <span className="breakdown-tag">
-                    <span className="dot dot-yellow" /> <b>{locallyCrossed.length}</b> Private Notes
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Priority 2: Prominent Shannon Information Gain Suggestion or Pure Skill Banner */}
-            {assistanceMode === 'assisted' ? (
-              optimalDeduction && (
-                <div className="info-gain-prominent">
-                  <div className="info-gain-header">
-                    <span className="info-gain-tag">
-                      <Sparkles size={13} /> MATHEMATICAL SHORTCUT · SHANNON INFORMATION GAIN
-                    </span>
-                    <span className="info-gain-metric">
-                      Eliminates ~50% of active board ({optimalDeduction.yesCount} YES / {optimalDeduction.noCount} NO)
-                    </span>
-                  </div>
-                  <div className="info-gain-question-row">
-                    <div className="info-gain-question">
-                      "{optimalDeduction.question}"
-                    </div>
-                    <button
-                      className="info-gain-action-btn"
-                      onClick={() => handleUseClue(optimalDeduction.question)}
-                      disabled={!isJoined || isSettled}
-                    >
-                      <Zap size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Use Clue Now
-                    </button>
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="pure-skill-banner">
-                <div className="pure-skill-left">
-                  <span className="pure-skill-badge"><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> PURE SKILL RANKED MODE · 98% POT SHARE</span>
-                  <span className="pure-skill-desc">
-                    AI clue chips disabled. Solving without AI suggestions earns the <b>50% Protocol Rake Rebate (98% payout)</b>, <b>Pure Deduction Grandmaster Certificate</b>, and a <b>2x Leaderboard Multiplier</b>!
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="text-link"
-                  onClick={() => setAssistanceMode('assisted')}
-                  style={{ fontSize: '11px', whiteSpace: 'nowrap', color: '#fef08a' }}
-                >
-                  Need a hint? Switch to Assisted &rarr;
-                </button>
-              </div>
-            )}
 
             {viewMode === 'contenders' ? (
               <div className="contenders-spotlight">
@@ -1427,6 +633,7 @@ function App() {
                     let cardClass = 'candidate';
                     if (isGlobal) cardClass += ' globally-ruled';
                     else if (isLocal) cardClass += ' locally-crossed';
+                    if (highlightedCards.includes(candId)) cardClass += ' clue-highlight';
 
                     return (
                       <button
@@ -1437,14 +644,14 @@ function App() {
                           toggleLocalCross(candId);
                         }}
                         className={cardClass}
-                        style={{ opacity: isMatchingFilter ? (isEliminated ? 0.35 : 1) : 0.2 }}
+                        style={{ opacity: highlightedCards.includes(candId) ? 1 : isMatchingFilter ? (isEliminated ? 0.65 : 1) : 0.25 }}
                         title={cand ? `${cand.name} (${cand.era}, ${cand.origin} - ${cand.category}). Left-click to inspect, right-click to note.` : `Candidate ${candId}`}
                         aria-label={`Candidate ${candId}: ${cand ? cand.name : 'Candidate'}`}
                       >
                         <div className="candidate-top">
                           <span className="candidate-num">{String(candId).padStart(2, '0')}</span>
                           {cand?.era && <span className="candidate-tag">{cand.era}</span>}
-                          {isGlobal && <span className="status-pill-global">RULED</span>}
+                          {isGlobal && <span className="status-pill-global">Ruled out</span>}
                           {!isGlobal && isLocal && <span className="status-pill-local">NOTE</span>}
                         </div>
                         <span className="candidate-name">{cand ? cand.name : `Candidate ${candId}`}</span>
@@ -1453,158 +660,445 @@ function App() {
                   })}
                 </div>
                 <div className="board-footer">
-                  <span>Canonical 64-Secrets Active · Left-click to inspect/guess · Right-click for private notes</span>
+                  <span>Open a card to inspect it or add a private note.</span>
                   <button onClick={() => setLocallyCrossed([])}>Clear my notes</button>
                 </div>
               </>
             )}
           </section>
           </div>
-        )}
+  );
 
-        {/* Section: Arena Leaderboard & Reputation Rankings */}
-        {activeTab === 'leaderboard' && (
-          <section className="leaderboard-section" id="leaderboard">
-          <div className="leaderboard-header">
-            <div className="arena-badge" style={{ marginBottom: '8px' }}>
-              <Trophy size={13} style={{ color: 'var(--lime)', display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
-              ARENA LEADERBOARD & REPUTATION
+  return (
+    <div className="app-shell">
+      {isSpectator && (
+        <div className="watch-banner">
+          <Eye size={15} />
+          <span>
+            You’re in Spectator Mode.{' '}
+            <button onClick={openWalletModal}>Connect a wallet to play.</button>
+          </span>
+          <span className="banner-note">Live Testnet Feed · No wallet required</span>
+        </div>
+      )}
+
+      <header className="topbar">
+        <div className="header-left">
+          <a
+            className="brand"
+            href="#round"
+            onClick={(e) => {
+              e.preventDefault();
+              handleTabChange('round');
+            }}
+            aria-label="Cipher home"
+          >
+            <span className="brand-mark"><span /></span>
+            <span>CIPHER</span>
+          </a>
+          <nav className="main-nav" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'round'}
+              className={activeTab === 'round' ? 'active' : ''}
+              onClick={() => handleTabChange('round')}
+            >
+              Play
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'board'}
+              className={activeTab === 'board' ? 'active' : ''}
+              onClick={() => handleTabChange('board')}
+            >
+              Board
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'how'}
+              className={activeTab === 'how' ? 'active' : ''}
+              onClick={() => handleTabChange('how')}
+            >
+              How to play
+            </button>
+          </nav>
+        </div>
+
+        <div className="header-right">
+          {accountId && (
+            <div className="player-progression-pill" title="Player Level & Win Streak Tracker">
+              <span><Star size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: 'var(--lime)' }} /> LVL 2 · ADEPT</span>
+              <span style={{ color: '#fbbf24' }}><Flame size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> 1W STREAK</span>
             </div>
-            <h2>Competitive Sleuth Standings</h2>
-            <p>
-              Compete in <b>Pure Skill Ranked Mode</b> to earn a <b>2x points multiplier</b>, a <b>50% protocol rake rebate (98% pot share)</b>, and claim the coveted <b>Grandmaster Cypherpunk</b> title.
+          )}
+
+          {/* Priority 1: Persistent How to Play button */}
+          <button
+            className="how-to-play-btn"
+            onClick={() => setShowHowToPlayModal(true)}
+            title="How to Play Cipher in 30 seconds"
+          >
+            <CircleHelp size={15} />
+            <span>How to Play</span>
+          </button>
+          <span className="network"><i /> NEAR TESTNET</span>
+          {accountId ? (
+            <button className="wallet-button" onClick={signOutWallet} title="Click to disconnect">
+              <Wallet size={15} />
+              {accountId}
+              <ChevronDown size={14} />
+            </button>
+          ) : (
+            <button className="wallet-button" onClick={openWalletModal}>
+              <Wallet size={15} />
+              Connect Wallet
+              <ChevronDown size={14} />
+            </button>
+          )}
+        </div>
+      </header>
+
+      <main id="top">
+
+        {activeTab === 'round' && (
+          <>
+            <section className="hero" id="round">
+          <div className="hero-copy">
+            <div className="arena-badge">
+              <span className="live-dot" /> {round ? `Round #${round.round_id} · NEAR Testnet` : 'NEAR Testnet'}
+            </div>
+            <h1>Find the <span className="highlight">hidden item.</span></h1>
+            <p className="hero-sub">
+              One of 64 items is hidden. Use the shared yes-or-no answers to cross off items, then take your best guess.
             </p>
-          </div>
-
-          <div className="leaderboard-toolbar">
-            <div className="leaderboard-tabs">
+            <div className="hero-buttons">
+              {isJoined ? (
+                <button className="button button-primary" disabled>
+                  <Sparkles size={16} /> You’re in (Active)
+                </button>
+              ) : (
+                <button className="button button-primary" onClick={handleJoinRound}>
+                  <Sparkles size={16} /> Join the round
+                  <span className="button-cost">0.1 NEAR</span>
+                </button>
+              )}
+              {/* Prominent Quickstart Modal Trigger */}
               <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('all')}
+                className="button button-secondary"
+                onClick={() => handleTabChange('board')}
               >
-                <span><Trophy size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> All Solvers ({leaderboardEntries.length})</span>
+                <LayoutGrid size={15} /> View board
               </button>
               <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'human' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('human')}
+                className="button button-secondary"
+                onClick={() => setShowHowToPlayModal(true)}
               >
-                <span><User size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Humans Only</span>
-              </button>
-              <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'agent' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('agent')}
-              >
-                <span><Bot size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Autonomous Agents</span>
-              </button>
-              <button
-                type="button"
-                className={`leaderboard-tab-btn ${leaderboardFilter === 'pure' ? 'active' : ''}`}
-                onClick={() => setLeaderboardFilter('pure')}
-              >
-                <span><Star size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Pure Deduction Masters</span>
+                <CircleHelp size={15} /> How to play
               </button>
             </div>
+          </div>
 
-            <div className="leaderboard-stats-summary">
-              <span>Settled Payouts: <strong>1.056 NEAR</strong></span>
-              <span>·</span>
-              <span>Active Jackpot: <strong>{potDisplay} NEAR</strong></span>
-              <span>·</span>
-              <span>Contract: <strong>cipherpot861267.testnet</strong></span>
+          <div className="pot-card">
+            <div className="pot-card-top">
+              <span className="pot-label">Current Pot</span>
+              <span className="pot-icon"><Coins size={18} /></span>
             </div>
-          </div>
-
-          <div className="leaderboard-table-wrap">
-            <table className="leaderboard-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '60px' }}>RANK</th>
-                  <th>SLEUTH / COMPETITOR</th>
-                  <th>REPUTATION TIER</th>
-                  <th>SOLVES</th>
-                  <th>PURE SKILL</th>
-                  <th>STREAK</th>
-                  <th>TOTAL WON</th>
-                  <th style={{ textAlign: 'right' }}>POINTS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLeaderboard.map((entry) => {
-                  const isYou = accountId && entry.account_id === accountId;
-                  const rankClass = entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
-                  return (
-                    <tr key={entry.account_id} style={isYou ? { background: 'rgba(217, 255, 85, 0.06)' } : undefined}>
-                      <td>
-                        <span className={`rank-badge ${rankClass}`}>
-                          {entry.rank}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="solver-name-cell">
-                          <a
-                            href={`https://testnet.nearblocks.io/address/${entry.account_id}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ fontFamily: 'var(--font-mono)', color: isYou ? 'var(--lime)' : '#fff', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
-                            title="View on NearBlocks Testnet Explorer"
-                          >
-                            <strong>{entry.account_id}</strong>
-                            <ArrowUpRight size={11} style={{ opacity: 0.5 }} />
-                          </a>
-                          {entry.is_agent ? (
-                            <span className="solver-tag-agent"><Bot size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> AGENT</span>
-                          ) : (
-                            <span className="solver-tag-human"><User size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> HUMAN</span>
-                          )}
-                          {isYou && <span className="solver-tag-you">YOU</span>}
-                        </div>
-                      </td>
-                      <td style={{ color: 'var(--text-secondary)' }}>
-                        {entry.tier}
-                      </td>
-                      <td>
-                        <strong>{entry.solves}</strong> <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>rounds</span>
-                      </td>
-                      <td>
-                        {entry.is_pure_master ? (
-                          <span className="pure-badge-tag">
-                            <Star size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: 'var(--lime)' }} /> {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>
-                            {entry.pure_solves} ({Math.round((entry.pure_solves / entry.solves) * 100)}%)
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {entry.streak > 0 ? (
-                          <span style={{ color: '#fbbf24', font: '600 11.5px var(--font-mono)' }}>
-                            <Flame size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3, color: '#fbbf24' }} /> {entry.streak}W
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ font: '600 12px var(--font-mono)', color: 'var(--color-success)' }}>
-                        {entry.total_won_near}
-                      </td>
-                      <td style={{ textAlign: 'right', font: '700 12px var(--font-mono)', color: 'var(--lime)' }}>
-                        {entry.points} PTS
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            <Shield size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Verified On-Chain: Sourced directly from NEAR Testnet contract <code>cipherpot861267.testnet</code>. Active Round #3 jackpot ({potDisplay} NEAR) unclaimed. First correct solver joins Rank #1.
+            <div className="pot-amount">
+              <span className="pot-number">{potDisplay}</span>
+              <span className="pot-unit">NEAR</span>
+            </div>
+            <div className="pot-network-note">
+              NEAR Testnet Pot ({contractConfig.CONTRACT_ID})
+            </div>
+            <div className="pot-card-bottom">
+              <span>{round ? statusText : 'Awaiting round data'}</span>
+              <span><Clock3 size={13} /> <b>{timerDisplay}</b></span>
+            </div>
           </div>
         </section>
+
+        <section className="round-strip" aria-label="Round status">
+          <div className="strip-status">
+            <span className="status-icon"><Activity size={16} /></span>
+            <div>
+              <small>Round Status</small>
+              <strong>{statusText}</strong>
+            </div>
+          </div>
+          <div className="strip-item">
+            <small>Questions Left</small>
+            <strong>{questionsLeftDisplay}</strong>
+            <span className="strip-foot">across all players</span>
+          </div>
+          <div className="strip-item">
+            <small>Your Guesses</small>
+            <strong>{guessesRemainingDisplay}</strong>
+            <span className="strip-foot">per entry fee</span>
+          </div>
+          <div className="strip-item">
+            <small>Players In</small>
+            <strong>{round ? round.total_players : 0}</strong>
+            <span className="strip-foot">joined this round</span>
+          </div>
+          <div className="strip-link">
+            <ShieldCheck size={17} />
+            <button
+              onClick={async () => {
+                const att = await fetchTeeAttestation();
+                setTeeAttestation(att);
+                setShowAttestationModal(true);
+              }}
+              title="View round commitment and signing key"
+            >
+              Round verification <ArrowUpRight size={13} />
+            </button>
+          </div>
+        </section>
+
+        <div className="inspector-bar">
+          <div className="inspector-group">
+            <span className="inspector-label">ARCHIVED ROUNDS:</span>
+            <button
+              type="button"
+              className={`inspector-pill ${round?.round_id === 3 ? 'active' : ''}`}
+              onClick={() => handleLoadRound(3)}
+            >
+              Round 3
+            </button>
+            <button
+              type="button"
+              className={`inspector-pill ${round?.round_id === 2 ? 'active' : ''}`}
+              onClick={() => handleLoadRound(2)}
+            >
+              Round 2
+            </button>
+            <button
+              type="button"
+              className={`inspector-pill ${round?.round_id === 1 ? 'active' : ''}`}
+              onClick={() => handleLoadRound(1)}
+            >
+              Round 1
+            </button>
+          </div>
+          <div>
+            <a
+              href={`https://testnet.nearblocks.io/address/${contractConfig.CONTRACT_ID}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-link"
+            >
+              Verified on NearBlocks <ArrowUpRight size={12} />
+            </a>
+          </div>
+        </div>
+
+        {notice && (
+          <div className="notice" role="status">
+            <CircleHelp size={16} />
+            <span>{notice}</span>
+            <button aria-label="Dismiss" onClick={() => setNotice('')}><X size={16} /></button>
+          </div>
         )}
+
+        {isSettled && round && (
+          <section className="settled-card settled-won">
+            <span className="settled-icon"><Check size={18} /></span>
+            <div style={{ flex: 1 }}>
+              <div className="inspector-label">ROUND #{round.round_id} SETTLED</div>
+              <h2 style={{ margin: '6px 0', fontSize: '18px' }}>Winner: {round.winner}</h2>
+              <p style={{ margin: '0 0 10px 0', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                Secret entity revealed: <b>{round.secret_revealed}</b>.
+                Payout: {formatNear(round.payout || '0')} NEAR (96% of pot).
+                Protocol fee: {formatNear(round.rake_amount || '0')} NEAR (4% rake).
+              </p>
+              <div>
+                <button
+                  className="button button-primary"
+                  onClick={() => setShowReplayModal(true)}
+                >
+                  <Share2 size={14} /> Replay Deduction & Share Card
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {isRolledOver && round && (
+          <section className="settled-card settled-refunding">
+            <span className="settled-icon"><Clock3 size={18} /></span>
+            <div style={{ flex: 1 }}>
+              <div className="inspector-label">ROUND #{round.round_id} TIMED OUT & ROLLED OVER</div>
+              <h2 style={{ margin: '6px 0', fontSize: '18px' }}>Progressive Jackpot Rolled Over to Round #{round.round_id + 1}</h2>
+              <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                Round reached 24h timeout without a winner. Secret revealed on-chain: <b>{round.secret_revealed}</b>.
+                100% of accumulated pot ({formatNear(round.pot)} NEAR) rolled over to expand Round #{round.round_id + 1}'s prize pool!
+              </p>
+            </div>
+          </section>
+        )}
+
+            {/* The Round Command & Control Grid */}
+            <div className="game-layout">
+              {feed[0] && <div className="latest-answer"><strong>{feed[0].answer}</strong> {feed[0].question}</div>}
+              {boardView}
+              <aside className="game-sidebar" aria-label="Questions">
+              <div className="round-column-right">
+                <section className="panel feed-panel" id="questions">
+              <div className="panel-header-inline">
+                <h2>Shared questions</h2>
+                <span className="feed-live"><i /> Live</span>
+              </div>
+              {feed.length === 0 ? (
+                <div className="feed-empty">
+                  <div className="feed-empty-icon"><MessageSquareText size={18} /></div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>No verified entries yet</div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Be the first to submit a deduction question</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="feed-list">
+                  {feed.map((entry) => (
+                    <div
+                      key={entry.question_id}
+                      className={`feed-item ${entry.answer === 'Yes' ? 'yes' : entry.answer === 'No' ? 'no' : 'unclear'}`}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)' }}>
+                          {(agents.some((a) => a.account_id === entry.asker) || entry.asker.includes('agent') || entry.asker === contractConfig.CONTRACT_ID) ? (
+                            <span style={{ color: '#38bdf8', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Bot size={13} /> AGENT: {entry.asker}</span>
+                          ) : (
+                            <span style={{ color: '#4ade80', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}><User size={13} /> HUMAN: {entry.asker}</span>
+                          )}
+                        </span>
+                        <strong style={{
+                          fontFamily: 'var(--font-mono)',
+                          color: entry.answer === 'Yes' ? 'var(--color-success)' : entry.answer === 'No' ? 'var(--color-danger)' : 'var(--color-warning)'
+                        }}>
+                          {entry.answer.toUpperCase()}
+                        </strong>
+                      </div>
+                      <div style={{ fontSize: '13px', marginTop: '4px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {entry.question}
+                      </div>
+                      {entry.rule_out_candidate_ids?.length > 0 && (
+                        <button type="button" className="text-link" onClick={() => {
+                          setHighlightedCards(entry.rule_out_candidate_ids);
+                          setEraFilter('All');
+                          setViewMode('all');
+                          document.getElementById('board')?.scrollIntoView();
+                        }}>
+                          See {entry.rule_out_candidate_ids.length} ruled-out cards
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+              </div>
+              <div className="round-column-left">
+                {isJoined && (
+              <section className="youre-in panel">
+                <div className="panel-header-inline">
+                  <h3>Participation status</h3>
+                  <span className="status-tag"><Check size={12} /> Unlocked</span>
+                </div>
+                <p>Entry fee paid (0.1 NEAR). You have full deduction questions and guess allowances.</p>
+                <div className="youre-in-stats">
+                  <span>Questions Left <b>{round ? round.questions_remaining : 20}</b></span>
+                  <span>Guesses Left <b>{playerInfo ? playerInfo.guesses_remaining : 3} / 3</b></span>
+                </div>
+              </section>
+            )}
+
+            <section className="panel ask-panel" id="ask">
+              <div className="panel-header-inline">
+                <h2>Ask a question</h2>
+                <span className="status-tag">
+                  <LockKeyhole size={12} /> {isJoined ? 'Ready' : 'Join to Play'}
+                </span>
+              </div>
+              <p className="section-intro">
+                Ask a yes-or-no question. The TEE Enclave referee answers and eliminates candidate secrets.
+              </p>
+              <label className="input-label" htmlFor="question">Your Question</label>
+              <textarea
+                id="question"
+                placeholder="e.g. Is it a rotor machine? Is it from the ancient era?"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                disabled={!isJoined || isSettled || submittingQuestion}
+              />
+              <button
+                className="button-submit-question"
+                disabled={!isJoined || isSettled || !question.trim() || submittingQuestion}
+                onClick={handleAskQuestion}
+              >
+                <MessageSquareText size={15} />
+                {submittingQuestion ? 'Evaluating with TEE...' : 'Submit question'}
+              </button>
+
+              {/* Priority 2: Enhanced Prominent One-Tap Quick Clue Chips or Pure Mode Note */}
+              {assistanceMode === 'assisted' ? (
+                <div className="prominent-clues-section">
+                  <div className="prominent-clues-title">
+                    <span><Zap size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> ONE-TAP QUICK CLUES</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tap to populate</span>
+                  </div>
+                  <div className="prominent-clue-grid">
+                    {[
+                      { label: 'Ancient Era?', query: 'Is it from the ancient era?' },
+                      { label: 'Rotor Machine?', query: 'Is it a mechanical rotor machine?' },
+                      { label: 'Digital Protocol?', query: 'Is it a digital algorithm or protocol?' },
+                      { label: 'Rome / Europe?', query: 'Did it originate in Europe or Rome?' },
+                      { label: 'Public Key?', query: 'Is it an asymmetric or public-key system?' },
+                      { label: 'Substitution?', query: 'Is it a substitution cipher?' },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        className="prominent-chip"
+                        disabled={!isJoined || isSettled || submittingQuestion}
+                        onClick={() => handleUseClue(item.query)}
+                      >
+                        <span>{item.label}</span>
+                        <span style={{ color: 'var(--lime)', fontSize: '11px' }}>&rarr;</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="pure-skill-banner" style={{ marginTop: '14px', padding: '12px' }}>
+                  <span className="pure-skill-badge"><Trophy size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> PURE SKILL</span>
+                  <span className="pure-skill-desc" style={{ fontSize: '11px' }}>
+                    Clues hidden in Pure Skill mode. Every deduction is your own move.
+                  </span>
+                </div>
+              )}
+
+              <div className="locked-note">
+                <LockKeyhole size={12} />
+                {isSpectator ? 'Connect a wallet and join to unlock' : 'Answers are shared with everyone in the round'}
+              </div>
+            </section>
+              </div>
+              </aside>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'round' && (
+          <nav className="game-mobile-nav" aria-label="Game controls">
+            <a href="#board" onClick={(event) => { event.preventDefault(); document.getElementById('board')?.scrollIntoView(); }}>Board</a>
+            <a href="#questions">Questions</a>
+            <a href="#ask">Ask</a>
+          </nav>
+        )}
+        {activeTab === 'board' && boardView}
 
         {activeTab === 'how' && (
           <section className="how-section" id="how">
@@ -1702,7 +1196,7 @@ function App() {
                   <span className="onboarding-num">3</span>
                   <div className="onboarding-step-body">
                     <h4>First Correct Guess Sweeps the Pot</h4>
-                    <p>3 guesses per entry. First correct guess signs an Ed25519 verdict to sweep up to <b>98% of the pot</b> (with Pure Skill bonus)!</p>
+                    <p>You have three guesses per entry. A successful claim pays <b>96% of the pot</b>.</p>
                   </div>
                 </div>
               </div>
@@ -1907,7 +1401,7 @@ function App() {
               <div className="modal-header-row">
                 <span className="info-gain-badge">
                   <ShieldCheck size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
-                  HARDWARE TEE ATTESTATION
+                  ROUND VERIFICATION
                 </span>
                 <button className="modal-close-btn" onClick={() => setShowAttestationModal(false)} aria-label="Close">
                   <X size={18} />
@@ -1915,21 +1409,13 @@ function App() {
               </div>
 
               <h2 style={{ fontSize: '21px', color: '#fff', margin: '0 0 8px 0', fontFamily: 'var(--font-head)' }}>
-                Confidential TEE Referee Proof
+                Round commitment and signing key
               </h2>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-                Cipher runs inside an isolated Trusted Execution Environment (AMD SEV-SNP Confidential VM) on NEAR AI Cloud. Secrets never touch smart contract storage.
+                The contract stores a hash of the hidden answer. The signing key below comes from the referee API. Hardware attestation is unverified.
               </p>
 
               <div className="enclave-specs">
-                <div className="spec-row">
-                  <span className="spec-label">Enclave Status:</span>
-                  <strong className="spec-value live">● ONLINE & ATTESTED</strong>
-                </div>
-                <div className="spec-row">
-                  <span className="spec-label">Enclave Hardware:</span>
-                  <span className="spec-value">AMD SEV-SNP Confidential VM</span>
-                </div>
                 <div className="spec-row">
                   <span className="spec-label">Commitment Scheme:</span>
                   <span className="spec-value">SHA-256(secret:salt)</span>
@@ -1943,22 +1429,15 @@ function App() {
               <div style={{ marginBottom: '14px' }}>
                 <span className="inspector-label">TEE Enclave Public Key (Ed25519)</span>
                 <div className="code-box">
-                  {teeAttestation?.tee_public_key || '33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14'}
+                  {teeAttestation?.tee_public_key || 'Unavailable'}
                 </div>
               </div>
 
               <div style={{ marginBottom: '14px' }}>
-                <span className="inspector-label">Active Round #{round ? round.round_id : 3} On-Chain Commitment Hash</span>
+                <span className="inspector-label">On-chain commitment</span>
                 <div className="code-box">
-                  {round ? round.commitment : '98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9'}
+                  {round?.commitment || 'Unavailable'}
                 </div>
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', marginBottom: '16px' }}>
-                <div className="checklist-item"><Check size={14} /> Zero secret leakage into contract state (immune to RPC reads)</div>
-                <div className="checklist-item"><Check size={14} /> 96% payout claim requires TEE signature over (round:id:player:salt)</div>
-                <div className="checklist-item"><Check size={14} /> Anti-prompt-injection & jailbreak filters active</div>
-                <div className="checklist-item"><Check size={14} /> 100% of expired round secrets revealed on rollover for public audit</div>
               </div>
 
               <div className="modal-actions">
@@ -2062,7 +1541,7 @@ function App() {
                       <Sparkles size={14} /> <Trophy size={14} /> TEE-CERTIFIED PURE DEDUCTION MASTERY
                     </div>
                     <div className="pure-mastery-desc">
-                      Hardware TEE Enclave verified 100% unassisted solve ({lastSolveMastery?.certificate || 'TEE_ENCLAVE_VERIFIED_PURE_SKILL'}). True mathematical deduction mastery achieved!
+                      Question suggestions used in this session: 0.
                     </div>
                   </div>
                 ) : (
@@ -2116,7 +1595,7 @@ function App() {
             }}
             title="Inspect Enclave TEE Attestation & Public Key"
           >
-            Verify TEE fairness <ArrowUpRight size={13} />
+            Round verification <ArrowUpRight size={13} />
           </button>
         </footer>
       </main>
