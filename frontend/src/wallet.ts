@@ -91,7 +91,8 @@ export async function submitQuestionOnChain(
   roundId: number,
   question: string,
   answer: string,
-  ruleOutCandidateIds: number[]
+  ruleOutCandidateIds: number[],
+  signature: string
 ) {
   if (!selector) throw new Error('Wallet not initialized');
   const wallet = await selector.wallet();
@@ -108,6 +109,7 @@ export async function submitQuestionOnChain(
             question,
             answer,
             rule_out_candidate_ids: ruleOutCandidateIds,
+            signature_hex: signature,
           },
           gas: '30000000000000',
           deposit: '0',

@@ -384,6 +384,7 @@ impl CipherPot {
         question: String,
         answer: String,
         rule_out_candidate_ids: Option<Vec<u32>>,
+        signature_hex: String,
     ) -> QuestionView {
         self.assert_not_paused();
         let mut round = self.get_round_internal(round_id);
@@ -410,6 +411,26 @@ impl CipherPot {
             ERR_QUESTION_LIMIT_REACHED
         );
 
+        let ruled_out = rule_out_candidate_ids.unwrap_or_default();
+        require!(matches!(answer.as_str(), "Yes" | "No" | "Unclear"), "Invalid answer");
+        require!(
+            ruled_out.len() <= TOTAL_CANDIDATES as usize
+                && ruled_out.iter().all(|id| (1..=TOTAL_CANDIDATES).contains(id)),
+            "Invalid ruled-out cards"
+        );
+        let payload = near_sdk::serde_json::to_vec(&(
+            "cipherpot-question-v1",
+            env::current_account_id(),
+            round_id,
+            &caller,
+            round.questions_asked,
+            &question,
+            &answer,
+            &ruled_out,
+        )).expect("Could not encode question");
+        let public_key = self.tee_public_key.as_deref().expect("Referee key is required");
+        self.verify_referee_signature(&payload, &signature_hex, public_key);
+
         round.questions_asked = round.questions_asked.saturating_add(1);
         player.questions_asked = player.questions_asked.saturating_add(1);
 
@@ -425,7 +446,7 @@ impl CipherPot {
             question,
             answer,
             timestamp: env::block_timestamp(),
-            rule_out_candidate_ids: rule_out_candidate_ids.unwrap_or_default(),
+            rule_out_candidate_ids: ruled_out,
         };
         questions.push(record.clone());
         self.round_questions.insert(&round_id, &questions);
@@ -512,6 +533,16 @@ impl CipherPot {
         let key = (round_id, claimer.clone());
         require!(self.round_players.get(&key).is_some(), ERR_NOT_JOINED);
 
+        let guesses = self.round_guesses.get(&round_id).unwrap_or_default();
+        require!(
+            guesses.iter().any(|guess| {
+                guess.player == claimer
+                    && guess.candidate_id == candidate_id
+                    && guess.candidate_name == candidate_name
+            }),
+            "Claim requires a matching recorded guess"
+        );
+
         // Verify cryptographic commitment: sha256(format!("{}:{}", candidate_name, salt)) == round.commitment
         let commitment_preimage = format!("{}:{}", candidate_name, salt);
         let hash_bytes = env::sha256(commitment_preimage.as_bytes());
@@ -571,12 +602,21 @@ impl CipherPot {
             ERR_ROUND_NOT_EXPIRED
         );
 
-        // Mark current round as RolledOver
-        round.status = RoundStatus::RolledOver;
-        if let (Some(s), Some(k)) = (secret, salt) {
-            round.secret_revealed = Some(s);
-            round.salt_revealed = Some(k);
+        match (secret, salt) {
+            (Some(secret), Some(salt)) => {
+                let preimage = format!("{}:{}", secret, salt);
+                let commitment = hex_encode(&env::sha256(preimage.as_bytes()));
+                require!(
+                    commitment.eq_ignore_ascii_case(&round.commitment),
+                    ERR_INVALID_COMMITMENT
+                );
+                round.secret_revealed = Some(secret);
+                round.salt_revealed = Some(salt);
+            }
+            (None, None) => {},
+            _ => env::panic_str("Provide both the secret and salt to reveal"),
         }
+        round.status = RoundStatus::RolledOver;
         self.rounds.insert(&round_id, &round);
 
         // Rolled over pot seeds the next round if created
@@ -588,6 +628,7 @@ impl CipherPot {
     // =========================================================================
 
     /// Create a new round with a cryptographic commitment (hash of secret + salt).
+    #[payable]
     pub fn create_round(
         &mut self,
         commitment: String,
@@ -596,14 +637,32 @@ impl CipherPot {
         initial_pot: Option<U128>,
     ) -> RoundView {
         self.assert_owner();
+        require!(
+            hex_decode(&commitment).is_some_and(|bytes| bytes.len() == 32),
+            ERR_INVALID_COMMITMENT
+        );
+        let carried_pot = if self.current_round_id == 0 {
+            0
+        } else {
+            let previous = self.get_round_internal(self.current_round_id);
+            require!(previous.status != RoundStatus::Active, "Close the current round first");
+            if previous.status == RoundStatus::RolledOver { previous.pot } else { 0 }
+        };
+        let deposit = env::attached_deposit().as_yoctonear();
+        let pot = carried_pot.checked_add(deposit).expect("Round pot overflow");
+        require!(
+            initial_pot.is_none_or(|expected| expected.0 == pot),
+            "Initial pot must match carryover plus attached deposit"
+        );
+
         let round_id = self.current_round_id + 1;
         self.current_round_id = round_id;
 
         let start_time = env::block_timestamp();
         let duration = duration_nanos.unwrap_or(DEFAULT_ROUND_DURATION_NANOS);
-        let end_time = start_time + duration;
+        let end_time = start_time.checked_add(duration).expect("Round expiry overflow");
         let fee = entry_fee.map(|f| f.0).unwrap_or(DEFAULT_ENTRY_FEE);
-        let pot = initial_pot.map(|p| p.0).unwrap_or(0);
+        require!(duration > 0, "Round duration must be positive");
 
         let round = Round {
             round_id,
@@ -859,6 +918,10 @@ impl CipherPot {
         pubkey_hex: &str,
     ) {
         let msg = format!("{}:{}:{}:{}", round_id, candidate_id, claimer, salt);
+        self.verify_referee_signature(msg.as_bytes(), sig_hex, pubkey_hex);
+    }
+
+    fn verify_referee_signature(&self, message: &[u8], sig_hex: &str, pubkey_hex: &str) {
         let sig_bytes = hex_decode(sig_hex).expect(ERR_INVALID_TEE_SIGNATURE);
         let pubkey_bytes = hex_decode(pubkey_hex).expect(ERR_INVALID_TEE_SIGNATURE);
 
@@ -872,7 +935,7 @@ impl CipherPot {
         let mut pubkey_arr = [0u8; 32];
         pubkey_arr.copy_from_slice(&pubkey_bytes);
 
-        let valid = env::ed25519_verify(&sig_arr, msg.as_bytes(), &pubkey_arr);
+        let valid = env::ed25519_verify(&sig_arr, message, &pubkey_arr);
         require!(valid, ERR_INVALID_TEE_SIGNATURE);
     }
 }
@@ -963,4 +1026,109 @@ pub fn get_canonical_board() -> Vec<CandidateView> {
         CandidateView { id: 63, name: "Kerckhoffs Principle".into(), category: "Cryptographic Axioms".into(), era: "Modern".into(), origin: "Netherlands".into(), r#type: "Open Design Principle".into() },
         CandidateView { id: 64, name: "Auguste Kerckhoffs".into(), category: "Linguists & Cryptographers".into(), era: "Modern".into(), origin: "Netherlands".into(), r#type: "Theorist".into() },
     ]
+}
+
+#[cfg(test)]
+mod round_tests {
+    use super::*;
+    use near_sdk::{test_utils::VMContextBuilder, testing_env, NearToken};
+
+    #[test]
+    fn expired_round_carries_pot_into_next_round() {
+        let owner: AccountId = "owner.testnet".parse().unwrap();
+        let mut context = VMContextBuilder::new();
+        context.predecessor_account_id(owner.clone());
+        context.attached_deposit(NearToken::from_yoctonear(100));
+        testing_env!(context.build());
+        let mut contract = CipherPot::init(owner, None, None);
+        let commitment = hex_encode(&env::sha256(b"Caesar Cipher:test-salt"));
+
+        let first = contract.create_round(commitment.clone(), Some(10), None, Some(U128(100)));
+        assert_eq!(first.pot.0, 100);
+
+        context.block_timestamp(10).attached_deposit(NearToken::from_yoctonear(0));
+        testing_env!(context.build());
+        contract.rollover(1, Some("test-salt".into()), Some("Caesar Cipher".into()));
+
+        context.attached_deposit(NearToken::from_yoctonear(25));
+        testing_env!(context.build());
+        let second = contract.create_round(commitment, None, None, Some(U128(125)));
+        assert_eq!(second.round_id, 2);
+        assert_eq!(second.pot.0, 125);
+    }
+    fn joined_round() -> CipherPot {
+        let owner: AccountId = "owner.testnet".parse().unwrap();
+        let mut context = VMContextBuilder::new();
+        context.predecessor_account_id(owner.clone());
+        testing_env!(context.build());
+        let mut contract = CipherPot::init(owner, None, None);
+        let commitment = hex_encode(&env::sha256(b"Caesar Cipher:test-salt"));
+        contract.create_round(commitment, Some(10), Some(U128(100)), None);
+
+        context.predecessor_account_id("player.testnet".parse().unwrap());
+        context.attached_deposit(NearToken::from_yoctonear(100));
+        testing_env!(context.build());
+        contract.join(Some(1));
+        context.attached_deposit(NearToken::from_yoctonear(0));
+        testing_env!(context.build());
+        contract
+    }
+
+    #[test]
+    #[should_panic(expected = "Claim requires a matching recorded guess")]
+    fn claim_requires_recorded_guess() {
+        let mut contract = joined_round();
+        contract.submit_guess(1, 2, "Enigma Machine".into());
+        drop(contract.claim(1, 1, "Caesar Cipher".into(), "test-salt".into(), None));
+    }
+
+    #[test]
+    fn recorded_correct_guess_schedules_winner_payout() {
+        let mut contract = joined_round();
+        contract.tee_public_key = Some("8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c".into());
+        contract.submit_guess(1, 1, "Caesar Cipher".into());
+        let signature = "c6033ddf60248a796b59a7c3e7fdcb7b2f6f3edef76c3489325bd40f9775db4256f28f3d24dadf117415991fdb0f6c9d5279bc77b9c420d7fde6f1c23512750f";
+        drop(contract.claim(1, 1, "Caesar Cipher".into(), "test-salt".into(), Some(signature.into())));
+
+        let round = contract.get_round_internal(1);
+        assert_eq!(round.status, RoundStatus::Settled);
+        assert_eq!(round.winner.unwrap().as_str(), "player.testnet");
+        assert_eq!(round.payout, Some(96));
+        assert_eq!(contract.accumulated_fees, 4);
+        let receipts = near_sdk::test_utils::get_created_receipts();
+        assert!(receipts.iter().any(|receipt| {
+            receipt.receiver_id.as_str() == "player.testnet"
+                && receipt.actions.iter().any(|action| {
+                    matches!(action, near_sdk::mock::MockAction::Transfer { deposit, .. }
+                        if deposit.as_yoctonear() == 96)
+                })
+        }));
+    }
+
+    fn submit_signed_answer(answer: &str) -> QuestionView {
+        let mut contract = joined_round();
+        contract.tee_public_key = Some("8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c".into());
+        let mut context = VMContextBuilder::new();
+        context.current_account_id("cipher.testnet".parse().unwrap());
+        context.predecessor_account_id("player.testnet".parse().unwrap());
+        testing_env!(context.build());
+        contract.submit_question(
+            1, "Is it ancient?".into(), answer.into(), Some(vec![2]),
+            "5752aa92169220b3e184f0d623d2fd6ea74dcbffa6137755fff888f2ac9233e9c01fd5ca2202247a326119ecb05b44a00fbfee3eb2edeb7f00bc9ce8fb7d8a0f".into(),
+        )
+    }
+
+    #[test]
+    fn accepts_python_referee_signature() {
+        let question = submit_signed_answer("Yes");
+        assert_eq!(question.answer, "Yes");
+        assert_eq!(question.rule_out_candidate_ids, vec![2]);
+    }
+
+    #[test]
+    #[should_panic(expected = "ERR_INVALID_TEE_SIGNATURE")]
+    fn rejects_modified_referee_answer() {
+        submit_signed_answer("No");
+    }
+
 }

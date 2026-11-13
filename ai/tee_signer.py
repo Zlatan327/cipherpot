@@ -9,6 +9,7 @@ Responsible for:
 """
 
 import hashlib
+import json
 import os
 import secrets
 from typing import Tuple, Optional
@@ -79,6 +80,14 @@ class TEESigner:
         expected = hashlib.sha256(preimage).hexdigest()
         return expected.lower() == commitment_hex.strip().lower()
 
+    def sign_question(self, contract_id: str, round_id: int, account_id: str,
+                      question_index: int, question: str, answer: str,
+                      ruled_out: list[int]) -> str:
+        payload = ["cipherpot-question-v1", contract_id, round_id, account_id,
+                   question_index, question, answer, ruled_out]
+        message = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        return self._private_key.sign(message).hex()
+
     def sign_verdict(self, round_id: int, candidate_id: int, claimer: str, salt: str) -> str:
         """
         Sign a correct guess verdict inside the TEE enclave.
@@ -100,16 +109,12 @@ class TEESigner:
             return False
 
 
-# Deterministic Enclave Default Seed (32 bytes)
-# Ensures TEE key identity remains consistent across daemon restarts unless overridden by env
-DEFAULT_ENCLAVE_SEED_HEX = "3b67466182bfb0ccfd0914550fcb402104a66cdd674df6058cf752a63e6d624a"
-
 # Singleton default enclave signer instance
 _default_signer: Optional[TEESigner] = None
 
 def get_tee_signer() -> TEESigner:
     global _default_signer
     if _default_signer is None:
-        priv_hex = os.getenv("TEE_PRIVATE_KEY_HEX", DEFAULT_ENCLAVE_SEED_HEX)
+        priv_hex = os.getenv("TEE_PRIVATE_KEY_HEX")
         _default_signer = TEESigner(priv_hex)
     return _default_signer

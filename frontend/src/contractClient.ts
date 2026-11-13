@@ -234,9 +234,12 @@ export async function askQuestionApi(
   accountId: string,
   question: string,
   isAssisted: boolean = false,
-  mode: string = 'pure'
+  mode: string = 'pure',
+  questionIndex?: number
 ): Promise<{
   answer: string;
+  question: string;
+  signature_hex?: string | null;
   rule_out_candidate_ids: number[];
   status: string;
   is_assisted?: boolean;
@@ -252,6 +255,7 @@ export async function askQuestionApi(
       account_id: accountId,
       question,
       is_assisted: isAssisted,
+      question_index: questionIndex,
       mode: mode,
     }),
   });

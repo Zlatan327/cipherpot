@@ -285,7 +285,8 @@ function App() {
         accountId,
         question.trim(),
         isCurrentQuestionAssisted,
-        isCurrentQuestionAssisted ? 'assisted' : 'pure'
+        isCurrentQuestionAssisted ? 'assisted' : 'pure',
+        round.questions_asked
       );
 
       if (typeof evalResult.session_clues_used === 'number') {
@@ -295,11 +296,13 @@ function App() {
 
       // 2. Submit structured answer & rule-outs to NEAR contract
       setNotice('Recording question & structured verdict on NEAR Testnet...');
+      if (!evalResult.signature_hex) throw new Error("The referee did not sign this answer.");
       await submitQuestionOnChain(
         round.round_id,
-        question.trim(),
+        evalResult.question,
         evalResult.answer,
-        evalResult.rule_out_candidate_ids || []
+        evalResult.rule_out_candidate_ids || [],
+        evalResult.signature_hex
       );
 
       // 3. Update local feed & crossed tiles
@@ -307,7 +310,7 @@ function App() {
         question_id: feed.length + 1,
         round_id: round.round_id,
         asker: accountId,
-        question: question.trim(),
+        question: evalResult.question,
         answer: evalResult.answer,
         timestamp: String(Date.now() * 1_000_000),
         rule_out_candidate_ids: evalResult.rule_out_candidate_ids || [],
