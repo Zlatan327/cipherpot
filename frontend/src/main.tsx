@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import {
   Activity,
   AlertTriangle,
-  ArrowDownRight,
   ArrowUpRight,
   Bot,
   Check,
@@ -270,12 +269,13 @@ function App() {
   const isRolledOver = round?.status === 'RolledOver';
 
   const statusText = useMemo(() => {
-    if (isSettled) return 'ROUND SETTLED';
+    if (!round) return 'Round data unavailable';
+    if (isSettled) return 'Round settled';
     if (isRolledOver) return 'ROUND ROLLED OVER';
     if (isJoined) return 'YOU’RE IN (PLAYING)';
     if (accountId) return 'WALLET CONNECTED';
     return 'SPECTATOR MODE (LIVE)';
-  }, [isSettled, isRolledOver, isJoined, accountId]);
+  }, [round, isSettled, isRolledOver, isJoined, accountId]);
 
   // Leaderboard Standings (Sourced from Real NEAR Testnet Contract Records)
   const leaderboardEntries = useMemo(() => {
@@ -510,7 +510,10 @@ function App() {
           candidate_name: selectedCandidate.name,
           account_id: accountId,
         }),
-      }).then((r) => r.json());
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(`Guess verification unavailable (HTTP ${r.status}).`);
+        return r.json();
+      });
 
       if (verifyRes.is_correct) {
         const isPure = Boolean(verifyRes.pure_deduction);
@@ -558,17 +561,17 @@ function App() {
 
   const potDisplay = useMemo(() => {
     if (round?.pot) return formatNear(round.pot);
-    return '2.5';
+    return '—';
   }, [round]);
 
   const timerDisplay = useMemo(() => {
     if (round?.time_remaining) return formatCountdown(round.time_remaining);
-    return '23:59:00';
+    return '—';
   }, [round]);
 
   const questionsLeftDisplay = useMemo(() => {
     if (round) return `${round.questions_remaining} / ${round.max_questions}`;
-    return '20 / 20';
+    return '—';
   }, [round]);
 
   const guessesRemainingDisplay = useMemo(() => {
@@ -579,20 +582,6 @@ function App() {
 
   return (
     <div className="app-shell">
-      {/* Live Arena Telemetry & Social Proof Ticker */}
-      <div className="arena-telemetry-ticker">
-        <div className="ticker-item">
-          <Sparkles size={13} style={{ color: 'var(--lime)' }} />
-          <span>Round #1 Settled: <strong>Caesar Cipher</strong> solved by <code>cipherpot861267.testnet</code> (1.056 NEAR)</span>
-        </div>
-        <div className="ticker-item">
-          <span><Zap size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Round #2: <strong>2.50 NEAR Rollover</strong> &rarr; Active Round #3 Jackpot: <strong>{potDisplay} NEAR</strong></span>
-        </div>
-        <div className="ticker-item">
-          <span><Shield size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Hardware Enclave: <strong>AMD SEV-SNP Isolated Memory Active</strong></span>
-        </div>
-      </div>
-
       {isSpectator && (
         <div className="watch-banner">
           <Eye size={15} />
@@ -699,12 +688,11 @@ function App() {
             <section className="hero" id="round">
           <div className="hero-copy">
             <div className="arena-badge">
-              <span className="live-dot" /> Round #{round ? round.round_id : 3} · Live Deduction Arena
+              <span className="live-dot" /> {round ? `Round #${round.round_id} · NEAR Testnet` : 'NEAR Testnet'}
             </div>
-            <h1>One secret.<br /><span className="highlight">Sixty-four</span> possibilities.</h1>
+            <h1>Find the <span className="highlight">hidden item.</span></h1>
             <p className="hero-sub">
-              64 canonical entities committed to NEAR Protocol with confidential TEE hardware validation.
-              Ask sharp yes/no questions, eliminate tiles, and claim the <b>{potDisplay} NEAR</b> pot.
+              One of 64 items is hidden. Use the shared yes-or-no answers to cross off items, then take your best guess.
             </p>
             <div className="hero-buttons">
               {isJoined ? (
@@ -722,20 +710,13 @@ function App() {
                 className="button button-secondary"
                 onClick={() => handleTabChange('board')}
               >
-                <LayoutGrid size={15} /> View The Board
+                <LayoutGrid size={15} /> View board
               </button>
               <button
                 className="button button-secondary"
                 onClick={() => setShowHowToPlayModal(true)}
               >
-                <CircleHelp size={15} /> How to Play in 30s
-              </button>
-              <button
-                type="button"
-                className="text-link"
-                onClick={() => handleTabChange('how')}
-              >
-                Deduction Funnel <ArrowDownRight size={15} />
+                <CircleHelp size={15} /> How to play
               </button>
             </div>
           </div>
@@ -753,7 +734,7 @@ function App() {
               NEAR Testnet Pot ({contractConfig.CONTRACT_ID})
             </div>
             <div className="pot-card-bottom">
-              <span><span className="live-dot" /> {isSettled ? 'SETTLED' : 'LIVE ROUND'}</span>
+              <span>{round ? statusText : 'Awaiting round data'}</span>
               <span><Clock3 size={13} /> <b>{timerDisplay}</b></span>
             </div>
           </div>
@@ -790,9 +771,9 @@ function App() {
                 setTeeAttestation(att);
                 setShowAttestationModal(true);
               }}
-              title="Inspect Confidential TEE Hardware Attestation & Public Key"
+              title="View round commitment and signing key"
             >
-              Verify TEE fairness <ArrowUpRight size={13} />
+              Round verification <ArrowUpRight size={13} />
             </button>
           </div>
         </section>
@@ -805,21 +786,21 @@ function App() {
               className={`inspector-pill ${round?.round_id === 3 ? 'active' : ''}`}
               onClick={() => handleLoadRound(3)}
             >
-              ● R#3 (Active · 2.60 NEAR)
+              Round 3
             </button>
             <button
               type="button"
               className={`inspector-pill ${round?.round_id === 2 ? 'active' : ''}`}
               onClick={() => handleLoadRound(2)}
             >
-              R#2 (Rolled Over)
+              Round 2
             </button>
             <button
               type="button"
               className={`inspector-pill ${round?.round_id === 1 ? 'active' : ''}`}
               onClick={() => handleLoadRound(1)}
             >
-              R#1 (Settled Won)
+              Round 1
             </button>
           </div>
           <div>
@@ -1200,10 +1181,10 @@ function App() {
                     type="button"
                     className={`mode-btn ${assistanceMode === 'pure' ? 'active pure' : ''}`}
                     onClick={() => setAssistanceMode('pure')}
-                    title="Pure deduction without AI assistance. 98% pot share (50% rake rebate) + 2x Leaderboard points!"
+                    title="Play with question suggestions hidden."
                   >
                     <span><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Pure Skill</span>
-                    <small>Ranked · 98% Pot (+2% Rebate)</small>
+                    <small>Suggestions hidden</small>
                   </button>
                 </div>
               </div>
@@ -1322,9 +1303,9 @@ function App() {
             ) : (
               <div className="pure-skill-banner">
                 <div className="pure-skill-left">
-                  <span className="pure-skill-badge"><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> PURE SKILL RANKED MODE · 98% POT SHARE</span>
+                  <span className="pure-skill-badge"><Trophy size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> PURE SKILL MODE</span>
                   <span className="pure-skill-desc">
-                    AI clue chips disabled. Solving without AI suggestions earns the <b>50% Protocol Rake Rebate (98% payout)</b>, <b>Pure Deduction Grandmaster Certificate</b>, and a <b>2x Leaderboard Multiplier</b>!
+                    Question suggestions are hidden in this mode.
                   </span>
                 </div>
                 <button
@@ -1472,7 +1453,7 @@ function App() {
             </div>
             <h2>Competitive Sleuth Standings</h2>
             <p>
-              Compete in <b>Pure Skill Ranked Mode</b> to earn a <b>2x points multiplier</b>, a <b>50% protocol rake rebate (98% pot share)</b>, and claim the coveted <b>Grandmaster Cypherpunk</b> title.
+              These standings include historical and session data.
             </p>
           </div>
 
@@ -1702,7 +1683,7 @@ function App() {
                   <span className="onboarding-num">3</span>
                   <div className="onboarding-step-body">
                     <h4>First Correct Guess Sweeps the Pot</h4>
-                    <p>3 guesses per entry. First correct guess signs an Ed25519 verdict to sweep up to <b>98% of the pot</b> (with Pure Skill bonus)!</p>
+                    <p>You have three guesses per entry. A successful claim pays <b>96% of the pot</b>.</p>
                   </div>
                 </div>
               </div>
@@ -1907,7 +1888,7 @@ function App() {
               <div className="modal-header-row">
                 <span className="info-gain-badge">
                   <ShieldCheck size={13} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '4px' }} />
-                  HARDWARE TEE ATTESTATION
+                  ROUND VERIFICATION
                 </span>
                 <button className="modal-close-btn" onClick={() => setShowAttestationModal(false)} aria-label="Close">
                   <X size={18} />
@@ -1915,21 +1896,13 @@ function App() {
               </div>
 
               <h2 style={{ fontSize: '21px', color: '#fff', margin: '0 0 8px 0', fontFamily: 'var(--font-head)' }}>
-                Confidential TEE Referee Proof
+                Round commitment and signing key
               </h2>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-                Cipher runs inside an isolated Trusted Execution Environment (AMD SEV-SNP Confidential VM) on NEAR AI Cloud. Secrets never touch smart contract storage.
+                The contract stores a hash of the hidden answer. The signing key below comes from the referee API. Hardware attestation is unverified.
               </p>
 
               <div className="enclave-specs">
-                <div className="spec-row">
-                  <span className="spec-label">Enclave Status:</span>
-                  <strong className="spec-value live">● ONLINE & ATTESTED</strong>
-                </div>
-                <div className="spec-row">
-                  <span className="spec-label">Enclave Hardware:</span>
-                  <span className="spec-value">AMD SEV-SNP Confidential VM</span>
-                </div>
                 <div className="spec-row">
                   <span className="spec-label">Commitment Scheme:</span>
                   <span className="spec-value">SHA-256(secret:salt)</span>
@@ -1943,22 +1916,15 @@ function App() {
               <div style={{ marginBottom: '14px' }}>
                 <span className="inspector-label">TEE Enclave Public Key (Ed25519)</span>
                 <div className="code-box">
-                  {teeAttestation?.tee_public_key || '33a8e59a5b77974d522a3243903500a7dc9aa95d85736b7e5662a5d5783f7e14'}
+                  {teeAttestation?.tee_public_key || 'Unavailable'}
                 </div>
               </div>
 
               <div style={{ marginBottom: '14px' }}>
-                <span className="inspector-label">Active Round #{round ? round.round_id : 3} On-Chain Commitment Hash</span>
+                <span className="inspector-label">On-chain commitment</span>
                 <div className="code-box">
-                  {round ? round.commitment : '98b2ad75a9da255f5c6319df1e2d9f61c41ba876fc7dd376cd48c4697778b5a9'}
+                  {round?.commitment || 'Unavailable'}
                 </div>
-              </div>
-
-              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', marginBottom: '16px' }}>
-                <div className="checklist-item"><Check size={14} /> Zero secret leakage into contract state (immune to RPC reads)</div>
-                <div className="checklist-item"><Check size={14} /> 96% payout claim requires TEE signature over (round:id:player:salt)</div>
-                <div className="checklist-item"><Check size={14} /> Anti-prompt-injection & jailbreak filters active</div>
-                <div className="checklist-item"><Check size={14} /> 100% of expired round secrets revealed on rollover for public audit</div>
               </div>
 
               <div className="modal-actions">
@@ -2116,7 +2082,7 @@ function App() {
             }}
             title="Inspect Enclave TEE Attestation & Public Key"
           >
-            Verify TEE fairness <ArrowUpRight size={13} />
+            Round verification <ArrowUpRight size={13} />
           </button>
         </footer>
       </main>
