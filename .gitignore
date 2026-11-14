@@ -33,3 +33,7 @@ ENV/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local referee round database
+*.sqlite3
+*.sqlite3-*
